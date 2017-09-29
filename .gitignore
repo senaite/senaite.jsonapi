@@ -1,3 +1,6 @@
 bin
 develop-eggs
 eggs
+src/bika.lims
+src/senaite.api
+.mr.developer.cfg
