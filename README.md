@@ -3,7 +3,7 @@
   <h1>
     <a href="https://github.com/senaite/senaite.jsonapi">
       <div>
-        <img src="static/logo.png" alt="senaite.jsonapi" />
+        <img src="static/logo.png" alt="senaite.jsonapi" height="64" />
       </div>
     </a>
   </h1>
