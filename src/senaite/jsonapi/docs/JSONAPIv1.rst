@@ -1,4 +1,4 @@
-SENAITE JSON API V1
+SENAITE JSON API v1
 ===================
 
 Running this test from the buildout directory::
@@ -50,7 +50,7 @@ JSON API::
 
 
 Version
-=======
+-------
 
 Ensure we are logged out::
 

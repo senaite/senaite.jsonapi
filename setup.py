@@ -9,11 +9,16 @@ setup(
     name='senaite.jsonapi',
     version=version,
     description="SENAITE JSON API",
-    long_description=open("README.md").read() + "\n" +
+    long_description=open("docs/About.rst").read() +
+                     "\n\n" +
+                     open("src/senaite/jsonapi/docs/JSONAPIv1.rst").read() +
+                     "\n\n" +
+                     "Changelog\n" +
+                     "=========\n" +
                      open("docs/Changelog.rst").read() + "\n" +
                      "\n\n" +
                      "Authors and maintainers\n" +
-                     "-----------------------\n" +
+                     "-----------------------\n\n" +
                      "- Ramon Bartl (RIDING BYTES) <rb@ridingbytes.com>",
     # Get more strings from
     # http://pypi.python.org/pypi?:action=list_classifiers
