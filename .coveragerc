@@ -1,0 +1,5 @@
+[report]
+include =
+  src/senaite/jsonapi/*
+omit =
+  src/senaite/jsonapi/tests/*
