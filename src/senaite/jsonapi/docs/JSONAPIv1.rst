@@ -16,7 +16,7 @@ Needed Imports::
     >>> from plone.app.testing import TEST_USER_ID
     >>> from plone.app.testing import TEST_USER_PASSWORD
 
-    >>> from senaite.lims import api
+    >>> from senaite import api
 
 Functional Helpers::
 
@@ -38,7 +38,7 @@ Functional Helpers::
 
 Variables::
 
-    >>> portal = self.getPortal()
+    >>> portal = self.portal
     >>> portal_url = portal.absolute_url()
     >>> bika_setup = portal.bika_setup
     >>> bika_setup_url = portal_url + "/bika_setup"
@@ -60,4 +60,4 @@ The version route should be visible to unauthenticated users::
 
     >>> browser.open(api_base_url + "/version")
     >>> browser.contents
-    '{"url": "http://nohost/plone/@@API/v2/version", "date": "...", "version": ..., "_runtime": ...}'
+    '{"url": "http://nohost/plone/@@API/senaite/v1/version", "date": "...", "version": ..., "_runtime": ...}'

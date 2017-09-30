@@ -8,10 +8,10 @@ from DateTime import DateTime
 from AccessControl import Unauthorized
 from Products.Archetypes.utils import mapply
 
-from senaite.lims import logger
-from senaite.lims.jsonapi import api
-from senaite.lims.jsonapi import underscore as u
-from senaite.lims.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi import api
+from senaite.jsonapi import logger
+from senaite.jsonapi import underscore as u
+from senaite.jsonapi.interfaces import IFieldManager
 
 
 class ZopeSchemaFieldManager(object):

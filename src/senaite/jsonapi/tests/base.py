@@ -5,8 +5,12 @@ import unittest2 as unittest
 from plone.testing import z2
 
 from plone.app.testing import setRoles
-from plone.app.testing import applyProfile
+# from plone.app.testing import applyProfile
 from plone.app.testing import TEST_USER_ID
+from plone.app.testing import TEST_USER_NAME
+from plone.app.testing import TEST_USER_PASSWORD
+# from plone.app.testing import SITE_OWNER_NAME
+# from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.app.testing import PLONE_FIXTURE
 from plone.app.testing import PloneSandboxLayer
 from plone.app.testing import FunctionalTesting
@@ -24,18 +28,18 @@ class SimpleTestLayer(PloneSandboxLayer):
         super(SimpleTestLayer, self).setUpZope(app, configurationContext)
 
         # Load ZCML
-        import senaite.lims
+        import senaite.jsonapi
 
-        self.loadZCML(package=senaite.lims)
+        self.loadZCML(package=senaite.jsonapi)
 
         # Install product and call its initialize() function
-        z2.installProduct(app, 'senaite.lims')
+        z2.installProduct(app, 'senaite.jsonapi')
 
     def setUpPloneSite(self, portal):
         super(SimpleTestLayer, self).setUpPloneSite(portal)
 
         # Apply Setup Profile (portal_quickinstaller)
-        applyProfile(portal, 'senaite.lims:default')
+        # applyProfile(portal, 'senaite.jsonapi:default')
 
 
 class FunctionalTestLayer(SimpleTestLayer):
@@ -56,7 +60,7 @@ class FunctionalTestLayer(SimpleTestLayer):
 SIMPLE_FIXTURE = SimpleTestLayer()
 SIMPLE_TESTING = FunctionalTesting(
     bases=(SIMPLE_FIXTURE, ),
-    name="senaite.lims:SimpleTesting"
+    name="senaite.jsonapi:SimpleTesting"
 )
 
 ###
@@ -66,7 +70,7 @@ SIMPLE_TESTING = FunctionalTesting(
 FUNCTIONAL_FIXTURE = FunctionalTestLayer()
 FUNCTIONAL_TESTING = FunctionalTesting(
     bases=(FUNCTIONAL_FIXTURE, ),
-    name="senaite.lims:FunctionalTesting"
+    name="senaite.jsonapi:FunctionalTesting"
 )
 
 
@@ -81,6 +85,19 @@ class SimpleTestCase(unittest.TestCase):
         self.request = self.layer['request']
         self.request['ACTUAL_URL'] = self.portal.absolute_url()
         setRoles(self.portal, TEST_USER_ID, ['LabManager', 'Manager'])
+
+    def getBrowser(self, login=True):
+        """Instantiate and return a testbrowser for convenience """
+        browser = z2.Browser(self.portal)
+        browser.addHeader('Accept-Language', 'en-US')
+        browser.handleErrors = False
+        if login:
+            browser.open(self.portal.absolute_url() + "/login_form")
+            browser.getControl(name='__ac_name').value = TEST_USER_NAME
+            browser.getControl(name='__ac_password').value = TEST_USER_PASSWORD
+            browser.getControl(name='submit').click()
+            self.assertTrue('You are now logged in' in browser.contents)
+        return browser
 
 
 class FunctionalTestCase(unittest.TestCase):

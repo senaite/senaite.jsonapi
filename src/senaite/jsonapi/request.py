@@ -16,8 +16,8 @@ except (pkg_resources.DistributionNotFound, ImportError):
 else:
     HAS_PLONE_PROTECT = True
 
-from senaite.lims import logger
-from senaite.lims.jsonapi import underscore as _
+from senaite.jsonapi import logger
+from senaite.jsonapi import underscore as _
 
 
 # These values evaluate to True

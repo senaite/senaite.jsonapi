@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from senaite.lims.jsonapi import api
-from senaite.lims.jsonapi.v1 import add_route
-from senaite.lims.jsonapi.exceptions import APIError
+from senaite.jsonapi import api
+from senaite.jsonapi.v1 import add_route
+from senaite.jsonapi.exceptions import APIError
 
 ACTIONS = "create,update,delete"
 
 
 # /<resource (portal_type)>
 @add_route("/<string:resource>",
-           "senaite.lims.jsonapi.v1.get", methods=["GET"])
+           "senaite.jsonapi.v1.get", methods=["GET"])
 #
 # /<resource (portal_type)>/<uid>
 @add_route("/<string:resource>/<string(maxlength=32):uid>",
-           "senaite.lims.jsonapi.v1.get", methods=["GET"])
+           "senaite.jsonapi.v1.get", methods=["GET"])
 def get(context, request, resource=None, uid=None):
     """GET
     """
@@ -24,7 +24,7 @@ def get(context, request, resource=None, uid=None):
     portal_type = api.resource_to_portal_type(resource)
     if portal_type is None:
         raise APIError(404, "Not Found")
-    return api.get_batched(portal_type=portal_type, uid=uid, endpoint="senaite.lims.jsonapi.v1.get")
+    return api.get_batched(portal_type=portal_type, uid=uid, endpoint="senaite.jsonapi.v1.get")
 
 
 # http://werkzeug.pocoo.org/docs/0.11/routing/#builtin-converters
@@ -32,19 +32,19 @@ def get(context, request, resource=None, uid=None):
 #
 # /<uid>
 @add_route("/<any(" + ACTIONS + "):action>",
-           "senaite.lims.jsonapi.v1.action", methods=["POST"])
+           "senaite.jsonapi.v1.action", methods=["POST"])
 #
 # /<action (create,update,delete)>/<uid>
 @add_route("/<any(" + ACTIONS + "):action>/<string(maxlength=32):uid>",
-           "senaite.lims.jsonapi.v1.action", methods=["POST"])
+           "senaite.jsonapi.v1.action", methods=["POST"])
 #
 # /<resource (portal_type)>/<action (create,update,delete)>
 @add_route("/<string:resource>/<any(" + ACTIONS + "):action>",
-           "senaite.lims.jsonapi.v1.action", methods=["POST"])
+           "senaite.jsonapi.v1.action", methods=["POST"])
 #
 # /<resource (portal_type)>/<action (create,update,delete)>/<uid>
 @add_route("/<string:resource>/<any(" + ACTIONS + "):action>/<string(maxlength=32):uid>",
-           "senaite.lims.jsonapi.v1.action", methods=["POST"])
+           "senaite.jsonapi.v1.action", methods=["POST"])
 def action(context, request, action=None, resource=None, uid=None):
     """Various HTTP POST actions
 
@@ -81,12 +81,12 @@ def action(context, request, action=None, resource=None, uid=None):
     return {
         "count": len(items),
         "items": items,
-        "url": api.url_for("senaite.lims.jsonapi.v1.action", action=action),
+        "url": api.url_for("senaite.jsonapi.v1.action", action=action),
     }
 
 
 @add_route("/search",
-           "senaite.lims.jsonapi.v1.search", methods=["GET"])
+           "senaite.jsonapi.v1.search", methods=["GET"])
 def search(context, request):
     """Generic search route
 

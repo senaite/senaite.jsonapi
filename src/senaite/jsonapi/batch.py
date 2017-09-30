@@ -4,8 +4,8 @@ import urllib
 
 from zope import interface
 
-from senaite.lims.jsonapi import request as req
-from senaite.lims.jsonapi.interfaces import IBatch
+from senaite.jsonapi import request as req
+from senaite.jsonapi.interfaces import IBatch
 
 
 class Batch(object):

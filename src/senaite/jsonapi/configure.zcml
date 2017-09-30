@@ -2,7 +2,10 @@
     xmlns="http://namespaces.zope.org/zope"
     xmlns:browser="http://namespaces.zope.org/browser"
     xmlns:zcml="http://namespaces.zope.org/zcml"
-    i18n_domain="senaite">
+    i18n_domain="senaite.jsonapi">
+
+  <!-- Package Includes -->
+  <include package=".v1"/>
 
   <!-- CATALOG
        Unified interface to one or more Portal Catalog tools.

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import logging
+
 from plone.jsonapi.core import router
 
-from senaite.lims import logger
+logger = logging.getLogger("senaite.jsonapi")
 
 
 def add_route(route, endpoint=None, **kw):
@@ -20,7 +22,7 @@ def add_route(route, endpoint=None, **kw):
     return wrapper
 
 
-def url_for(endpoint, default="senaite.lims.jsonapi.get", **values):
+def url_for(endpoint, default="senaite.jsonapi.get", **values):
     """Looks up the API URL for the given endpoint
 
     :param endpoint: The name of the registered route (aka endpoint)

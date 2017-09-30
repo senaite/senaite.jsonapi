@@ -2,12 +2,12 @@
 
 import pkgutil
 
-from senaite.lims import logger
-from senaite.lims.jsonapi.v1 import routes
-from senaite.lims.jsonapi import add_route as add_senaite_route
+from senaite.jsonapi import logger
+from senaite.jsonapi.v1 import routes
+from senaite.jsonapi import add_route as add_senaite_route
 
 __version__ = 1
-__date__ = "2017-08-08"
+__date__ = "2017-10-01"
 
 BASE_URL = "/senaite/v1"
 

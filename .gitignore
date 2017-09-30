@@ -4,3 +4,6 @@ eggs
 src/bika.lims
 src/senaite.api
 .mr.developer.cfg
+.installed.cfg
+parts/
+var

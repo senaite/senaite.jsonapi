@@ -9,10 +9,10 @@ from AccessControl import getSecurityManager
 
 from Products.CMFCore import permissions
 
-from senaite.lims import logger
-from senaite.lims.jsonapi import api
-from senaite.lims.jsonapi.interfaces import IDataManager
-from senaite.lims.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi import logger
+from senaite.jsonapi import api
+from senaite.jsonapi.interfaces import IDataManager
+from senaite.jsonapi.interfaces import IFieldManager
 
 
 class BaseDataManager(object):

@@ -10,11 +10,11 @@ from Products.CMFCore.interfaces import ISiteRoot
 from Products.ZCatalog.interfaces import ICatalogBrain
 from Products.ATContentTypes.interfaces import IATContentType
 
-from senaite.lims import logger
-from senaite.lims.jsonapi import api
-from senaite.lims.jsonapi.interfaces import IInfo
-from senaite.lims.jsonapi.interfaces import ICatalog
-from senaite.lims.jsonapi.interfaces import IDataManager
+from senaite.jsonapi import api
+from senaite.jsonapi import logger
+from senaite.jsonapi.interfaces import IInfo
+from senaite.jsonapi.interfaces import ICatalog
+from senaite.jsonapi.interfaces import IDataManager
 
 _marker = object
 

@@ -15,23 +15,24 @@ from plone import api as ploneapi
 from plone.jsonapi.core import router
 from plone.behavior.interfaces import IBehaviorAssignable
 
-from senaite.lims import api
-from senaite.lims import logger
-from senaite.lims.jsonapi import config
-from senaite.lims.jsonapi import request as req
-from senaite.lims.jsonapi import underscore as u
-from senaite.lims.jsonapi.interfaces import IInfo
-from senaite.lims.jsonapi.interfaces import IBatch
-from senaite.lims.jsonapi.interfaces import ICatalog
-from senaite.lims.jsonapi.exceptions import APIError
-from senaite.lims.jsonapi.interfaces import IDataManager
-from senaite.lims.jsonapi.interfaces import IFieldManager
-from senaite.lims.jsonapi.interfaces import ICatalogQuery
+from senaite import api
+from senaite.jsonapi import logger
+from senaite.jsonapi import config
+from senaite.jsonapi import request as req
+from senaite.jsonapi import underscore as u
+from senaite.jsonapi.interfaces import IInfo
+from senaite.jsonapi.interfaces import IBatch
+from senaite.jsonapi.interfaces import ICatalog
+from senaite.jsonapi.exceptions import APIError
+from senaite.jsonapi.interfaces import IDataManager
+from senaite.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi.interfaces import ICatalogQuery
+
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 
 _marker = object()
 
-DEFAULT_ENDPOINT = "senaite.lims.jsonapi.v1.get"
+DEFAULT_ENDPOINT = "senaite.jsonapi.v1.get"
 
 
 # -----------------------------------------------------------------------------
@@ -535,37 +536,37 @@ def get_search_results(portal_type=None, uid=None, **kw):
 
 
 def get_portal():
-    """Proxy to senaite.lims.api.get_portal
+    """Proxy to senaite.api.get_portal
     """
     return api.get_portal()
 
 
 def get_tool(name, default=_marker):
-    """Proxy to senaite.lims.api.get_tool
+    """Proxy to senaite.api.get_tool
     """
     return api.get_tool(name, default)
 
 
 def get_object(brain_or_object):
-    """Proxy to senaite.lims.api.get_object
+    """Proxy to senaite.api.get_object
     """
     return api.get_object(brain_or_object)
 
 
 def is_brain(brain_or_object):
-    """Proxy to senaite.lims.api.is_brain
+    """Proxy to senaite.api.is_brain
     """
     return api.is_brain(brain_or_object)
 
 
 def is_at_content(brain_or_object):
-    """Proxy to senaite.lims.api.is_at_content
+    """Proxy to senaite.api.is_at_content
     """
     return api.is_at_content(brain_or_object)
 
 
 def is_dexterity_content(brain_or_object):
-    """Proxy to senaite.lims.api.is_dexterity_content
+    """Proxy to senaite.api.is_dexterity_content
     """
     return api.is_dexterity_content(brain_or_object)
 
@@ -641,13 +642,13 @@ def get_behaviors(brain_or_object):
 
 
 def is_root(brain_or_object):
-    """Proxy to senaite.lims.api.is_portal
+    """Proxy to senaite.api.is_portal
     """
     return api.is_portal(brain_or_object)
 
 
 def is_folderish(brain_or_object):
-    """Proxy to senaite.lims.api.is_folderish
+    """Proxy to senaite.api.is_folderish
     """
     return api.is_folderish(brain_or_object)
 
@@ -831,49 +832,49 @@ def get_parent(brain_or_object):
 
 
 def get_object_by_uid(uid, default=None):
-    """Proxy to senaite.lims.api.get_object_by_uid
+    """Proxy to senaite.api.get_object_by_uid
     """
     return api.get_object_by_uid(uid, default)
 
 
 def get_path(brain_or_object):
-    """Proxy to senaite.lims.api.get_path
+    """Proxy to senaite.api.get_path
     """
     return api.get_path(brain_or_object)
 
 
 def get_parent_path(brain_or_object):
-    """Proxy to senaite.lims.api.get_parent_path
+    """Proxy to senaite.api.get_parent_path
     """
     return api.get_parent_path(brain_or_object)
 
 
 def get_id(brain_or_object):
-    """Proxy to senaite.lims.api.get_id
+    """Proxy to senaite.api.get_id
     """
     return api.get_id(brain_or_object)
 
 
 def get_uid(brain_or_object):
-    """Proxy to senaite.lims.api.get_uid
+    """Proxy to senaite.api.get_uid
     """
     return api.get_uid(brain_or_object)
 
 
 def get_url(brain_or_object):
-    """Proxy to senaite.lims.api.get_url
+    """Proxy to senaite.api.get_url
     """
     return api.get_url(brain_or_object)
 
 
 def get_portal_type(brain_or_object):
-    """Proxy to senaite.lims.api.get_portal_type
+    """Proxy to senaite.api.get_portal_type
     """
     return api.get_portal_type(brain_or_object)
 
 
 def do_transition_for(brain_or_object, transition):
-    """Proxy to senaite.lims.api.do_transition_for
+    """Proxy to senaite.api.do_transition_for
     """
     return api.do_transition_for(brain_or_object, transition)
 

@@ -2,10 +2,10 @@
 
 from plone import api as ploneapi
 
-from senaite.lims.jsonapi import api
-from senaite.lims.jsonapi import logger
-from senaite.lims.jsonapi import request as req
-from senaite.lims.jsonapi.v1 import add_route
+from senaite.jsonapi import api
+from senaite.jsonapi import logger
+from senaite.jsonapi import request as req
+from senaite.jsonapi.v1 import add_route
 
 
 def get_user_info(user):
@@ -35,7 +35,7 @@ def get_user_info(user):
         "roles": user.getRoles(),
         "groups": pu.getGroups(),
         "authenticated": current == user,
-        "api_url": api.url_for("senaite.lims.jsonapi.v1.users", username=user.getId()),
+        "api_url": api.url_for("senaite.jsonapi.v1.users", username=user.getId()),
     }
 
     for k, v in api.get_user_properties(user).items():
@@ -53,8 +53,8 @@ def get_user_info(user):
 # API ROUTES
 # -----------------------------------------------------------------------------
 
-@add_route("/users", "senaite.lims.jsonapi.v1.users", methods=["GET"])
-@add_route("/users/<string:username>", "senaite.lims.jsonapi.v1.users", methods=["GET"])
+@add_route("/users", "senaite.jsonapi.v1.users", methods=["GET"])
+@add_route("/users/<string:username>", "senaite.jsonapi.v1.users", methods=["GET"])
 def get(context, request, username=None):
     """Plone users route
     """
@@ -92,8 +92,8 @@ def get(context, request, username=None):
     }
 
 
-@add_route("/auth", "senaite.lims.jsonapi.v1.auth", methods=["GET"])
-@add_route("/users/auth", "senaite.lims.jsonapi.v1.users.auth", methods=["GET"])
+@add_route("/auth", "senaite.jsonapi.v1.auth", methods=["GET"])
+@add_route("/users/auth", "senaite.jsonapi.v1.users.auth", methods=["GET"])
 def auth(context, request):
     """ Basic Authentication
     """
@@ -107,8 +107,8 @@ def auth(context, request):
     return {}
 
 
-@add_route("/login", "senaite.lims.jsonapi.v1.login", methods=["GET", "POST"])
-@add_route("/users/login", "senaite.lims.jsonapi.v1.users.login", methods=["GET", "POST"])
+@add_route("/login", "senaite.jsonapi.v1.login", methods=["GET", "POST"])
+@add_route("/users/login", "senaite.jsonapi.v1.users.login", methods=["GET", "POST"])
 def login(context, request):
     """ Login Route
 
@@ -142,8 +142,8 @@ def login(context, request):
     return get(context, request, username=__ac_name)
 
 
-@add_route("/logout", "senaite.lims.jsonapi.v1.logout", methods=["GET"])
-@add_route("/users/logout", "senaite.lims.jsonapi.v1.users.logout", methods=["GET"])
+@add_route("/logout", "senaite.jsonapi.v1.logout", methods=["GET"])
+@add_route("/users/logout", "senaite.jsonapi.v1.users.logout", methods=["GET"])
 def logout(context, request):
     """ Logout Route
     """
@@ -153,6 +153,6 @@ def logout(context, request):
     acl_users.logout(request)
 
     return {
-        "url": api.url_for("senaite.lims.jsonapi.v1.users"),
+        "url": api.url_for("senaite.jsonapi.v1.users"),
         "success": True
     }

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from senaite.lims.jsonapi import request as req
+from senaite.jsonapi import request as req
 
 
 class APIError(Exception):

@@ -14,7 +14,7 @@ setup(
                      "\n\n" +
                      "Authors and maintainers\n" +
                      "-----------------------\n" +
-                     "- RIDING BYTES, http://ridingbytes.com",
+                     "- Ramon Bartl (RIDING BYTES) <rb@ridingbytes.com>",
     # Get more strings from
     # http://pypi.python.org/pypi?:action=list_classifiers
     classifiers=[
@@ -34,8 +34,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'setuptools',
-        'plone.api',
-        'senaite.api',
+        'senaite.api>=1.0.0',
         'bika.lims>=3.2.1rc3',
     ],
     extras_require={
