@@ -7,6 +7,7 @@
       </div>
     </a>
   </h1>
+  <h1>SENAITE JSON API</h1>
 
   <p>The JSON API provides a RESTful JSON interface to SENAITE LIMS.</p>
 
