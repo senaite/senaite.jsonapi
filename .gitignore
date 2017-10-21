@@ -7,3 +7,5 @@ src/senaite.api
 .installed.cfg
 parts/
 var
+*.pyc
+*egg-info
