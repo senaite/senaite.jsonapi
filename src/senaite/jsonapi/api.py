@@ -131,6 +131,16 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
     return make_items_for(results, endpoint=endpoint)
 
 
+# PATCH (alias for update_items)
+def patch_items(portal_type=None, uid=None, endpoint=None, **kw):
+    return update_items(portal_type=portal_type, uid=uid, endpoint=endpoint, **kw)
+
+
+# PUT (alias for update_items)
+def put_items(portal_type=None, uid=None, endpoint=None, **kw):
+    return update_items(portal_type=portal_type, uid=uid, endpoint=endpoint, **kw)
+
+
 # UPDATE
 def update_items(portal_type=None, uid=None, endpoint=None, **kw):
     """ update items
@@ -251,6 +261,11 @@ def get_info(brain_or_object, endpoint=None, complete=False):
     :returns: Data mapping for the object/catalog brain
     :rtype: dict
     """
+
+    # also extract the brain data for objects
+    if not is_brain(brain_or_object):
+        brain_or_object = get_brain(brain_or_object)
+        complete = True
 
     # extract the data from the initial object with the proper adapter
     info = IInfo(brain_or_object).to_dict()
@@ -553,6 +568,30 @@ def get_object(brain_or_object):
     return api.get_object(brain_or_object)
 
 
+def get_brain(brain_or_object):
+    """Return a ZCatalog brain for the object
+
+    :param brain_or_object: A single catalog brain or content object
+    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
+    :returns: True if the object is a catalog brain
+    :rtype: bool
+    """
+    if is_brain(brain_or_object):
+        return brain_or_object
+    if is_root(brain_or_object):
+        return brain_or_object
+
+    # fetch the brain by UID
+    uid = get_uid(brain_or_object)
+    uc = get_tool("uid_catalog")
+    results = uc({"UID": uid})
+    if len(results) == 0:
+        fail(500, "Object with UID={} not in portal_catalog".format(uid))
+    if len(results) > 1:
+        fail(500, "More than one object with UID={} found in portal_catalog".format(uid))
+    return results[0]
+
+
 def is_brain(brain_or_object):
     """Proxy to senaite.api.is_brain
     """
@@ -726,13 +765,13 @@ def to_json_value(obj, fieldname, value=_marker, default=None):
     if isinstance(value, ImplicitAcquisitionWrapper):
         return get_url_info(value)
 
-    # convert dates
-    if is_date(value):
-        return to_iso_date(value)
-
     # check if the value is callable
     if callable(value):
         value = value()
+
+    # convert dates
+    if is_date(value):
+        return to_iso_date(value)
 
     # check if the value is JSON serializable
     if not is_json_serializable(value):
@@ -1064,8 +1103,11 @@ def get_object_by_path(path):
     """
 
     # nothing to do here
-    if not path:
+    if not isinstance(path, basestring):
         return None
+
+    # path must be a string
+    path = str(path)
 
     portal = get_portal()
     portal_path = get_path(portal)

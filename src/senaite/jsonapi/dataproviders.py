@@ -53,9 +53,6 @@ class Base(object):
 
         # 2. include custom key-value pairs listed in the mapping dictionary
         for key, attr in self.attributes.iteritems():
-            # key already extracted in the first step
-            if data.get(key, _marker) is not _marker:
-                continue  # don't overwrite
             if key in self.ignore:
                 continue  # skip ignores
             # fetch the mapped attribute

@@ -14,9 +14,18 @@ ACTIONS = "create,update,delete"
 # /<resource (portal_type)>/<uid>
 @add_route("/<string:resource>/<string(maxlength=32):uid>",
            "senaite.jsonapi.v1.get", methods=["GET"])
+@add_route("/<string:resource>/<string(length=32):uid>",
+           "senaite.jsonapi.v1.get", methods=["GET"])
+@add_route("/<string(length=32):uid>",
+           "senaite.jsonapi.v1.get", methods=["GET"])
 def get(context, request, resource=None, uid=None):
     """GET
     """
+
+    # We have a UID, return the record
+    if uid and not resource:
+        return api.get_record(uid)
+
     # we have a UID as resource, return the record
     if api.is_uid(resource):
         return api.get_record(resource)
@@ -24,50 +33,33 @@ def get(context, request, resource=None, uid=None):
     portal_type = api.resource_to_portal_type(resource)
     if portal_type is None:
         raise APIError(404, "Not Found")
+
     return api.get_batched(portal_type=portal_type, uid=uid, endpoint="senaite.jsonapi.v1.get")
 
 
 # http://werkzeug.pocoo.org/docs/0.11/routing/#builtin-converters
 # http://werkzeug.pocoo.org/docs/0.11/routing/#custom-converters
-#
-# /<uid>
 @add_route("/<any(" + ACTIONS + "):action>",
            "senaite.jsonapi.v1.action", methods=["POST"])
-#
-# /<action (create,update,delete)>/<uid>
+@add_route("/<string:resource>",
+           "senaite.jsonapi.v1.action", methods=["POST"])
+@add_route("/<string:resource>/<string(maxlength=32):uid>",
+           "senaite.jsonapi.v1.action", methods=["POST"])
 @add_route("/<any(" + ACTIONS + "):action>/<string(maxlength=32):uid>",
            "senaite.jsonapi.v1.action", methods=["POST"])
-#
-# /<resource (portal_type)>/<action (create,update,delete)>
+@add_route("/<string(length=32):uid>",
+           "senaite.jsonapi.v1.action", methods=["POST"])
 @add_route("/<string:resource>/<any(" + ACTIONS + "):action>",
            "senaite.jsonapi.v1.action", methods=["POST"])
-#
-# /<resource (portal_type)>/<action (create,update,delete)>/<uid>
 @add_route("/<string:resource>/<any(" + ACTIONS + "):action>/<string(maxlength=32):uid>",
            "senaite.jsonapi.v1.action", methods=["POST"])
 def action(context, request, action=None, resource=None, uid=None):
     """Various HTTP POST actions
-
-    Case 1: /<uid>
-    -> Return the full object immediately in the root of the JSON API response
-    <Senaite-Site>/@@API/senaite/v1/<uid>
-
-    Case 2: /<action>/<uid>
-    -> The actions (update, delete) will performed on the object identified by <uid>
-    -> The actions (create) will use the <uid> as the parent folder
-    <Senaite-Site>/@@API/senaite/v1/<action>/<uid>
-
-    Case 3: <resource>/<action>
-    -> The "target" object will be located by a location given in the request body (uid, path, parent_path + id)
-    -> The actions (cut, copy, update, delete) will performed on the target object
-    -> The actions (create) will use the target object as the container
-    <Senaite-Site>/@@API/senaite/v1/<resource>/<action>
-
-    Case 4: <resource>/<action>/<uid>
-    -> The actions (cut, copy, update, delete) will performed on the object identified by <uid>
-    -> The actions (create) will use the <uid> as the parent folder
-    <Senaite-Site>/@@API/senaite/v1/<resource>/<action>
     """
+
+    # allow to set the method via the header
+    if action is None:
+        action = request.get_header("HTTP_X_HTTP_METHOD_OVERRIDE", "CREATE").lower()
 
     # Fetch and call the action function of the API
     func_name = "{}_items".format(action)
@@ -88,7 +80,7 @@ def action(context, request, action=None, resource=None, uid=None):
 @add_route("/search",
            "senaite.jsonapi.v1.search", methods=["GET"])
 def search(context, request):
-    """Generic search route
+    """Generic search add_route
 
     <Plonesite>/@@API/v2/search -> returns all contents of the portal
     <Plonesite>/@@API/v2/search?portal_type=Folder -> returns only folders

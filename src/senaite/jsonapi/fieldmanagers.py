@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import dateutil
 import mimetypes
 
 from zope import interface
+from zope.schema._bootstrapinterfaces import WrongType
 
 from DateTime import DateTime
 from AccessControl import Unauthorized
@@ -50,11 +52,21 @@ class ZopeSchemaFieldManager(object):
         if self.field.readonly:
             raise Unauthorized("Field is read only")
 
-        # Validate
-        self.field.validate(value)
+        fieldname = self.get_field_name()
+        # id fields take only strings
+        if fieldname == "id":
+            value = str(value)
 
-        # TODO: Check security on the field level
-        return self.field.set(instance, value)
+        try:
+            # Validate
+            self.field.validate(value)
+
+            # TODO: Check security on the field level
+            return self.field.set(instance, value)
+        except WrongType:
+            logger.warn("WrongType: Field={} Value={}".format(self.field, value))
+        except:
+            logger.warn("Unknown Exception: Field={} Value={}".format(self.field, value))
 
     def _get(self, instance, **kw):
         """Get the value of the field
@@ -64,6 +76,28 @@ class ZopeSchemaFieldManager(object):
 
         # TODO: Check security on the field level
         return self.field.get(instance)
+
+
+class DatetimeFieldManager(ZopeSchemaFieldManager):
+    """Adapter to get/set the value of Datetime Fields
+    """
+    interface.implements(IFieldManager)
+
+    def set(self, instance, value, **kw):
+        if isinstance(value, basestring):
+            value = dateutil.parser.parse(value)
+        self.field.validate(value)
+        return self.field.set(instance, value)
+
+    def json_data(self, instance, default=None):
+        """Get a JSON compatible value
+        """
+        value = self.get(instance)
+        if not value:
+            return ""
+        if callable(value):
+            value = value()
+        return api.to_iso_date(value, default=default)
 
 
 class RichTextFieldManager(ZopeSchemaFieldManager):

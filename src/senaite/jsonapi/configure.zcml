@@ -177,6 +177,12 @@
       factory=".fieldmanagers.NamedFileFieldManager"
       />
 
+  <!-- Adapter for Datetime Fields -->
+  <adapter
+      for="zope.schema.interfaces.IDatetime"
+      factory=".fieldmanagers.DatetimeFieldManager"
+      />
+
   <!-- Adapter for Named Image Fields -->
   <adapter
       for="plone.namedfile.interfaces.INamedImageField"
