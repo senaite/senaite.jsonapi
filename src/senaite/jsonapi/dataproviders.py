@@ -156,6 +156,12 @@ class ZCDataProvider(Base):
             'meta_type',
         ]
 
+    def _x_get_parent_path(self):
+        """Generate the parent path
+        """
+        path = self.context.getPath().split("/")
+        return "/".join(path[:-1])
+
 
 class DexterityDataProvider(Base):
     """ Data Provider for Dexterity based content types
