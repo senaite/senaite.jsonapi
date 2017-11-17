@@ -50,7 +50,7 @@ class Base(object):
         """Generate the physical path
         """
         path = self.context.getPhysicalPath()
-        return "/".join(path[:-1])
+        return "/".join(path)
 
     def _x_get_parent_path(self):
         """Generate the parent path
