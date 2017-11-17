@@ -42,7 +42,21 @@ class Base(object):
             "portal_type": "portal_type",
             "tags": "Subject",
             "author": "Creator",
+            "path": "_x_get_physical_path",
+            "parent_path": "_x_get_parent_path",
         }
+
+    def _x_get_physical_path(self):
+        """Generate the physical path
+        """
+        path = self.context.getPhysicalPath()
+        return "/".join(path[:-1])
+
+    def _x_get_parent_path(self):
+        """Generate the parent path
+        """
+        path = self.context.getPhysicalPath()
+        return "/".join(path[:-1])
 
     def to_dict(self):
         """ extract the data of the content and return it as a dictionary
@@ -57,6 +71,8 @@ class Base(object):
                 continue  # skip ignores
             # fetch the mapped attribute
             value = getattr(self.context, attr, None)
+            if value is None:
+                value = getattr(self, attr, None)
             # handle function calls
             if callable(value):
                 value = value()

@@ -1,3 +1,9 @@
+1.1.1 (unreleased)
+------------------
+
+- Added `parent_path` to response data
+- Allow custom methods as attributes in adapter
+
 1.1.0 (2017-11-04)
 ------------------
 
