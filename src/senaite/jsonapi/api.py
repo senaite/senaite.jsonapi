@@ -265,6 +265,9 @@ def get_info(brain_or_object, endpoint=None, complete=False):
     # also extract the brain data for objects
     if not is_brain(brain_or_object):
         brain_or_object = get_brain(brain_or_object)
+        if brain_or_object is None:
+            logger.warn("Couldn't find/fetch brain of {}".format(brain_or_object))
+            return {}
         complete = True
 
     # extract the data from the initial object with the proper adapter
@@ -584,9 +587,9 @@ def get_brain(brain_or_object):
     # fetch the brain by UID
     uid = get_uid(brain_or_object)
     uc = get_tool("uid_catalog")
-    results = uc({"UID": uid})
+    results = uc({"UID": uid}) or search(query={'UID': uid})
     if len(results) == 0:
-        fail(500, "Object with UID={} not in portal_catalog".format(uid))
+        return None
     if len(results) > 1:
         fail(500, "More than one object with UID={} found in portal_catalog".format(uid))
     return results[0]
@@ -844,8 +847,9 @@ def get_contents(brain_or_object):
     # Returning objects (not brains) to make sure we do not miss any child.
     # It may happen when children belong to different catalogs and not
     # found on 'portal_catalog'.
-    return api.get_object(brain_or_object).objectValues()
-
+    ret = filter(lambda obj: api.is_object(obj),
+                  api.get_object(brain_or_object).objectValues())
+    return ret
 
 def get_parent(brain_or_object):
     """Locate the parent object of the content/catalog brain
