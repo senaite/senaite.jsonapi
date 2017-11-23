@@ -828,8 +828,8 @@ def to_iso_date(date, default=None):
     return date.isoformat()
 
 
-def get_contents(brain_or_object, depth=1):
-    """Lookup folder contents for this object
+def get_contents(brain_or_object):
+    """Lookup folder contents for this object.
 
     :param brain_or_object: A single catalog brain or content object
     :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
@@ -841,14 +841,10 @@ def get_contents(brain_or_object, depth=1):
     if not is_folderish(brain_or_object):
         return []
 
-    query = {
-        "path": {
-            "query": get_path(brain_or_object),
-            "depth": depth,
-        }
-    }
-
-    return search(query=query)
+    # Returning objects (not brains) to make sure we do not miss any child.
+    # It may happen when children belong to different catalogs and not
+    # found on 'portal_catalog'.
+    return api.get_object(brain_or_object).objectValues()
 
 
 def get_parent(brain_or_object):
