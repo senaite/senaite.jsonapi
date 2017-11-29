@@ -517,6 +517,7 @@ class ARAnalysesFieldManager(ATFieldManager):
         assert type(value) in (list, tuple)
         new_values = []
         for item in value:
-            new_values.append(item.get("local_uid"))
+            ans = api.get_object_by_uid(item.get("local_uid"))
+            new_values.append(ans)
 
         self._set(instance, new_values, **kw)
