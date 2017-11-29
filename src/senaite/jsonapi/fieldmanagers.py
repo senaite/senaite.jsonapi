@@ -504,3 +504,19 @@ class ARAnalysesFieldManager(ATFieldManager):
         value = self.get(instance)
         out = map(api.get_url_info, value)
         return out or default
+
+    def set(self, instance, value, **kw):
+        """
+        The Setter!
+        :param instance:
+        :param value: list of dictionaries where AS UID can be found.
+        :param kw:
+        :return:
+        """
+
+        assert type(value) in (list, tuple)
+        new_values = []
+        for item in value:
+            new_values.append(item.get("local_uid"))
+
+        self._set(instance, new_values, **kw)
