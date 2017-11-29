@@ -472,7 +472,7 @@ class ProxyFieldManager(ATFieldManager):
     def get_proxy_object(self, instance):
         """Get the proxy object of the field
         """
-        return self.field._get_proxy(instance)
+        return self.field.get_proxy(instance)
 
     def get_proxy_field(self, instance):
         """Get the proxied field of this field
