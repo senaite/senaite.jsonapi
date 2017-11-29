@@ -474,10 +474,12 @@ class ReferenceFieldManager(ATFieldManager):
             ref.append(api.get_object_by_path(value))
 
         # Handle non multi valued fields
-        if not self.multi_valued and len(ref) > 1:
-            raise ValueError("Multiple values given for single valued field {}"
-                             .format(self.field))
-
+        if not self.multi_valued:
+            if len(ref) > 1:
+                raise ValueError("Multiple values given for single valued "
+                                 "field {}".format(self.field))
+            else:
+                ref = ref[0]
         return self._set(instance, ref, **kw)
 
     def json_data(self, instance, default=None):
@@ -504,7 +506,7 @@ class ProxyFieldManager(ATFieldManager):
     def get_proxy_object(self, instance):
         """Get the proxy object of the field
         """
-        return self.field._get_proxy(instance)
+        return self.field.get_proxy(instance)
 
     def get_proxy_field(self, instance):
         """Get the proxied field of this field
