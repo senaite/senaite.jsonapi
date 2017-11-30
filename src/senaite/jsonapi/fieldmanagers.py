@@ -422,9 +422,15 @@ class ReferenceFieldManager(ATFieldManager):
 
                 # dict (catalog query)
                 if u.is_dict(item):
-                    results = api.search(portal_type=self.allowed_types, **item)
-                    objs = map(api.get_object, results)
-                    ref.extend(objs)
+                    # If there is UID of objects, just use it.
+                    uid = item.get('uid', None)
+                    if uid:
+                        obj = api.get_object_by_uid(uid)
+                        ref.append(obj)
+                    else:
+                        results = api.search(portal_type=self.allowed_types, **item)
+                        objs = map(api.get_object, results)
+                        ref.extend(objs)
                     continue
 
                 # Plain string
@@ -517,7 +523,7 @@ class ARAnalysesFieldManager(ATFieldManager):
         assert type(value) in (list, tuple)
         new_values = []
         for item in value:
-            ans = api.get_object_by_uid(item.get("local_uid"))
+            ans = api.get_object_by_uid(item.get("uid"))
             new_values.append(ans)
 
         self._set(instance, new_values, **kw)
