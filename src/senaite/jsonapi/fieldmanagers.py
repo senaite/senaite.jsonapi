@@ -513,17 +513,27 @@ class ARAnalysesFieldManager(ATFieldManager):
 
     def set(self, instance, value, **kw):
         """
-        The Setter!
-        :param instance:
-        :param value: list of dictionaries where AS UID can be found.
-        :param kw:
-        :return:
+        Set Analyses to an AR
+
+        :param instance: Analysis Request
+        :param value: Single AS UID or a list of dictionaries containing AS UIDs
+        :param kw: Additional keyword parameters passed to the field
         """
 
-        assert type(value) in (list, tuple)
-        new_values = []
-        for item in value:
-            ans = api.get_object_by_uid(item.get("uid"))
-            new_values.append(ans)
+        if not isinstance(value, (list, tuple)):
+            value = [value]
 
-        self._set(instance, new_values, **kw)
+        uids = []
+        for item in value:
+            uid = None
+            if isinstance(item, dict):
+                uid = item.get("uid")
+            if api.is_uid(value):
+                uid = item
+            if uid is None:
+                logger.warn("Could extract UID of value")
+                continue
+            uids.append(uid)
+
+        analyses = map(api.get_object_by_uid, uids)
+        self._set(instance, analyses, **kw)
