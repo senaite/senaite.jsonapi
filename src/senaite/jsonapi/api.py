@@ -1415,6 +1415,18 @@ def deactivate_object(brain_or_object):
         fail(401, "Not allowed to deactivate object '%s'" % obj.getId())
 
 
+def get_bika_registry_records():
+    """Get registry records associated with bika
+
+    :returns: Dictionary that maps the bika records found with its values
+    """
+    portal_reg = ploneapi.portal.get_tool(name="portal_registry")
+    bika_registers = {}
+    for record in portal_reg.records:
+        if "bika" in record.lower():
+            bika_registers[record] = api.get_registry_record(record)
+    return bika_registers
+
 # -----------------------------------------------------------------------------
 #   Batching Helpers
 # -----------------------------------------------------------------------------
