@@ -5,10 +5,10 @@ from senaite.jsonapi import request as req
 from senaite.jsonapi.v1 import add_route
 
 
-@add_route("/bika-config-registry", "senaite.jsonapi.v1.bika-config-registry", methods=["GET"])
-@add_route("/registry/bika-config-registry", "senaite.jsonapi.v1.registry.bika-config-registry", methods=["GET"])
+@add_route("/senaite-config-registry", "senaite.jsonapi.v1.senaite-config-registry", methods=["GET"])
+@add_route("/registry/senaite-config-registry", "senaite.jsonapi.v1.registry.senaite-config-registry", methods=["GET"])
 def get(context, request, username=None):
-    """Bika and Senaite configuration registry records route
+    """Senaite configuration registry records route
     """
     registry_records = api.get_registry_records_by_keyword("bika")
     registry_records.update(api.get_registry_records_by_keyword("senaite"))
