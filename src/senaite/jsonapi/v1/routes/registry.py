@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from plone import api as ploneapi
-
 from senaite.jsonapi import api
-from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi.v1 import add_route
 
@@ -11,9 +8,10 @@ from senaite.jsonapi.v1 import add_route
 @add_route("/bika-config-registry", "senaite.jsonapi.v1.bika-config-registry", methods=["GET"])
 @add_route("/registry/bika-config-registry", "senaite.jsonapi.v1.registry.bika-config-registry", methods=["GET"])
 def get(context, request, username=None):
-    """Bika configuration registry records route
+    """Bika and Senaite configuration registry records route
     """
-    registry_records = api.get_bika_registry_records()
+    registry_records = api.get_registry_records_by_keyword("bika")
+    registry_records.update(api.get_registry_records_by_keyword("senaite"))
 
     # Prepare batch
     size = req.get_batch_size()
