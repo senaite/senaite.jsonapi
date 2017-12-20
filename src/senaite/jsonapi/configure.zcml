@@ -143,6 +143,12 @@
       factory=".fieldmanagers.ReferenceFieldManager"
       />
 
+  <!-- Adapter for UIDReference Field -->
+  <adapter
+      for="bika.lims.interfaces.field.IUIDReferenceField"
+      factory=".fieldmanagers.UIDReferenceFieldManager"
+      />
+
 
   <!-- ZOPE SCHEMA FIELD MANAGERS
        Field level interface to get and set values and get a JSON compatible
