@@ -65,7 +65,7 @@ class ZopeSchemaFieldManager(object):
             return self.field.set(instance, value)
         except WrongType:
             logger.warn("WrongType: Field={} Value={}".format(self.field, value))
-        except:
+        except:  # noqa
             logger.warn("Unknown Exception: Field={} Value={}".format(self.field, value))
 
     def _get(self, instance, **kw):
@@ -456,9 +456,15 @@ class ReferenceFieldManager(ATFieldManager):
 
                 # dict (catalog query)
                 if u.is_dict(item):
-                    results = api.search(portal_type=self.allowed_types, **item)
-                    objs = map(api.get_object, results)
-                    ref.extend(objs)
+                    # If there is UID of objects, just use it.
+                    uid = item.get('uid', None)
+                    if uid:
+                        obj = api.get_object_by_uid(uid)
+                        ref.append(obj)
+                    else:
+                        results = api.search(portal_type=self.allowed_types, **item)
+                        objs = map(api.get_object, results)
+                        ref.extend(objs)
                     continue
 
                 # Plain string
@@ -538,3 +544,30 @@ class ARAnalysesFieldManager(ATFieldManager):
         value = self.get(instance)
         out = map(api.get_url_info, value)
         return out or default
+
+    def set(self, instance, value, **kw):
+        """
+        Set Analyses to an AR
+
+        :param instance: Analysis Request
+        :param value: Single AS UID or a list of dictionaries containing AS UIDs
+        :param kw: Additional keyword parameters passed to the field
+        """
+
+        if not isinstance(value, (list, tuple)):
+            value = [value]
+
+        uids = []
+        for item in value:
+            uid = None
+            if isinstance(item, dict):
+                uid = item.get("uid")
+            if api.is_uid(value):
+                uid = item
+            if uid is None:
+                logger.warn("Could extract UID of value")
+                continue
+            uids.append(uid)
+
+        analyses = map(api.get_object_by_uid, uids)
+        self._set(instance, analyses, **kw)

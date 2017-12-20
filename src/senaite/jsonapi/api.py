@@ -848,8 +848,9 @@ def get_contents(brain_or_object):
     # It may happen when children belong to different catalogs and not
     # found on 'portal_catalog'.
     ret = filter(lambda obj: api.is_object(obj),
-                  api.get_object(brain_or_object).objectValues())
+                 api.get_object(brain_or_object).objectValues())
     return ret
+
 
 def get_parent(brain_or_object):
     """Locate the parent object of the content/catalog brain
