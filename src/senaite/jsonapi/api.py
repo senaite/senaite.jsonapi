@@ -1415,17 +1415,22 @@ def deactivate_object(brain_or_object):
         fail(401, "Not allowed to deactivate object '%s'" % obj.getId())
 
 
-def get_bika_registry_records():
-    """Get registry records associated with bika
+def get_registry_records_by_keyword(keyword):
+    """Get all the registry records (names and values) whose name
+     contains the specified keyword
 
-    :returns: Dictionary that maps the bika records found with its values
+    :param keyword: The keyword that has to be contained in the record name
+    :type keyword: str
+    :returns: Dictionary mapping the names of the found records to its values
     """
+    if not keyword:
+        fail(400, "Please provide a valid keyword")
     portal_reg = ploneapi.portal.get_tool(name="portal_registry")
-    bika_registers = {}
+    found_registers = {}
     for record in portal_reg.records:
-        if "bika" in record.lower():
-            bika_registers[record] = api.get_registry_record(record)
-    return bika_registers
+        if keyword in record.lower():
+            found_registers[record] = api.get_registry_record(record)
+    return found_registers
 
 # -----------------------------------------------------------------------------
 #   Batching Helpers
