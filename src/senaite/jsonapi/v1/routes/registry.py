@@ -26,4 +26,5 @@ def get(context, request, username=None):
         "pages": batch.get_numpages(),
         "count": batch.get_sequence_length(),
         "items": registry_records,
+        "url": api.url_for("senaite.jsonapi.v1.senaite-config-registry"),
     }
