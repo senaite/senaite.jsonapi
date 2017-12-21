@@ -483,7 +483,7 @@ class ReferenceFieldManager(ATFieldManager):
         if not self.multi_valued:
             if len(ref) > 1:
                 raise ValueError("Multiple values given for single valued "
-                                 "field {}".format(self.field))
+                                 "field {}".format(repr(self.field)))
             else:
                 ref = ref[0]
         return self._set(instance, ref, **kw)
@@ -622,13 +622,12 @@ class UIDReferenceFieldManager(ATFieldManager):
                     uid = item.get('uid', None)
                     if uid:
                         ref.append(uid)
-                        continue
 
         # Handle non multi valued fields
         if not self.multi_valued:
             if len(ref) > 1:
                 raise ValueError("Multiple values given for single valued "
-                                 "field {}".format(self.field))
+                                 "field {}".format(repr(self.field)))
             else:
                 ref = ref[0]
 
