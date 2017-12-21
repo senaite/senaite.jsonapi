@@ -483,7 +483,7 @@ class ReferenceFieldManager(ATFieldManager):
         if not self.multi_valued:
             if len(ref) > 1:
                 raise ValueError("Multiple values given for single valued "
-                                 "field {}".format(self.field))
+                                 "field {}".format(repr(self.field)))
             else:
                 ref = ref[0]
         return self._set(instance, ref, **kw)
@@ -571,3 +571,64 @@ class ARAnalysesFieldManager(ATFieldManager):
 
         analyses = map(api.get_object_by_uid, uids)
         self._set(instance, analyses, **kw)
+
+
+class UIDReferenceFieldManager(ATFieldManager):
+    """Adapter to get/set the value of UIDReferenceFields
+    """
+    interface.implements(IFieldManager)
+
+    def __init__(self, field):
+        super(UIDReferenceFieldManager, self).__init__(field)
+        self.multi_valued = field.multiValued
+
+    def json_data(self, instance, default={}):
+        """Get a JSON compatible value
+        """
+        value = self.get(instance)
+        if not value:
+            return default
+        if self.multi_valued:
+            out = map(api.get_url_info, value)
+        else:
+            out = value
+        return out or default
+
+    def set(self, instance, value, **kw):  # noqa
+        """Set the value of the uid reference field
+        """
+        ref = []
+        # The value is an UID
+        if api.is_uid(value):
+            ref.append(value)
+
+        # The value is a dictionary, get the UIDs.
+        if u.is_dict(value):
+            ref = ref.append(value.get("uid"))
+
+        # The value is already an object
+        if api.is_at_content(value):
+            ref.append(value)
+
+        # The value is a list
+        if u.is_list(value):
+            for item in value:
+                # uid
+                if api.is_uid(item):
+                    ref.append(item)
+                # dict (catalog query)
+                elif u.is_dict(item):
+                    # If there is UID of objects, just use it.
+                    uid = item.get('uid', None)
+                    if uid:
+                        ref.append(uid)
+
+        # Handle non multi valued fields
+        if not self.multi_valued:
+            if len(ref) > 1:
+                raise ValueError("Multiple values given for single valued "
+                                 "field {}".format(repr(self.field)))
+            else:
+                ref = ref[0]
+
+        return self._set(instance, ref, **kw)
