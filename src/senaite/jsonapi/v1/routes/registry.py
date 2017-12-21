@@ -15,7 +15,15 @@ def get(context, request, key=None):
     # Prepare batch
     size = req.get_batch_size()
     start = req.get_batch_start()
-    batch = api.get_batch(registry_records, size, start)
-    batch['url'] = api.url_for("senaite.jsonapi.v1.registry", keyword=key)
+    batch = api.make_batch(registry_records, size, start)
 
-    return batch
+    return {
+        "pagesize": batch.get_pagesize(),
+        "next": batch.make_next_url(),
+        "previous": batch.make_prev_url(),
+        "page": batch.get_pagenumber(),
+        "pages": batch.get_numpages(),
+        "count": batch.get_sequence_length(),
+        "items": [registry_records],
+        "url": api.url_for("senaite.jsonapi.v1.registry", key=key),
+    }
