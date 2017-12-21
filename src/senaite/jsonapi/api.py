@@ -1416,20 +1416,21 @@ def deactivate_object(brain_or_object):
         fail(401, "Not allowed to deactivate object '%s'" % obj.getId())
 
 
-def get_registry_records_by_keyword(keyword):
+def get_registry_records_by_keyword(keyword=None):
     """Get all the registry records (names and values) whose name
-     contains the specified keyword
+     contains the specified keyword or, if keyword is None, return
+     all registry items
 
     :param keyword: The keyword that has to be contained in the record name
-    :type keyword: str
+    :type keyword: str or None
     :returns: Dictionary mapping the names of the found records to its values
     """
-    if not keyword:
-        fail(400, "Please provide a valid keyword")
     portal_reg = ploneapi.portal.get_tool(name="portal_registry")
     found_registers = {}
     for record in portal_reg.records:
-        if keyword.lower() in record.lower():
+        if keyword is None:
+            found_registers[record] = api.get_registry_record(record)
+        elif keyword.lower() in record.lower():
             found_registers[record] = api.get_registry_record(record)
     return found_registers
 
