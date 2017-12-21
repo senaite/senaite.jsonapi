@@ -5,6 +5,7 @@ import datetime
 
 from DateTime import DateTime
 from AccessControl import Unauthorized
+from Products.ATContentTypes.utils import DT2dt
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
 from Acquisition import ImplicitAcquisitionWrapper
@@ -455,6 +456,14 @@ def get_workflow_info(brain_or_object, endpoint=None):
             "url": transition["url"],
         }
 
+    def to_review_history_info(review_history):
+        """ return the transition information
+        """
+        converted = DT2dt(review_history.get('time')).\
+            strftime("%Y-%m-%d %H:%M:%S")
+        review_history['time'] = converted
+        return review_history
+
     out = []
 
     for workflow in workflows:
@@ -487,11 +496,16 @@ def get_workflow_info(brain_or_object, endpoint=None):
         # get the transition informations
         transitions = map(to_transition_info, wf_tool.getTransitionsFor(obj))
 
+        # get the review history
+        rh = map(to_review_history_info,
+                 workflow.getInfoFor(obj, 'review_history', ''))
+
         out.append({
             "workflow": workflow.getId(),
             "status": status,
             "review_state": state,
             "transitions": transitions,
+            "review_history": rh,
         })
 
     return {"workflow_info": out}
