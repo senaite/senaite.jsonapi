@@ -1429,7 +1429,7 @@ def get_registry_records_by_keyword(keyword):
     portal_reg = ploneapi.portal.get_tool(name="portal_registry")
     found_registers = {}
     for record in portal_reg.records:
-        if keyword in record.lower():
+        if keyword.lower() in record.lower():
             found_registers[record] = api.get_registry_record(record)
     return found_registers
 
