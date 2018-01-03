@@ -9,7 +9,7 @@ class TestSetup(SimpleTestCase):
 
     def test_is_bika_lims_installed(self):
         qi = self.portal.portal_quickinstaller
-        self.assertTrue(qi.isProductInstalled("senaite.core"))
+        self.assertTrue(qi.isProductInstalled("bika.lims"))
 
 
 def test_suite():
