@@ -1448,6 +1448,7 @@ def get_registry_records_by_keyword(keyword=None):
             found_registers[record] = api.get_registry_record(record)
     return found_registers
 
+
 # -----------------------------------------------------------------------------
 #   Batching Helpers
 # -----------------------------------------------------------------------------
