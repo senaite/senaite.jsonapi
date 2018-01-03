@@ -9,3 +9,4 @@ parts/
 var
 *.pyc
 *egg-info
+src/senaite.core

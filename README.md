@@ -7,7 +7,7 @@
   </a>
   <h1>SENAITE JSON API</h1>
 
-  <p>The JSON API provides a RESTful JSON interface to SENAITE LIMS.</p>
+  <p>The JSON API provides a RESTful JSON interface to SENAITE CORE.</p>
 
   <div>
     <a href="https://travis-ci.org/senaite/senaite.api">
