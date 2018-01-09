@@ -1453,14 +1453,19 @@ def get_registry_records_by_keyword(keyword=None):
 
 
 def get_mail_settings():
+    """ Get the mail controlpanel configuration values
+    :return: Dictionary mapping mail parameter name to its current value.
+    """
     mail_settings = {}
     portal = api.get_portal()
     mail_settings_fields = getFieldNames(IMailSchema)
+    # Here we get the values for Site 'From' name (email_from_name)
+    # and Site 'From' address (email_from_address)
     for setting in mail_settings_fields:
         value = portal.getProperty(setting)
         if value:
             mail_settings[setting] = value
-
+    # Get the rest of values from the mail host (ESMTP and SMTP values)
     mail_settings.update(vars(ploneapi.portal.get_tool(name='MailHost')))
 
     return mail_settings
