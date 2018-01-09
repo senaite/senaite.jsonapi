@@ -7,10 +7,10 @@
   </a>
   <h1>SENAITE JSON API</h1>
 
-  <p>The JSON API provides a RESTful JSON interface to SENAITE LIMS.</p>
+  <p>The JSON API provides a RESTful JSON interface to SENAITE CORE.</p>
 
   <div>
-    <a href="https://travis-ci.org/senaite/senaite.api">
+    <a href="https://travis-ci.org/senaite/senaite.jsonapi">
       <img src="https://img.shields.io/travis/senaite/senaite.jsonapi.svg?style=flat-square" alt="travis-ci" />
     </a>
     <a href="https://coveralls.io/github/senaite/senaite.jsonapi">

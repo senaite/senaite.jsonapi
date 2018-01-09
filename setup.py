@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-version = '1.1.1'
+version = '1.2.0'
 
 
 setup(
@@ -15,11 +15,7 @@ setup(
                      "\n\n" +
                      "Changelog\n" +
                      "=========\n" +
-                     open("docs/Changelog.rst").read() + "\n" +
-                     "\n\n" +
-                     "Authors and maintainers\n" +
-                     "-----------------------\n\n" +
-                     "- Ramon Bartl (RIDING BYTES) <rb@ridingbytes.com>",
+                     open("docs/Changelog.rst").read() + "\n",
     # Get more strings from
     # http://pypi.python.org/pypi?:action=list_classifiers
     classifiers=[
@@ -31,7 +27,7 @@ setup(
     author='SENAITE Foundation',
     author_email='hello@senaite.com',
     url='https://github.com/senaite/senaite.jsonapi',
-    license='GPLv3',
+    license='GPLv2',
     packages=find_packages('src', exclude=['ez_setup']),
     package_dir={'': 'src'},
     namespace_packages=['senaite'],
@@ -40,7 +36,7 @@ setup(
     install_requires=[
         'setuptools',
         'senaite.api',
-        'bika.lims',
+        'senaite.core',
     ],
     extras_require={
         'test': [

@@ -1,8 +1,24 @@
-1.1.1 (unreleased)
+1.2.0 (2018-01-03)
 ------------------
+
+**Added**
 
 - Added `parent_path` to response data
 - Allow custom methods as attributes in adapter
+
+**Removed**
+
+**Changed**
+
+- Integration to SENAITE CORE
+- License changed to GPLv2
+
+**Fixed**
+
+- Fixed Tests
+
+**Security**
+
 
 1.1.0 (2017-11-04)
 ------------------
