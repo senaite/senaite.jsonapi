@@ -473,6 +473,8 @@ def get_workflow_info(brain_or_object, endpoint=None):
 
         # get the status info of the current state (dictionary)
         info = wf_tool.getStatusOf(workflow.getId(), obj)
+        if info is None:
+            continue
 
         # get the current review_status
         review_state = info.get("review_state", None)
