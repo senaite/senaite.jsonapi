@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from senaite.jsonapi import api
 from senaite.jsonapi import request as req
 from senaite.jsonapi.v1 import add_route
