@@ -25,12 +25,14 @@ class Catalog(object):
         self._bika_catalog = api.get_tool("bika_catalog")
         self._bika_analysis_catalog = api.get_tool("bika_analysis_catalog")
         self._bika_setup_catalog = api.get_tool("bika_setup_catalog")
+        self._uid_catalog = api.get_tool("uid_catalog")
 
         self._catalogs = {
             "portal_catalog": self._catalog,
             "bika_catalog": self._bika_catalog,
             "bika_analysis_catalog": self._bika_analysis_catalog,
             "bika_setup_catalog": self._bika_setup_catalog,
+            'uid_catalog': self._uid_catalog
         }
 
     def search(self, query):
