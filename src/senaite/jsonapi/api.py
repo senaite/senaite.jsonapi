@@ -11,10 +11,13 @@ from Products.ZCatalog.Lazy import LazyMap
 from Acquisition import ImplicitAcquisitionWrapper
 
 from zope.schema import getFields
+from zope.schema import getFieldNames
 
 from plone import api as ploneapi
 from plone.jsonapi.core import router
 from plone.behavior.interfaces import IBehaviorAssignable
+from plone.app.controlpanel.mail import IMailSchema
+
 
 from senaite import api
 from senaite.jsonapi import logger
@@ -1449,6 +1452,25 @@ def get_registry_records_by_keyword(keyword=None):
         elif keyword.lower() in record.lower():
             found_registers[record] = api.get_registry_record(record)
     return found_registers
+
+
+def get_mail_settings():
+    """ Get the mail controlpanel configuration values
+    :return: Dictionary mapping mail parameter name to its current value.
+    """
+    mail_settings = {}
+    portal = api.get_portal()
+    mail_settings_fields = getFieldNames(IMailSchema)
+    # Here we get the values for Site 'From' name (email_from_name)
+    # and Site 'From' address (email_from_address)
+    for setting in mail_settings_fields:
+        value = portal.getProperty(setting)
+        if value:
+            mail_settings[setting] = value
+    # Get the rest of values from the mail host (ESMTP and SMTP values)
+    mail_settings.update(vars(ploneapi.portal.get_tool(name='MailHost')))
+
+    return mail_settings
 
 
 # -----------------------------------------------------------------------------
