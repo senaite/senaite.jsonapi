@@ -24,6 +24,6 @@ def get(context, request, key=None):
         "page": batch.get_pagenumber(),
         "pages": batch.get_numpages(),
         "count": batch.get_sequence_length(),
-        "items": [settings],
+        "items": settings,
         "url": api.url_for("senaite.jsonapi.v1.settings", key=key),
     }
