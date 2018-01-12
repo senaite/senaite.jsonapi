@@ -1459,7 +1459,8 @@ def get_settings_by_keyword(keyword=None):
      keyword is None, get all the settings.
 
     :param keyword: settings to be retrieved
-    :return: dictionary with the settings
+    :return: dictionary with the settings plus a key to identify from which
+    keyword where retrieved.
     """
     possible_keys = {'mail': get_mail_settings,
                      'language': get_language_settings,
