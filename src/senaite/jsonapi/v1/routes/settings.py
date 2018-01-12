@@ -8,14 +8,14 @@ from senaite.jsonapi.v1 import add_route
 @add_route("/settings", "senaite.jsonapi.v1.settings", methods=["GET"])
 @add_route("/settings/<string:key>", "senaite.jsonapi.v1.settings", methods=["GET"])
 def get(context, request, key=None):
-    """Return the mail configuration
+    """Return settings by keyword. If key is None, return all settings.
     """
-    mail_settings = api.get_mail_settings()
+    settings = api.get_settings_by_keyword(key)
 
     # Prepare batch
     size = req.get_batch_size()
     start = req.get_batch_start()
-    batch = api.make_batch(mail_settings, size, start)
+    batch = api.make_batch(settings, size, start)
 
     return {
         "pagesize": batch.get_pagesize(),
@@ -24,29 +24,6 @@ def get(context, request, key=None):
         "page": batch.get_pagenumber(),
         "pages": batch.get_numpages(),
         "count": batch.get_sequence_length(),
-        "items": [mail_settings],
+        "items": [settings],
         "url": api.url_for("senaite.jsonapi.v1.settings", key=key),
     }
-
-
-# @add_route("/mailsettings", "senaite.jsonapi.v1.mailsettings", methods=["GET"])
-# def get(context, request):
-#     """Return the mail configuration
-#     """
-#     mail_settings = api.get_mail_settings()
-#
-#     # Prepare batch
-#     size = req.get_batch_size()
-#     start = req.get_batch_start()
-#     batch = api.make_batch(mail_settings, size, start)
-#
-#     return {
-#         "pagesize": batch.get_pagesize(),
-#         "next": batch.make_next_url(),
-#         "previous": batch.make_prev_url(),
-#         "page": batch.get_pagenumber(),
-#         "pages": batch.get_numpages(),
-#         "count": batch.get_sequence_length(),
-#         "items": [mail_settings],
-#         "url": api.url_for("senaite.jsonapi.v1.mailsettings"),
-#     }
