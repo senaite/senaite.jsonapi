@@ -16,7 +16,7 @@ from zope.schema import getFieldNames
 from plone import api as ploneapi
 from plone.jsonapi.core import router
 from plone.behavior.interfaces import IBehaviorAssignable
-from plone.app.controlpanel.mail import IMailSchema
+import plone.app.controlpanel as cp
 
 
 from senaite import api
@@ -1454,13 +1454,54 @@ def get_registry_records_by_keyword(keyword=None):
     return found_registers
 
 
+def get_settings_by_keyword(keyword=None):
+    """Get the settings associated to the specified keyword or, if
+     keyword is None, get all the settings.
+
+    :param keyword: settings to be retrieved
+    :return: dictionary with the settings
+    """
+    possible_keys = {'mail': get_mail_settings,
+                     'language': get_language_settings,
+                     'calendar': get_calendar_settings,
+                     'editing': get_editing_settings,
+                     'events': get_events_settings,
+                     'filter': get_filter_settings,
+                     'form': get_form_settings,
+                     'interfaces': get_interfaces_settings,
+                     'maintenance': get_maintenace_settings,
+                     'markup': get_markup_settings,
+                     'navigation': get_navigation_settings,
+                     'overview': get_overview_settings,
+                     'ram': get_ram_settings,
+                     'search': get_search_settings,
+                     'security': get_security_settings,
+                     'site': get_site_settings,
+                     'skins': get_skins_settings,
+                     'syndication': get_syndication_settings,
+                     'types': get_types_settings,
+                     'usergroups': get_undergroups_settings,
+                     'widgets': get_widgets_settings,
+                     }
+    # possible_settings = [settings for settings in dir(cp) if not settings.startswith('__')]
+    found_settings = []
+    if keyword is None:
+        for key, settings_getter in possible_keys.items():
+            settings = settings_getter()
+            found_settings.append(settings.update({'key': key}))
+    elif keyword in possible_keys:
+        settings = possible_keys[keyword]()
+        found_settings.append(settings.update({'key': keyword}))
+    return settings
+
+
 def get_mail_settings():
-    """ Get the mail controlpanel configuration values
+    """Get the mail controlpanel configuration values
     :return: Dictionary mapping mail parameter name to its current value.
     """
     mail_settings = {}
     portal = api.get_portal()
-    mail_settings_fields = getFieldNames(IMailSchema)
+    mail_settings_fields = getFieldNames(cp.mail.IMailSchema)
     # Here we get the values for Site 'From' name (email_from_name)
     # and Site 'From' address (email_from_address)
     for setting in mail_settings_fields:
@@ -1472,6 +1513,85 @@ def get_mail_settings():
 
     return mail_settings
 
+
+def get_language_settings():
+    pass
+
+
+def get_calendar_settings():
+    pass
+
+
+def get_editing_settings():
+    pass
+
+
+def get_events_settings():
+    pass
+
+
+def get_filter_settings():
+    pass
+
+
+def get_form_settings():
+    pass
+
+
+def get_interfaces_settings():
+    pass
+
+
+def get_maintenace_settings():
+    pass
+
+
+def get_markup_settings():
+    pass
+
+
+def get_navigation_settings():
+    pass
+
+
+def get_overview_settings():
+    pass
+
+
+def get_ram_settings():
+    pass
+
+
+def get_search_settings():
+    pass
+
+
+def get_security_settings():
+    pass
+
+
+def get_site_settings():
+    pass
+
+
+def get_skins_settings():
+    pass
+
+
+def get_syndication_settings():
+    pass
+
+
+def get_types_settings():
+    pass
+
+
+def get_undergroups_settings():
+    pass
+
+
+def get_widgets_settings():
+    pass
 
 # -----------------------------------------------------------------------------
 #   Batching Helpers
