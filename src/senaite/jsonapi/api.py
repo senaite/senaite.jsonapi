@@ -1462,7 +1462,7 @@ def get_settings_by_keyword(keyword=None):
     :return: dictionary with the settings plus a key to identify from which
     keyword where retrieved.
     """
-    possible_keys = {'mail': get_mail_settings,
+    key_to_getter = {'mail': get_mail_settings,
                      'language': get_language_settings,
                      'calendar': get_calendar_settings,
                      'editing': get_editing_settings,
@@ -1485,19 +1485,19 @@ def get_settings_by_keyword(keyword=None):
                      'widgets': get_widgets_settings,
                      }
     # possible_settings = [settings for settings in dir(cp) if not settings.startswith('__')]
-    found_settings = []
+    settings = []
     if keyword is None:
-        for key, settings_getter in possible_keys.items():
-            settings = settings_getter()
-            found_settings.append(settings.update({'key': key}))
-    elif keyword in possible_keys:
-        settings = possible_keys[keyword]()
-        found_settings.append(settings.update({'key': keyword}))
+        for key, settings_getter in key_to_getter.items():
+            settings_from_key = settings_getter()
+            settings.append({key: settings_from_key})
+    elif keyword in key_to_getter.keys():
+        settings_from_key = key_to_getter[keyword]()
+        settings.append({keyword: settings_from_key})
     return settings
 
 
 def get_mail_settings():
-    """Get the mail controlpanel configuration values
+    """Get the mail control panel configuration values
     :return: Dictionary mapping mail parameter name to its current value.
     """
     mail_settings = {}
