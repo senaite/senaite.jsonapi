@@ -1500,6 +1500,7 @@ def get_mail_settings():
     """Get the mail control panel configuration values
     :return: Dictionary mapping mail parameter name to its current value.
     """
+    import pdb; pdb.set_trace()
     mail_settings = {}
     portal = api.get_portal()
     mail_settings_fields = getFieldNames(cp.mail.IMailSchema)
@@ -1510,7 +1511,7 @@ def get_mail_settings():
         if value:
             mail_settings[setting] = value
     # Get the rest of values from the mail host (ESMTP and SMTP values)
-    mail_settings.update(vars(ploneapi.portal.get_tool(name='MailHost')))
+    mail_settings.update(vars(portal.MailHost))
 
     return mail_settings
 
@@ -1520,7 +1521,13 @@ def get_language_settings():
 
 
 def get_calendar_settings():
-    pass
+    """Get the calendar settings
+
+    :return: Dictionary calendar parameter name to its current value.
+    """
+    portal = api.get_portal()
+    calendar_settings = vars(portal.portal_calendar)
+    return calendar_settings
 
 
 def get_editing_settings():
