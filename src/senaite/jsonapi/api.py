@@ -1520,7 +1520,6 @@ def get_mail_settings():
 def get_calendar_settings():
     """Get the calendar settings
 
-    :param portal:
     :return: Dictionary calendar parameter name to its current value.
     """
     return vars(api.get_tool(name='portal_calendar'))
@@ -1529,7 +1528,6 @@ def get_calendar_settings():
 def get_editor_settings():
     """Get the TinyMCE editor settings
 
-    :param portal:
     :return:
     """
     return vars(api.get_tool(name='portal_tinymce'))
