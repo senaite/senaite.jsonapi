@@ -1522,7 +1522,11 @@ def get_calendar_settings():
 
     :return: Dictionary calendar parameter name to its current value.
     """
-    return vars(api.get_tool(name='portal_calendar'))
+    calendar_settings = {}
+    portal_calendar = api.get_tool(name='portal_calendar')
+    calendar_settings['calendar_states'] = portal_calendar.getCalendarStates()
+    calendar_settings.update(vars(portal_calendar))
+    return calendar_settings
 
 
 def get_editor_settings():
