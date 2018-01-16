@@ -1463,8 +1463,9 @@ def get_settings_by_keyword(keyword=None):
     keyword where retrieved.
     """
     key_to_getter = {'mail': get_mail_settings,
-                     'language': get_language_settings,
                      'calendar': get_calendar_settings,
+                     'editor': get_editor_settings,
+                     'language': get_language_settings,
                      'editing': get_editing_settings,
                      'events': get_events_settings,
                      'filter': get_filter_settings,
@@ -1498,11 +1499,11 @@ def get_settings_by_keyword(keyword=None):
 
 def get_mail_settings():
     """Get the mail control panel configuration values
+
     :return: Dictionary mapping mail parameter name to its current value.
     """
-    import pdb; pdb.set_trace()
-    mail_settings = {}
     portal = api.get_portal()
+    mail_settings = {}
     mail_settings_fields = getFieldNames(cp.mail.IMailSchema)
     # Here we get the values for Site 'From' name (email_from_name)
     # and Site 'From' address (email_from_address)
@@ -1511,23 +1512,31 @@ def get_mail_settings():
         if value:
             mail_settings[setting] = value
     # Get the rest of values from the mail host (ESMTP and SMTP values)
-    mail_settings.update(vars(portal.MailHost))
+    mail_settings.update(vars(api.get_tool(name='MailHost')))
 
     return mail_settings
-
-
-def get_language_settings():
-    pass
 
 
 def get_calendar_settings():
     """Get the calendar settings
 
+    :param portal:
     :return: Dictionary calendar parameter name to its current value.
     """
-    portal = api.get_portal()
-    calendar_settings = vars(portal.portal_calendar)
-    return calendar_settings
+    return vars(api.get_tool(name='portal_calendar'))
+
+
+def get_editor_settings():
+    """Get the TinyMCE editor settings
+
+    :param portal:
+    :return:
+    """
+    return vars(api.get_tool(name='portal_tinymce'))
+
+
+def get_language_settings():
+    pass
 
 
 def get_editing_settings():
