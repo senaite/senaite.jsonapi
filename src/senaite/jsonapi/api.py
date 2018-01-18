@@ -1494,6 +1494,7 @@ def get_settings_by_keyword(keyword=None):
     elif keyword in key_to_getter.keys():
         settings_from_key = key_to_getter[keyword]()
         settings.append({keyword: settings_from_key})
+
     return settings
 
 
@@ -1502,17 +1503,21 @@ def get_mail_settings():
 
     :return: Dictionary mapping mail parameter name to its current value.
     """
+    # get the name of the settings to retrieve
+    # As a note, there is an inconsistency in how the smtp password is stored. In the Schema it is defined as smtp_pass
+    # but in the mail host it is defined as smtp_pwd
+    mail_settings_fields = [s if s != 'smtp_pass' else 'smtp_pwd' for s in getFieldNames(cp.mail.IMailSchema)]
+    # since mail settings are split among the portal and the mail host recover both
     portal = api.get_portal()
+    mail_host = api.get_tool(name='MailHost')
+
     mail_settings = {}
-    mail_settings_fields = getFieldNames(cp.mail.IMailSchema)
-    # Here we get the values for Site 'From' name (email_from_name)
-    # and Site 'From' address (email_from_address)
     for setting in mail_settings_fields:
         value = portal.getProperty(setting)
+        if value is None and hasattr(mail_host, setting):
+            value = getattr(mail_host, setting)
         if value:
             mail_settings[setting] = value
-    # Get the rest of values from the mail host (ESMTP and SMTP values)
-    mail_settings.update(vars(api.get_tool(name='MailHost')))
 
     return mail_settings
 
