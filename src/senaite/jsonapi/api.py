@@ -1503,21 +1503,14 @@ def get_mail_settings():
 
     :return: Dictionary mapping mail parameter name to its current value.
     """
-    # get the name of the settings to retrieve
-    # As a note, there is an inconsistency in how the smtp password is stored. In the Schema it is defined as smtp_pass
-    # but in the mail host it is defined as smtp_pwd
+    # there is an inconsistency in the smtp password field naming. In the Schema it is defined as smtp_pass
+    # whereas in the mail host it is defined as smtp_pwd
     mail_settings_fields = [s if s != 'smtp_pass' else 'smtp_pwd' for s in getFieldNames(cp.mail.IMailSchema)]
-    # since mail settings are split among the portal and the mail host recover both
-    portal = api.get_portal()
     mail_host = api.get_tool(name='MailHost')
-
     mail_settings = {}
     for setting in mail_settings_fields:
-        value = portal.getProperty(setting)
-        if value is None and hasattr(mail_host, setting):
-            value = getattr(mail_host, setting)
-        if value:
-            mail_settings[setting] = value
+        if hasattr(mail_host, setting):
+            mail_settings[setting] = getattr(mail_host, setting)
 
     return mail_settings
 
@@ -1527,10 +1520,13 @@ def get_calendar_settings():
 
     :return: Dictionary calendar parameter name to its current value.
     """
-    calendar_settings = {}
+    calendar_settings_fields = getFieldNames(cp.calendar.ICalendarSchema)
     portal_calendar = api.get_tool(name='portal_calendar')
-    calendar_settings['calendar_states'] = portal_calendar.getCalendarStates()
-    calendar_settings.update(vars(portal_calendar))
+    calendar_settings = {}
+    for setting in calendar_settings_fields:
+        if hasattr(portal_calendar, setting):
+            calendar_settings[setting] = getattr(portal_calendar, setting)
+
     return calendar_settings
 
 
