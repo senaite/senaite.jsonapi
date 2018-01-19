@@ -12,6 +12,7 @@ from Acquisition import ImplicitAcquisitionWrapper
 
 from zope.schema import getFields
 from zope.schema import getFieldNames
+from zope.component import getAdapter
 
 from plone import api as ploneapi
 from plone.jsonapi.core import router
@@ -1462,168 +1463,60 @@ def get_settings_by_keyword(keyword=None):
     :return: dictionary with the settings plus a key to identify from which
     keyword where retrieved.
     """
-    key_to_getter = {'mail': get_mail_settings,
-                     'calendar': get_calendar_settings,
-                     'ram': get_ram_settings,
-                     'editor': get_editor_settings,
-                     'language': get_language_settings,
-                     'editing': get_editing_settings,
-                     'events': get_events_settings,
-                     'filter': get_filter_settings,
-                     'form': get_form_settings,
-                     'interfaces': get_interfaces_settings,
-                     'maintenance': get_maintenace_settings,
-                     'markup': get_markup_settings,
-                     'navigation': get_navigation_settings,
-                     'overview': get_overview_settings,
-                     'search': get_search_settings,
-                     'security': get_security_settings,
-                     'site': get_site_settings,
-                     'skins': get_skins_settings,
-                     'syndication': get_syndication_settings,
-                     'types': get_types_settings,
-                     'usergroups': get_undergroups_settings,
-                     'widgets': get_widgets_settings,
-                     }
-    # possible_settings = [settings for settings in dir(cp) if not settings.startswith('__')]
+    key_to_ischema = {
+                      'mail':        [cp.mail.IMailSchema],
+                      'calendar':    [cp.calendar.ICalendarSchema],
+                      'ram':         [cp.ram.IRAMCacheSchema],
+                      'language':    [cp.language.ILanguageSelectionSchema],
+                      'editing':     [cp.editing.IEditingSchema],
+                      'usergroups':  [cp.usergroups.IUserGroupsSettingsSchema,
+                                      cp.usergroups.ISecuritySchema,],
+                      'search':      [cp.search.ISearchSchema],
+                      'filter':      [cp.filter.IFilterAttributesSchema,
+                                      cp.filter.IFilterEditorSchema,
+                                      cp.filter.IFilterSchema,
+                                      cp.filter.IFilterTagsSchema],
+                      'maintenance': [cp.maintenance.IMaintenanceSchema],
+                      'markup':      [cp.markup.IMarkupSchema,
+                                      cp.markup.ITextMarkupSchema,
+                                      cp.markup.IWikiMarkupSchema,],
+                      'navigation':  [cp.navigation.INavigationSchema],
+                      'security':    [cp.security.ISecuritySchema],
+                      'site':        [cp.site.ISiteSchema],
+                      'skins':       [cp.skins.ISkinsSchema],
+                      }
+
     settings = []
     if keyword is None:
-        for key, settings_getter in key_to_getter.items():
-            settings_from_key = settings_getter()
-            settings.append({key: settings_from_key})
-    elif keyword in key_to_getter.keys():
-        settings_from_key = key_to_getter[keyword]()
+        for key, ischema in key_to_ischema.items():
+            settings_for_key = get_settings_from_schema( ischema)
+            settings.append({key: settings_for_key})
+    elif keyword in key_to_ischema.keys():
+        settings_from_key = get_settings_from_schema(key_to_ischema[keyword])
         settings.append({keyword: settings_from_key})
 
     return settings
 
 
-def get_mail_settings():
-    """Get the mail control panel configuration values
-
-    :return: Dictionary mapping mail parameter name to its current value.
+def get_settings_from_schema(ischemas):
     """
-    # there is an inconsistency in the smtp password field naming. In the Schema it is defined as smtp_pass
-    # whereas in the mail host it is defined as smtp_pwd
-    mail_settings_fields = [s if s != 'smtp_pass' else 'smtp_pwd' for s in getFieldNames(cp.mail.IMailSchema)]
-    mail_host = api.get_tool(name='MailHost')
-    mail_settings = {}
-    for setting in mail_settings_fields:
-        if hasattr(mail_host, setting):
-            mail_settings[setting] = getattr(mail_host, setting)
 
-    return mail_settings
-
-
-def get_calendar_settings():
-    """Get the calendar settings
-
-    :return: Dictionary mapping calendar parameter name to its current value.
-    """
-    calendar_settings_fields = getFieldNames(cp.calendar.ICalendarSchema)
-    portal_calendar = api.get_tool(name='portal_calendar')
-    calendar_settings = {}
-    for setting in calendar_settings_fields:
-        if hasattr(portal_calendar, setting):
-            calendar_settings[setting] = getattr(portal_calendar, setting)
-
-    return calendar_settings
-
-
-def get_ram_settings():
-    """Get ram cache settings
-
-    :return: Dictionary mapping ram cache parameter name to its current value.
-    """
-    ram_settings_fields = getFieldNames(cp.ram.IRAMCacheSchema)
-    ram_cache = api.get_tool(name='RAMCache')
-    ram_settings = {}
-    for setting in ram_settings_fields:
-        if hasattr(ram_cache, setting):
-            ram_settings[setting] = getattr(ram_cache, setting)
-
-    return ram_settings
-    pass
-
-
-def get_editor_settings():
-    """Get the TinyMCE editor settings
-
+    :param ischema:
     :return:
     """
-    return vars(api.get_tool(name='portal_tinymce'))
+    settings = {}
+    for ischema in ischemas:
+        schema_id = ischema.getName()
+        settings[schema_id] = {}
+        schema =  getAdapter(api.get_portal(), ischema)
+        settings_fields = getFieldNames(ischema)
+        for setting in settings_fields:
+            if hasattr(schema, setting):
+                value = getattr(schema, setting)
+                if is_json_serializable(value):
+                    settings[schema_id][setting] = value
 
-
-def get_language_settings():
-    pass
-
-
-def get_editing_settings():
-    pass
-
-
-def get_events_settings():
-    pass
-
-
-def get_filter_settings():
-    pass
-
-
-def get_form_settings():
-    pass
-
-
-def get_interfaces_settings():
-    pass
-
-
-def get_maintenace_settings():
-    pass
-
-
-def get_markup_settings():
-    pass
-
-
-def get_navigation_settings():
-    pass
-
-
-def get_overview_settings():
-    pass
-
-
-def get_search_settings():
-    pass
-
-
-def get_security_settings():
-    pass
-
-
-def get_site_settings():
-    pass
-
-
-def get_skins_settings():
-    pass
-
-
-def get_syndication_settings():
-    pass
-
-
-def get_types_settings():
-    pass
-
-
-def get_undergroups_settings():
-    pass
-
-
-def get_widgets_settings():
-    pass
+    return settings
 
 # -----------------------------------------------------------------------------
 #   Batching Helpers
