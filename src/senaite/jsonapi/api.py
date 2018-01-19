@@ -1489,18 +1489,20 @@ def get_settings_by_keyword(keyword=None):
     settings = []
     if keyword is None:
         for key, ischemas in key_to_ischema.items():
-            settings_for_key = get_settings_from_schemas(ischemas)
+            settings_for_key = get_settings_from_ischemas(ischemas)
             settings.append({key: settings_for_key})
     elif keyword in key_to_ischema.keys():
-        settings_from_key = get_settings_from_schemas(key_to_ischema[keyword])
+        settings_from_key = get_settings_from_ischemas(key_to_ischema[keyword])
         settings.append({keyword: settings_from_key})
     return settings
 
 
-def get_settings_from_schemas(ischemas):
-    """Get the configuration settings associated to a list of schemas
+def get_settings_from_ischemas(ischemas):
+    """Get the configuration settings associated to a list of schema
+    interfaces
 
-    :param ischemas: list of schemas from which we want to get its fields
+    :param ischemas: list of schemas' interfaces from which we want
+    to get its fields
     :return: dictionary where the keys are the schema names and the
     values are dictionaries with the settings linked to that schema.
     """
