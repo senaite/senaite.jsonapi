@@ -1464,6 +1464,7 @@ def get_settings_by_keyword(keyword=None):
     """
     key_to_getter = {'mail': get_mail_settings,
                      'calendar': get_calendar_settings,
+                     'ram': get_ram_settings,
                      'editor': get_editor_settings,
                      'language': get_language_settings,
                      'editing': get_editing_settings,
@@ -1475,7 +1476,6 @@ def get_settings_by_keyword(keyword=None):
                      'markup': get_markup_settings,
                      'navigation': get_navigation_settings,
                      'overview': get_overview_settings,
-                     'ram': get_ram_settings,
                      'search': get_search_settings,
                      'security': get_security_settings,
                      'site': get_site_settings,
@@ -1518,7 +1518,7 @@ def get_mail_settings():
 def get_calendar_settings():
     """Get the calendar settings
 
-    :return: Dictionary calendar parameter name to its current value.
+    :return: Dictionary mapping calendar parameter name to its current value.
     """
     calendar_settings_fields = getFieldNames(cp.calendar.ICalendarSchema)
     portal_calendar = api.get_tool(name='portal_calendar')
@@ -1528,6 +1528,22 @@ def get_calendar_settings():
             calendar_settings[setting] = getattr(portal_calendar, setting)
 
     return calendar_settings
+
+
+def get_ram_settings():
+    """Get ram cache settings
+
+    :return: Dictionary mapping ram cache parameter name to its current value.
+    """
+    ram_settings_fields = getFieldNames(cp.ram.IRAMCacheSchema)
+    ram_cache = api.get_tool(name='RAMCache')
+    ram_settings = {}
+    for setting in ram_settings_fields:
+        if hasattr(ram_cache, setting):
+            ram_settings[setting] = getattr(ram_cache, setting)
+
+    return ram_settings
+    pass
 
 
 def get_editor_settings():
@@ -1575,10 +1591,6 @@ def get_navigation_settings():
 
 
 def get_overview_settings():
-    pass
-
-
-def get_ram_settings():
     pass
 
 
