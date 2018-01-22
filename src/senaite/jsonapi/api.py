@@ -19,7 +19,6 @@ from plone.jsonapi.core import router
 from plone.behavior.interfaces import IBehaviorAssignable
 import plone.app.controlpanel as cp
 
-
 from senaite import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import config
