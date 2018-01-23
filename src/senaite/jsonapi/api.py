@@ -271,6 +271,12 @@ def get_info(brain_or_object, endpoint=None, complete=False):
             return {}
         complete = True
 
+    # When querying uid catalog we have to be sure that we skip the objects
+    # used to relate two or more objects
+    if api.is_relationship_object(brain_or_object):
+        logger.warn("Skipping relationship object {}".format(brain_or_object))
+        return {}
+    
     # extract the data from the initial object with the proper adapter
     info = IInfo(brain_or_object).to_dict()
 
