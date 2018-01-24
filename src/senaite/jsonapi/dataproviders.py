@@ -129,11 +129,6 @@ class ZCDataProvider(Base):
         # extract the metadata
         self.keys = catalog_adapter.get_schema()
 
-        # add specific catalog brain mappings
-        self.attributes.update({
-            "path": "getPath",
-        })
-
         # ignore some metadata values, which we already mapped
         self.ignore = [
             'CreationDate',
@@ -159,8 +154,17 @@ class ZCDataProvider(Base):
     def _x_get_parent_path(self):
         """Generate the parent path
         """
-        path = self.context.getPath().split("/")
+        path = self._x_get_physical_path().split("/")
         return "/".join(path[:-1])
+
+    def _x_get_physical_path(self):
+        """Generate the physical path
+        """
+        path = self.context.getPath()
+        portal_path = api.get_path(api.get_portal())
+        if portal_path not in path:
+            return "{}/{}".format(portal_path, path)
+        return "/".join(path)
 
 
 class DexterityDataProvider(Base):
