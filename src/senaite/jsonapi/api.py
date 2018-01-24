@@ -38,6 +38,29 @@ _marker = object()
 
 DEFAULT_ENDPOINT = "senaite.jsonapi.v1.get"
 
+CONTROLPANEL_INTERFACE_MAPPING = {
+    'mail': [cp.mail.IMailSchema],
+    'calendar': [cp.calendar.ICalendarSchema],
+    'ram': [cp.ram.IRAMCacheSchema],
+    'language': [cp.language.ILanguageSelectionSchema],
+    'editing': [cp.editing.IEditingSchema],
+    'usergroups': [cp.usergroups.IUserGroupsSettingsSchema,
+                   cp.usergroups.ISecuritySchema, ],
+    'search': [cp.search.ISearchSchema],
+    'filter': [cp.filter.IFilterAttributesSchema,
+               cp.filter.IFilterEditorSchema,
+               cp.filter.IFilterSchema,
+               cp.filter.IFilterTagsSchema],
+    'maintenance': [cp.maintenance.IMaintenanceSchema],
+    'markup': [cp.markup.IMarkupSchema,
+               cp.markup.ITextMarkupSchema,
+               cp.markup.IWikiMarkupSchema, ],
+    'navigation': [cp.navigation.INavigationSchema],
+    'security': [cp.security.ISecuritySchema],
+    'site': [cp.site.ISiteSchema],
+    'skins': [cp.skins.ISkinsSchema],
+}
+
 
 # -----------------------------------------------------------------------------
 #   JSON API (CRUD) Functions (called by the route providers)
@@ -1462,39 +1485,16 @@ def get_settings_by_keyword(keyword=None):
     :return: dictionary with the settings plus a key to identify from which
     keyword where retrieved.
     """
-    key_to_ischema = {
-        'mail': [cp.mail.IMailSchema],
-        'calendar': [cp.calendar.ICalendarSchema],
-        'ram': [cp.ram.IRAMCacheSchema],
-        'language': [cp.language.ILanguageSelectionSchema],
-        'editing': [cp.editing.IEditingSchema],
-        'usergroups': [cp.usergroups.IUserGroupsSettingsSchema,
-                       cp.usergroups.ISecuritySchema,],
-        'search': [cp.search.ISearchSchema],
-        'filter': [cp.filter.IFilterAttributesSchema,
-                   cp.filter.IFilterEditorSchema,
-                   cp.filter.IFilterSchema,
-                   cp.filter.IFilterTagsSchema],
-        'maintenance': [cp.maintenance.IMaintenanceSchema],
-        'markup': [cp.markup.IMarkupSchema,
-                   cp.markup.ITextMarkupSchema,
-                   cp.markup.IWikiMarkupSchema,],
-        'navigation': [cp.navigation.INavigationSchema],
-        'security': [cp.security.ISecuritySchema],
-        'site': [cp.site.ISiteSchema],
-        'skins': [cp.skins.ISkinsSchema],
-    }
-
     settings = []
     if keyword is None:
         # iterate over all the schemas to return all settings
-        for key, ischemas in key_to_ischema.items():
+        for key, ischemas in CONTROLPANEL_INTERFACE_MAPPING.items():
             settings_from_ifaces = map(get_settings_from_interface, ischemas)
             settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
             settings.append({key: settings_from_key})
         return settings
     # if keyword has value then get only the settings associated to the key
-    settings_from_ifaces = map(get_settings_from_interface, key_to_ischema[keyword])
+    settings_from_ifaces = map(get_settings_from_interface, CONTROLPANEL_INTERFACE_MAPPING[keyword])
     settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
     settings.append({keyword: settings_from_key})
     return settings
