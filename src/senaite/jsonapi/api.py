@@ -1463,27 +1463,27 @@ def get_settings_by_keyword(keyword=None):
     keyword where retrieved.
     """
     key_to_ischema = {
-                      'mail':        [cp.mail.IMailSchema],
-                      'calendar':    [cp.calendar.ICalendarSchema],
-                      'ram':         [cp.ram.IRAMCacheSchema],
-                      'language':    [cp.language.ILanguageSelectionSchema],
-                      'editing':     [cp.editing.IEditingSchema],
-                      'usergroups':  [cp.usergroups.IUserGroupsSettingsSchema,
-                                      cp.usergroups.ISecuritySchema,],
-                      'search':      [cp.search.ISearchSchema],
-                      'filter':      [cp.filter.IFilterAttributesSchema,
-                                      cp.filter.IFilterEditorSchema,
-                                      cp.filter.IFilterSchema,
-                                      cp.filter.IFilterTagsSchema],
-                      'maintenance': [cp.maintenance.IMaintenanceSchema],
-                      'markup':      [cp.markup.IMarkupSchema,
-                                      cp.markup.ITextMarkupSchema,
-                                      cp.markup.IWikiMarkupSchema,],
-                      'navigation':  [cp.navigation.INavigationSchema],
-                      'security':    [cp.security.ISecuritySchema],
-                      'site':        [cp.site.ISiteSchema],
-                      'skins':       [cp.skins.ISkinsSchema],
-                      }
+        'mail': [cp.mail.IMailSchema],
+        'calendar': [cp.calendar.ICalendarSchema],
+        'ram': [cp.ram.IRAMCacheSchema],
+        'language': [cp.language.ILanguageSelectionSchema],
+        'editing': [cp.editing.IEditingSchema],
+        'usergroups': [cp.usergroups.IUserGroupsSettingsSchema,
+                       cp.usergroups.ISecuritySchema,],
+        'search': [cp.search.ISearchSchema],
+        'filter': [cp.filter.IFilterAttributesSchema,
+                   cp.filter.IFilterEditorSchema,
+                   cp.filter.IFilterSchema,
+                   cp.filter.IFilterTagsSchema],
+        'maintenance': [cp.maintenance.IMaintenanceSchema],
+        'markup': [cp.markup.IMarkupSchema,
+                   cp.markup.ITextMarkupSchema,
+                   cp.markup.IWikiMarkupSchema,],
+        'navigation': [cp.navigation.INavigationSchema],
+        'security': [cp.security.ISecuritySchema],
+        'site': [cp.site.ISiteSchema],
+        'skins': [cp.skins.ISkinsSchema],
+    }
 
     settings = []
     if keyword is None:
