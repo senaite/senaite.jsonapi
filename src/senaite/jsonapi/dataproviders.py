@@ -154,9 +154,8 @@ class ZCDataProvider(Base):
     def _x_get_parent_path(self):
         """Generate the parent path
         """
-        path = self.context.getPath().split("/")
+        path = self._x_get_physical_path().split("/")
         return "/".join(path[:-1])
-
 
     def _x_get_physical_path(self):
         """Generate the physical path
