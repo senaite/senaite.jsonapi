@@ -1488,34 +1488,34 @@ def get_settings_by_keyword(keyword=None):
     settings = []
     if keyword is None:
         for key, ischemas in key_to_ischema.items():
-            settings_for_key = get_settings_from_ischemas(ischemas)
-            settings.append({key: settings_for_key})
+            settings_from_ifaces = map(get_settings_from_interface, ischemas)
+            settings_from_key = {k: v for d in settings_from_ifaces for k,v in d.items()}
+            settings.append({key: settings_from_key})
     elif keyword in key_to_ischema.keys():
-        settings_from_key = get_settings_from_ischemas(key_to_ischema[keyword])
+        settings_from_ifaces = map(get_settings_from_interface, key_to_ischema[keyword])
+        settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
         settings.append({keyword: settings_from_key})
     return settings
 
 
-def get_settings_from_ischemas(ischemas):
+def get_settings_from_interface(iface):
     """Get the configuration settings associated to a list of schema
     interfaces
 
-    :param ischemas: list of schemas' interfaces from which we want
-    to get its fields
-    :return: dictionary where the keys are the schema names and the
-    values are dictionaries with the settings linked to that schema.
+    :param iface: The schema interface from which we want to get its
+    fields
+    :return: Tuple where first value is schema name and second value is a
+    dictionary with the setting names (keys) linked to that schema and its
+     values.
     """
     settings = {}
-    for ischema in ischemas:
-        schema_id = ischema.getName()
-        settings[schema_id] = {}
-        schema =  getAdapter(api.get_portal(), ischema)
-        settings_fields = getFieldNames(ischema)
-        for setting in settings_fields:
-            if hasattr(schema, setting):
-                value = getattr(schema, setting)
-                if is_json_serializable(value):
-                    settings[schema_id][setting] = value
+    schema_id = iface.getName()
+    settings[schema_id] = {}
+    schema = getAdapter(api.get_portal(), iface)
+    for setting in getFieldNames(iface):
+        value = getattr(schema, setting, None)
+        if is_json_serializable(value):
+            settings[schema_id][setting] = value
     return settings
 
 # -----------------------------------------------------------------------------
