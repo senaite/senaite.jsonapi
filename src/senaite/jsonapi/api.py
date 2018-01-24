@@ -1487,14 +1487,16 @@ def get_settings_by_keyword(keyword=None):
 
     settings = []
     if keyword is None:
+        # iterate over all the schemas to return all settings
         for key, ischemas in key_to_ischema.items():
             settings_from_ifaces = map(get_settings_from_interface, ischemas)
-            settings_from_key = {k: v for d in settings_from_ifaces for k,v in d.items()}
+            settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
             settings.append({key: settings_from_key})
-    elif keyword in key_to_ischema.keys():
-        settings_from_ifaces = map(get_settings_from_interface, key_to_ischema[keyword])
-        settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
-        settings.append({keyword: settings_from_key})
+        return settings
+    # if keyword has value then get only the settings associated to the key
+    settings_from_ifaces = map(get_settings_from_interface, key_to_ischema[keyword])
+    settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
+    settings.append({keyword: settings_from_key})
     return settings
 
 
@@ -1504,9 +1506,9 @@ def get_settings_from_interface(iface):
 
     :param iface: The schema interface from which we want to get its
     fields
-    :return: Tuple where first value is schema name and second value is a
-    dictionary with the setting names (keys) linked to that schema and its
-     values.
+    :return: Dictionary with iface name as key and as value a dictionary
+    with the setting names (keys) linked to that schema and its
+    values.
     """
     settings = {}
     schema_id = iface.getName()
