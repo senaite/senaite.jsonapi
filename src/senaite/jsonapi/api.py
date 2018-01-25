@@ -1463,7 +1463,7 @@ def is_relationship_object(brain_or_object):
     :param brain_or_object: A single catalog brain or content object
     :return: True if the object is a relationship object
     """
-    if 'at_references' in brain_or_object.getPath():
+    if 'at_references' in get_path(brain_or_object):
         return True
     return False
 
