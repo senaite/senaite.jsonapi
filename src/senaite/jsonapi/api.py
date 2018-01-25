@@ -299,7 +299,7 @@ def get_info(brain_or_object, endpoint=None, complete=False):
 
     # When querying uid catalog we have to be sure that we skip the objects
     # used to relate two or more objects
-    if api.is_relationship_object(brain_or_object):
+    if is_relationship_object(brain_or_object):
         logger.warn("Skipping relationship object {}".format(repr(brain_or_object)))
         return {}
     
@@ -1481,6 +1481,17 @@ def get_registry_records_by_keyword(keyword=None):
         elif keyword.lower() in record.lower():
             found_registers[record] = api.get_registry_record(record)
     return found_registers
+
+
+def is_relationship_object(brain_or_object):
+    """Checks if the passed in brain or object is a relationship object
+
+    :param brain_or_object: A single catalog brain or content object
+    :return: True if the object is a relationship object
+    """
+    if 'at_references' in get_path(brain_or_object):
+        return True
+    return False
 
 
 def get_settings_by_keyword(keyword=None):
