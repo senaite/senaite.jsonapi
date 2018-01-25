@@ -1457,6 +1457,16 @@ def get_registry_records_by_keyword(keyword=None):
     return found_registers
 
 
+def is_relationship_object(brain_or_object):
+    """Checks if the passed in brain or object is a relationship object
+
+    :param brain_or_object: A single catalog brain or content object
+    :return: True if the object is a relationship object
+    """
+    if 'at_references' in brain_or_object.getPath():
+        return True
+    return False
+
 # -----------------------------------------------------------------------------
 #   Batching Helpers
 # -----------------------------------------------------------------------------
