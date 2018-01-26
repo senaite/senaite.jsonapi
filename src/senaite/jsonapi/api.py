@@ -1508,12 +1508,14 @@ def get_settings_by_keyword(keyword=None):
         for key, ischemas in CONTROLPANEL_INTERFACE_MAPPING.items():
             settings_from_ifaces = map(get_settings_from_interface, ischemas)
             settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
-            settings.append({key: settings_from_key})
+            settings.append({key: settings_from_key,
+                             "api_url": url_for("senaite.jsonapi.v1.settings", key=key)})
         return settings
     # if keyword has value then get only the settings associated to the key
     settings_from_ifaces = map(get_settings_from_interface, CONTROLPANEL_INTERFACE_MAPPING[keyword])
     settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
-    settings.append({keyword: settings_from_key})
+    settings.append({keyword: settings_from_key,
+                     "api_url": url_for("senaite.jsonapi.v1.settings", key=keyword)})
     return settings
 
 
