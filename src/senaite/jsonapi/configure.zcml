@@ -132,12 +132,13 @@
           factory=".fieldmanagers.ProxyFieldManager"
           />
   </configure>
-
-  <!-- Adapter for Bika LIMS AR Analyses Field -->
-  <adapter
-      for="bika.lims.interfaces.IARAnalysesField"
-      factory=".fieldmanagers.ARAnalysesFieldManager"
-      />
+  <configure zcml:condition="installed senaite.core">
+      <!-- Adapter for Bika LIMS AR Analyses Field -->
+      <adapter
+          for="bika.lims.interfaces.IARAnalysesField"
+          factory=".fieldmanagers.ARAnalysesFieldManager"
+          />
+  </configure>
 
   <!-- Adapter for Reference Field -->
   <adapter
