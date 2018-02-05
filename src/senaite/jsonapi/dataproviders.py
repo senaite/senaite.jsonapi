@@ -164,7 +164,7 @@ class ZCDataProvider(Base):
         portal_path = api.get_path(api.get_portal())
         if portal_path not in path:
             return "{}/{}".format(portal_path, path)
-        return "/".join(path)
+        return path
 
 
 class DexterityDataProvider(Base):
