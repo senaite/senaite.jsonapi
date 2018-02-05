@@ -126,16 +126,19 @@
       />
 
   <!-- Adapter for Bika LIMS Proxy Field -->
-  <adapter
-      for="bika.lims.interfaces.IProxyField"
-      factory=".fieldmanagers.ProxyFieldManager"
-      />
-
-  <!-- Adapter for Bika LIMS AR Analyses Field -->
-  <adapter
-      for="bika.lims.interfaces.IARAnalysesField"
-      factory=".fieldmanagers.ARAnalysesFieldManager"
-      />
+  <configure zcml:condition="installed senaite.core">
+      <adapter
+          for="bika.lims.interfaces.IProxyField"
+          factory=".fieldmanagers.ProxyFieldManager"
+          />
+  </configure>
+  <configure zcml:condition="installed senaite.core">
+      <!-- Adapter for Bika LIMS AR Analyses Field -->
+      <adapter
+          for="bika.lims.interfaces.IARAnalysesField"
+          factory=".fieldmanagers.ARAnalysesFieldManager"
+          />
+  </configure>
 
   <!-- Adapter for Reference Field -->
   <adapter
@@ -144,11 +147,12 @@
       />
 
   <!-- Adapter for UIDReference Field -->
-  <adapter
-      for="bika.lims.interfaces.field.IUIDReferenceField"
-      factory=".fieldmanagers.UIDReferenceFieldManager"
-      />
-
+  <configure zcml:condition="installed senaite.core">
+      <adapter
+          for="bika.lims.interfaces.field.IUIDReferenceField"
+          factory=".fieldmanagers.UIDReferenceFieldManager"
+          />
+  </configure>
 
   <!-- ZOPE SCHEMA FIELD MANAGERS
        Field level interface to get and set values and get a JSON compatible
