@@ -21,14 +21,14 @@ class Catalog(object):
     interface.implements(ICatalog)
 
     def __init__(self, context):
-        self._catalog = api.get_tool("portal_catalog")
+        self._portal_catalog = api.get_tool("portal_catalog")
         self._bika_catalog = api.get_tool("bika_catalog")
         self._bika_analysis_catalog = api.get_tool("bika_analysis_catalog")
         self._bika_setup_catalog = api.get_tool("bika_setup_catalog")
         self._uid_catalog = api.get_tool("uid_catalog")
 
         self._catalogs = {
-            "portal_catalog": self._catalog,
+            "portal_catalog": self._portal_catalog,
             "bika_catalog": self._bika_catalog,
             "bika_analysis_catalog": self._bika_analysis_catalog,
             "bika_setup_catalog": self._bika_setup_catalog,
@@ -50,7 +50,8 @@ class Catalog(object):
     def __call__(self, query):
         return self.search(query)
 
-    def get_catalog(self, name="portal_catalog"):
+    def get_catalog(self):
+        name = req.get("catalog", "portal_catalog")
         return self._catalogs[name]
 
     def get_schema(self):
