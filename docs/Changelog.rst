@@ -15,6 +15,7 @@
 
 **Fixed**
 
+- #25 Null values are saved as 'NOW' in Date Time Fields
 - Fixed Tests
 
 **Security**
