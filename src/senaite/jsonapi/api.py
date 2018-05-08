@@ -776,6 +776,23 @@ def is_path(path):
         return False
     return True
 
+def calculate_delta_date(literal):
+    """Calculate the date in the past from the given literal
+    :param literal: A date literal, e.g. "today"
+    :type literal: str
+    :returns: Date between the literal and today
+    :rtype: DateTime
+    """
+    mapping = {
+        "today": 0,
+        "yesterday": 1,
+        "this-week": 7,
+        "this-month": 30,
+        "this-year": 365,
+    }
+    today = DateTime(DateTime().Date())  # current date without the time
+    return today - mapping.get(literal, 0)
+
 
 def is_json_serializable(thing):
     """Checks if the given thing can be serialized to JSON
