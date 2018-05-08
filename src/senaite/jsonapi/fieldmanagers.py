@@ -84,7 +84,7 @@ class DatetimeFieldManager(ZopeSchemaFieldManager):
     interface.implements(IFieldManager)
 
     def set(self, instance, value, **kw):
-        if isinstance(value, basestring):
+        if value and isinstance(value, basestring):
             value = dateutil.parser.parse(value)
         self.field.validate(value)
         return self.field.set(instance, value)
@@ -326,12 +326,13 @@ class DateTimeFieldManager(ATFieldManager):
     def set(self, instance, value, **kw):
         """Converts the value into a DateTime object before setting.
         """
-        try:
-            value = DateTime(value)
-        except SyntaxError:
-            logger.warn("Value '{}' is not a valid DateTime string"
-                        .format(value))
-            return False
+        if value:
+            try:
+                value = DateTime(value)
+            except SyntaxError:
+                logger.warn("Value '{}' is not a valid DateTime string"
+                            .format(value))
+                return False
 
         self._set(instance, value, **kw)
 
