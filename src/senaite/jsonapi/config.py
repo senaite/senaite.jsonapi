@@ -1,12 +1,27 @@
 # -*- coding: utf-8 -*-
+#
+# This file is part of SENAITE.JSONAPI.
+#
+# SENAITE.JSONAPI is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright 2017-2020 by it's authors.
+# Some rights reserved, see README and LICENSE.
 
-
-# The location mentioned here take precendence over any given container path
-# defined in the request.
 CONTAINER_PATHS_FOR_PORTAL_TYPES = {
     # 'ARImport': '',
     # 'ARPriorities': '',
-    'ARPriority': 'bika_setup/bika_arpriorities',
+    # 'ARPriority': 'bika_setup/bika_arpriorities',
     # 'ARReport': '',
     'ARTemplate': 'bika_setup/bika_artemplates',
     # 'ARTemplates': '',
@@ -139,7 +154,7 @@ CONTAINER_PATHS_FOR_PORTAL_TYPES = {
 ALLOWED_PORTAL_TYPES_TO_CREATE = [
     # 'ARImport',
     # 'ARPriorities',
-    'ARPriority',
+    # 'ARPriority',
     # 'ARReport',
     'ARTemplate',
     # 'ARTemplates',
@@ -208,7 +223,7 @@ ALLOWED_PORTAL_TYPES_TO_CREATE = [
     # 'InstrumentValidation',
     # 'Instruments',
     'Invoice',
-    'InvoiceBatch',
+    # 'InvoiceBatch',
     # 'InvoiceFolder',
     'LabContact',
     # 'LabContacts',
@@ -235,9 +250,9 @@ ALLOWED_PORTAL_TYPES_TO_CREATE = [
     'RejectAnalysis',
     'Report',
     # 'ReportFolder',
-    'SRTemplate',
+    # 'SRTemplate',
     # 'SRTemplates',
-    'Sample',
+    # 'Sample',
     'SampleCondition',
     # 'SampleConditions',
     # 'SampleMatrices',
@@ -250,7 +265,7 @@ ALLOWED_PORTAL_TYPES_TO_CREATE = [
     # 'SamplesFolder',
     'SamplingDeviation',
     # 'SamplingDeviations',
-    'SamplingRound',
+    # 'SamplingRound',
     # 'SamplingRounds',
     'StorageLocation',
     # 'StorageLocations',
