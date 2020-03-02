@@ -4,7 +4,7 @@
     <img src="static/logo.png" alt="senaite.jsonapi" height="128" />
   </a>
 
-  <p>RESTful JSON interface for SENAITE LIMS</p>
+  <p>RESTful JSON API for SENAITE LIMS</p>
 
   <div>
     <a href="https://pypi.python.org/pypi/senaite.jsonapi">
