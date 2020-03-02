@@ -18,39 +18,35 @@
 # Copyright 2017-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-import json
 import datetime
+import json
 
-from DateTime import DateTime
+import plone.app.controlpanel as cp
 from AccessControl import Unauthorized
+from Acquisition import ImplicitAcquisitionWrapper
+from bika.lims import api
+from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
+from DateTime import DateTime
+from plone import api as ploneapi
+from plone.behavior.interfaces import IBehaviorAssignable
+from plone.jsonapi.core import router
 from Products.ATContentTypes.utils import DT2dt
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
-from Acquisition import ImplicitAcquisitionWrapper
-
-from zope.schema import getFields
-from zope.schema import getFieldNames
-from zope.component import getAdapter
-
-from plone import api as ploneapi
-from plone.jsonapi.core import router
-from plone.behavior.interfaces import IBehaviorAssignable
-import plone.app.controlpanel as cp
-
-from senaite import api
-from senaite.jsonapi import logger
 from senaite.jsonapi import config
+from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi import underscore as u
-from senaite.jsonapi.interfaces import IInfo
+from senaite.jsonapi.exceptions import APIError
 from senaite.jsonapi.interfaces import IBatch
 from senaite.jsonapi.interfaces import ICatalog
-from senaite.jsonapi.exceptions import APIError
+from senaite.jsonapi.interfaces import ICatalogQuery
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
-from senaite.jsonapi.interfaces import ICatalogQuery
-
-from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
+from senaite.jsonapi.interfaces import IInfo
+from zope.component import getAdapter
+from zope.schema import getFieldNames
+from zope.schema import getFields
 
 _marker = object()
 
@@ -320,7 +316,7 @@ def get_info(brain_or_object, endpoint=None, complete=False):
     if is_relationship_object(brain_or_object):
         logger.warn("Skipping relationship object {}".format(repr(brain_or_object)))
         return {}
-    
+
     # extract the data from the initial object with the proper adapter
     info = IInfo(brain_or_object).to_dict()
 

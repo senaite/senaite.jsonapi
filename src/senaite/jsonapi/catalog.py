@@ -18,19 +18,16 @@
 # Copyright 2017-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-from zope import interface
-
+from bika.lims import api as senaiteapi
 from DateTime import DateTime
-from ZPublisher import HTTPRequest
-
-from senaite import api as senaiteapi
-
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi import underscore as _
 from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
+from zope import interface
+from ZPublisher import HTTPRequest
 
 
 class Catalog(object):

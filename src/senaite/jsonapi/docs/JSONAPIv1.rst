@@ -16,7 +16,7 @@ Needed Imports::
     >>> from plone.app.testing import TEST_USER_ID
     >>> from plone.app.testing import TEST_USER_PASSWORD
 
-    >>> from senaite import api
+    >>> from bika.lims import api
 
 Functional Helpers::
 
