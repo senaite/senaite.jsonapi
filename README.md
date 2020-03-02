@@ -31,4 +31,4 @@
 
 ## About
 
-The SENAITE.JSONAPI allows to retrieve and updated contents via JSON
+The SENAITE.JSONAPI allows to retrieve and update contents via JSON
