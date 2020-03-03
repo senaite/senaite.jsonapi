@@ -7,4 +7,3 @@ recursive-include docs *
 recursive-include src/senaite/jsonapi *
 recursive-exclude src/senaite/jsonapi *.pyc
 recursive-exclude src/senaite/jsonapi/tests *
-recursive-exclude src/senaite/jsonapi/docs *
