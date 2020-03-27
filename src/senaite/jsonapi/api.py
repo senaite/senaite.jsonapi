@@ -132,7 +132,6 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
         - `parent_uid`  specifies the *uid* of the target folder
         - `parent_path` specifies the *physical path* of the target folder
     """
-
     # disable CSRF
     req.disable_csrf_protection()
 
@@ -1358,6 +1357,7 @@ def create_object(container, portal_type, **data):
             data = u.omit(data, "SampleType", "Analyses")
             # Set the container as the client, as the AR lives in it
             data["Client"] = container
+            return obj
         # Standard content creation
         else:
             # we want just a minimun viable object and set the data later
@@ -1387,21 +1387,7 @@ def create_analysisrequest(container, **data):
     """
     container = get_object(container)
     request = req.get_request()
-    # we need to resolve the SampleType to a full object
-    sample_type = data.get("SampleType", None)
-    if sample_type is None:
-        fail(400, "Please provide a SampleType")
-
-    # TODO We should handle the same values as in the DataManager for this field
-    #      (UID, path, objects, dictionaries ...)
-    results = search(portal_type="SampleType", title=sample_type)
-
-    values = {
-        "Analyses": data.get("Analyses", []),
-        "SampleType": results and get_object(results[0]) or None,
-    }
-
-    return create_ar(container, request, values)
+    return create_ar(container, request, data)
 
 
 def update_object_with_data(content, record):

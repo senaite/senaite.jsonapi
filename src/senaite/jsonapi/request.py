@@ -218,7 +218,13 @@ def get_request_data():
     if not is_json_deserializable(data):
         from plone.jsonapi.routes.exceptions import APIError
         raise APIError(400, "Request Data is not JSON deserializable – Check JSON Syntax!")
-    return _.convert(json.loads(data), _.to_list)
+    out_data = json.loads(data)
+
+    # When using requests.post, the data is stored as a dict in request.form
+    out_data.update(request.form)
+
+    out_data = _.convert(out_data, _.to_list)
+    return out_data
 
 
 def get_json():
