@@ -24,23 +24,12 @@ from senaite.jsonapi.v1 import add_route
 
 
 @add_route("/catalogs", "senaite.jsonapi.v1.catalogs", methods=["GET"])
-@add_route("/catalogs/<string:key>", "senaite.jsonapi.v1.catalogs", methods=["GET"])
-def get(context, request, key=None):
+@add_route("/catalogs/<string:catalog_id>", "senaite.jsonapi.v1.catalogs", methods=["GET"])
+def get(context, request, catalog_id=None):
     """Returns all registered catalogs if key is None, otherwise try to fetch
     the information about the catalog name passed in
     """
     archetype_tool = api.get_tool("archetype_tool")
-
-    # Get the catalogs
-    if key:
-        catalogs = [api.get_tool(key)]
-    else:
-        if not archetype_tool:
-            # Default catalog
-            catalogs = [api.get_tool("portal_catalog")],
-        else:
-            catalogs = archetype_tool.getCatalogsInSite()
-            catalogs = map(api.get_tool, catalogs)
 
     def get_data(catalog):
         portal_types = catalog.getPortalTypes()
@@ -57,6 +46,21 @@ def get(context, request, key=None):
             "schema": catalog.schema(),
             "portal_types": map(lambda it: it[1], portal_types),
         }
+
+    if catalog_id:
+        # Return the catalog directly
+        catalog = api.get_tool(catalog_id)
+
+        # If a catalog name was passed in, return the catalog info directly
+        return get_data(catalog)
+
+    # Look for all catalogs
+    if not archetype_tool:
+        # Default catalog
+        catalogs = [api.get_tool("portal_catalog")],
+    else:
+        catalogs = archetype_tool.getCatalogsInSite()
+        catalogs = map(api.get_tool, catalogs)
 
     # Exclude some catalogs
     skip = ["reference_catalog", "uid_catalog"]
@@ -78,5 +82,5 @@ def get(context, request, key=None):
         "pages": batch.get_numpages(),
         "count": batch.get_sequence_length(),
         "items": records,
-        "url": api.url_for("senaite.jsonapi.v1.registry", key=key),
+        "url": api.url_for("senaite.jsonapi.v1.registry", key=catalog_id),
     }
