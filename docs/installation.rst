@@ -5,6 +5,8 @@ To install senaite.jsonapi in your SENAITE instance, simply add this add-on
 in your buildout configuration file as follows, and run `bin/buildout`
 afterwards:
 
+.. code-block:: ini
+
     [buildout]
 
     ...
