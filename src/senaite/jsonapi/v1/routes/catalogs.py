@@ -42,9 +42,9 @@ def get(context, request, catalog_id=None):
 
         return {
             "id": catalog.id,
-            "indexes": catalog.indexes(),
-            "schema": catalog.schema(),
-            "portal_types": map(lambda it: it[1], portal_types),
+            "indexes": sorted(catalog.indexes()),
+            "schema": sorted(catalog.schema()),
+            "portal_types": sorted(map(lambda it: it[1], portal_types)),
         }
 
     if catalog_id:
