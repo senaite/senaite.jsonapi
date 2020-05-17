@@ -18,8 +18,10 @@
 # Copyright 2017-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+
 from bika.lims import api as senaiteapi
 from DateTime import DateTime
+from Products.CMFPlone.CatalogTool import CatalogTool
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
@@ -36,25 +38,12 @@ class Catalog(object):
     interface.implements(ICatalog)
 
     def __init__(self, context):
-        self._portal_catalog = api.get_tool("portal_catalog")
-        self._bika_catalog = api.get_tool("bika_catalog")
-        self._bika_analysis_catalog = api.get_tool("bika_analysis_catalog")
-        self._bika_setup_catalog = api.get_tool("bika_setup_catalog")
-        self._uid_catalog = api.get_tool("uid_catalog")
-
-        self._catalogs = {
-            "portal_catalog": self._portal_catalog,
-            "bika_catalog": self._bika_catalog,
-            "bika_analysis_catalog": self._bika_analysis_catalog,
-            "bika_setup_catalog": self._bika_setup_catalog,
-            "uid_catalog": self._uid_catalog
-        }
+        self._catalogs = {}
 
     def search(self, query):
         """search the catalog
         """
         logger.info("Catalog query={}".format(query))
-
         # Support to set the catalog as a request parameter
         catalogs = _.to_list(req.get("catalog", None))
         if catalogs:
@@ -67,6 +56,11 @@ class Catalog(object):
 
     def get_catalog(self):
         name = req.get("catalog", "portal_catalog")
+        if name not in self._catalogs:
+            # Get the catalog directly from senaite api
+            cat = senaiteapi.get_tool(name)
+            if isinstance(cat, CatalogTool):
+                self._catalogs[name] = cat
         return self._catalogs[name]
 
     def get_schema(self):

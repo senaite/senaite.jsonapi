@@ -1,3 +1,8 @@
+1.2.3 (unreleased)
+------------------
+
+- #34 Make senaite.jsonapi catalog-agnostic on searches
+
 1.2.2 (2020-03-03)
 ------------------
 
