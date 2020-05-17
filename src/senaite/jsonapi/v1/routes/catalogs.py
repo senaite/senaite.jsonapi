@@ -29,11 +29,12 @@ def get(context, request, key=None):
     """Returns all registered catalogs if key is None, otherwise try to fetch
     the information about the catalog name passed in
     """
+    archetype_tool = api.get_tool("archetype_tool")
+
     # Get the catalogs
     if key:
         catalogs = [api.get_tool(key)]
     else:
-        archetype_tool = api.get_tool("archetype_tool")
         if not archetype_tool:
             # Default catalog
             catalogs = [api.get_tool("portal_catalog")],
@@ -42,11 +43,19 @@ def get(context, request, key=None):
             catalogs = map(api.get_tool, catalogs)
 
     def get_data(catalog):
+        portal_types = catalog.getPortalTypes()
+
+        # Bail out portal types not present in this catalog
+        pt_catalogs = map(archetype_tool.getCatalogsByType, portal_types)
+        pt_catalogs = map(lambda pts: catalog in pts, pt_catalogs)
+        pt_catalogs = zip(pt_catalogs, portal_types)
+        portal_types = filter(lambda it: it[0], pt_catalogs)
+
         return {
             "id": catalog.id,
             "indexes": catalog.indexes(),
             "schema": catalog.schema(),
-            "portal_types": catalog.getPortalTypes(),
+            "portal_types": map(lambda it: it[1], portal_types),
         }
 
     # Exclude some catalogs
