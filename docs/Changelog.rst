@@ -1,6 +1,7 @@
 1.2.3 (unreleased)
 ------------------
 
+- #35 Added `catalogs` route
 - #34 Make senaite.jsonapi catalog-agnostic on searches
 
 1.2.2 (2020-03-03)
