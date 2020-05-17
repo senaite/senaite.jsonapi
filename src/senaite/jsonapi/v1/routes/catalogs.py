@@ -82,5 +82,5 @@ def get(context, request, catalog_id=None):
         "pages": batch.get_numpages(),
         "count": batch.get_sequence_length(),
         "items": records,
-        "url": api.url_for("senaite.jsonapi.v1.registry", key=catalog_id),
+        "url": api.url_for("senaite.jsonapi.v1.catalogs", key=catalog_id),
     }
