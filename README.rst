@@ -73,12 +73,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 
-
-## Documentation
-
-https://senaitejsonapi.readthedocs.io/en/latest/
-
-
 .. Links
 
 .. _SENAITE LIMS: https://www.senaite.com
