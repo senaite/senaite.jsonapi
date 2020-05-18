@@ -166,8 +166,7 @@ Given this Request URL:
 
 http://localhost:8080/senaite/@@API/senaite/v1/update/
 
-the following POSTs are equivalent, all them updates the "Priority" of sample
-with id DBS-00012 to 2:
+the following POSTs are equivalent, all them update the "Priority" of sample DBS-00012 to 2:
 
 .. code-block:: javascript
 

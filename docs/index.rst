@@ -27,8 +27,8 @@ Table of Contents:
 
    installation
    quickstart
-   api
    auth
+   api
    crud
 
 
