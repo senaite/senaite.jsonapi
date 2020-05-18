@@ -1,4 +1,4 @@
-.. image:: https://raw.githubusercontent.com/senaite/senaite.jsonapi/master/static/logo_pypi.png
+.. image:: https://raw.githubusercontent.com/senaite/senaite.jsonapi/master/static/logo.png
    :target: https://github.com/senaite/senaite.jsonapi
    :alt: senaite.jsonapi
    :height: 128px
