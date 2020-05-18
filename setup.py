@@ -4,17 +4,15 @@ from setuptools import setup, find_packages
 
 version = "1.2.2"
 
-with open("docs/About.rst", "r") as fh:
+with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 with open("src/senaite/jsonapi/docs/JSONAPIv1.rst", "r") as fh:
     long_description += "\n\n"
     long_description += fh.read()
 
-with open("docs/Changelog.rst", "r") as fh:
+with open("docs/changelog.rst", "r") as fh:
     long_description += "\n\n"
-    long_description += "Changelog\n"
-    long_description += "=========\n\n"
     long_description += fh.read()
 
 setup(
