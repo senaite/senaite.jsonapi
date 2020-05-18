@@ -29,6 +29,7 @@ Table of Contents:
    quickstart
    api
    auth
+   crud
 
 
 .. Links

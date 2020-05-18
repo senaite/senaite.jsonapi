@@ -187,5 +187,5 @@ object metadata is returned, e.g.:
 .. _SENAITE LIMS: https://www.senaite.com
 .. _senaite.core's types.xml: https://github.com/senaite/senaite.core/tree/master/bika/lims/profiles/default/types
 .. _SENAITE Health, an extension for health-care labs: https://pypi.org/project/senaite.health
-.. _Advanced Rest Client: https://chrome.google.com/webstore/detail/advanced-rest-client
+.. _Advanced Rest Client: https://chrome.google.com/webstore/detail/advanced-rest-client/hgmloofddffdnphfgcellkdfbfbjeloo
 .. _JSONView: https://chrome.google.com/webstore/detail/jsonview
