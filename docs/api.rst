@@ -279,8 +279,8 @@ object types it contains, with different requirements in terms of indexes for
 searches. The immediate benefit is that system becomes more performant, but at
 a cost: the user has to know the catalog to search against.
 
-Catalog-specific searches
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Searches by catalog
+~~~~~~~~~~~~~~~~~~~
 
 You can check the catalogs registered in the system and locate the portal type
 you want to search with the route `catalogs`, as explained in :ref:`Catalogs_Resource`.
@@ -333,6 +333,70 @@ expect this query to return a single item, a Sample:
           searches, so only the catalog metadata of the item is displayed unless
           you add the parameter `&complete=True` in the URL.
 
+Searches by index
+~~~~~~~~~~~~~~~~~
+
+Search of resources supports the use of indexes as filter criteria. Note that
+we've used the param `id` in the above mentioned searches. In fact, `id` is an
+index that is present either in default `portal_catalog` and in the catalog for
+which we've done the catalog-specific search.
+
+Remember you can check the indexes available for any given catalog by using the
+:ref:`Catalogs route`. For instance:
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/search?portal_type=Client
+
+Will return all the objects their value for `portal_type` index is `Client` and
+that are stored in the default catalog `portal_catalog`. Obviously, this url
+returns exactly the same result as if we were using the route `client`:
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/client
+
+But `portal_catalog` has other indexes that might be of our interest for
+searches:
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/search?review_state=inactive
+
+Will return the items, regardless of the type, that are stored in `portal_catalog`
+that are in inactive status.
+
+Searches by index can also be used against other catalogs:
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/search?getClientID=HHILLS&bika_catalog_analysisrequest_listing
+
+Will return all the samples assigned to client with id `HHILLS`. Note this is
+not the internal ID of the client object, rather the id assigned manually by
+user on Client creation.
+
+We can also combine multiple indexes in our search:
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/search?getClientID=HHILLS&review_state=published&catalog=bika_catalog_analysisrequest_listing
+
+Will return the samples assigned to client with id `HHILLS` their status is
+`published`.
+
+
+Sorting and limiting results
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Results can also be sorted by any index present in the catalog, by using the
+`sort_on` parameter:
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/search?getClientID=HHILLS&review_state=published&sort_on=getDateSampled&catalog=bika_catalog_analysisrequest_listing
+
+Will return the samples assigned to client with id `HHILLS` their status is
+`published`, sorted by date sampled ascending. We can also sort the results
+descending with parameter `sort_order`:
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/search?getClientID=HHILLS&review_state=published&sort_on=getDateSampled&sort_order=desc&catalog=bika_catalog_analysisrequest_listing
+
+In addition to sorting, we can also limit the number of results to a given
+number:
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/search?getClientID=HHILLS&review_state=published&sort_on=getDateSampled&sort_order=desc&limit=10&catalog=bika_catalog_analysisrequest_listing
+
+Will return the first 10 samples that are assigned to a client with id `HHILLS`,
+their status is `published`, sorted by date sampled descending.
 
 .. _Parameters:
 
