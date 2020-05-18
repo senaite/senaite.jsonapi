@@ -1,3 +1,8 @@
+.. image:: https://raw.githubusercontent.com/senaite/senaite.jsonapi/master/static/logo_pypi.png
+   :target: https://github.com/senaite/senaite.jsonapi
+   :alt: senaite.jsonapi
+   :height: 128px
+
 RESTful JSON API for SENAITE LIMS
 =================================
 
