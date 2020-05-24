@@ -21,7 +21,6 @@
 import datetime
 import json
 
-import plone.app.controlpanel as cp
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
 from bika.lims import api
@@ -31,6 +30,7 @@ from plone import api as ploneapi
 from plone.behavior.interfaces import IBehaviorAssignable
 from plone.jsonapi.core import router
 from Products.ATContentTypes.utils import DT2dt
+from Products.CMFPlone.controlpanel import browser as cp
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
 from senaite.jsonapi import config
@@ -54,25 +54,11 @@ DEFAULT_ENDPOINT = "senaite.jsonapi.v1.get"
 
 CONTROLPANEL_INTERFACE_MAPPING = {
     'mail': [cp.mail.IMailSchema],
-    'calendar': [cp.calendar.ICalendarSchema],
-    'ram': [cp.ram.IRAMCacheSchema],
-    'language': [cp.language.ILanguageSelectionSchema],
-    'editing': [cp.editing.IEditingSchema],
+    'language': [cp.language.ILanguageSchema],
+    'dateandtime': [cp.dateandtime.IDateAndTimeSchema],
     'usergroups': [cp.usergroups.IUserGroupsSettingsSchema,
-                   cp.usergroups.ISecuritySchema, ],
-    'search': [cp.search.ISearchSchema],
-    'filter': [cp.filter.IFilterAttributesSchema,
-               cp.filter.IFilterEditorSchema,
-               cp.filter.IFilterSchema,
-               cp.filter.IFilterTagsSchema],
+                   cp.usergroups.ISecuritySchema],
     'maintenance': [cp.maintenance.IMaintenanceSchema],
-    'markup': [cp.markup.IMarkupSchema,
-               cp.markup.ITextMarkupSchema,
-               cp.markup.IWikiMarkupSchema, ],
-    'navigation': [cp.navigation.INavigationSchema],
-    'security': [cp.security.ISecuritySchema],
-    'site': [cp.site.ISiteSchema],
-    'skins': [cp.skins.ISkinsSchema],
 }
 
 
