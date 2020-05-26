@@ -163,7 +163,8 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
 
         # check if it is allowed to create the portal_type
         if not is_creation_allowed(portal_type, container):
-            fail(401, "Creation of '{}' is not allowed".format(portal_type))
+            fail(401, "Creation of '{}' in '{}' is not allowed".format(
+                portal_type, api.get_path(container)))
 
         # create the object and pass in the record data
         obj = create_object(container, portal_type, **record)
@@ -1085,25 +1086,16 @@ def is_creation_allowed(portal_type, container):
     """
     # Do not allow the creation of objects directly inside portal root
     if container == api.get_portal():
-        fail(401, "Creation of objects inside {} is not allowed".format(
-            api.get_path(container)
-        ))
         return False
 
     # Do not allow the creation of objects directly inside setup folder
     if container == api.get_setup():
-        fail(401, "Creation of objects inside {} is not allowed".format(
-            api.get_path(container)
-        ))
         return False
 
     # Check if the portal_type is allowed in the container
     container_info = container.getTypeInfo()
     if container_info.filter_content_types:
         if portal_type not in container_info.allowed_content_types:
-            fail(401, "Creation of {} inside {} is not allowed".format(
-                portal_type, api.get_path(container)
-            ))
             return False
 
     # Look for a create-specific adapter for this portal type and container
@@ -1115,7 +1107,6 @@ def is_creation_allowed(portal_type, container):
     pt = api.get_tool("portal_types")
     fti = pt.getTypeInfo(portal_type)
     if fti.product in config.SKIP_CREATION_PORTAL_TYPES_PRODUCTS:
-        logger.warn("Creation of {} not supported".format(portal_type))
         return False
 
     return True
