@@ -4,6 +4,8 @@ Changelog
 1.2.3 (unreleased)
 ------------------
 
+- #37 Adapter for custom handling of `create` operation
+- #37 Make the creation operation to be portal_type-naive
 - #35 Added `catalogs` route
 - #34 Make senaite.jsonapi catalog-agnostic on searches
 
