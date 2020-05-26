@@ -133,3 +133,12 @@ class IBatch(interface.Interface):
     def make_prev_url():
         """ build and return the previous url
         """
+
+
+class IPortalTypeCRUDInfo(interface.Interface):
+    """Interface that provides portal_type-specific CRUD actions
+    """
+
+    def is_creation_allowed(self):
+        """ Return whether the creation of this portal type is allowed
+        """

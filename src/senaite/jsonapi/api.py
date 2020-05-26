@@ -24,6 +24,7 @@ import json
 import plone.app.controlpanel as cp
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
+
 from bika.lims import api
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 from DateTime import DateTime
@@ -44,9 +45,11 @@ from senaite.jsonapi.interfaces import ICatalogQuery
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.interfaces import IInfo
+from senaite.jsonapi.interfaces import IPortalTypeCRUDInfo
 from zope.component import getAdapter
 from zope.schema import getFieldNames
 from zope.schema import getFields
+from zope.component import queryAdapter
 
 _marker = object()
 
@@ -149,13 +152,13 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
             # try to fetch the portal type out of the request data
             portal_type = record.pop("portal_type", None)
 
-        # check if it is allowed to create the portal_type
-        if not is_creation_allowed(portal_type):
-            fail(401, "Creation of '{}' is not allowed".format(portal_type))
-
         if container is None:
             # find the container for content creation
             container = find_target_container(portal_type, record)
+
+        # check if it is allowed to create the portal_type
+        if not is_creation_allowed(portal_type, container):
+            fail(401, "Creation of '{}' is not allowed".format(portal_type))
 
         # Check if we have a container and a portal_type
         if not all([container, portal_type]):
@@ -1070,16 +1073,51 @@ def get_container_for(portal_type):
     return get_object_by_path("/".join([portal_path, container_path]))
 
 
-def is_creation_allowed(portal_type):
+def is_creation_allowed(portal_type, container):
     """Checks if it is allowed to create the portal type
 
     :param portal_type: The portal type requested
     :type portal_type: string
+    :container container: The parent of the object to be created
     :returns: True if it is allowed to create this object
     :rtype: bool
     """
-    allowed_portal_types = config.ALLOWED_PORTAL_TYPES_TO_CREATE
-    return portal_type in allowed_portal_types
+    # Do not allow the creation of objects directly inside portal root
+    if container == api.get_portal():
+        fail(401, "Creation of objects inside {} is not allowed".format(
+            api.get_path(container)
+        ))
+        return False
+
+    # Do not allow the creation of objects directly inside setup folder
+    if container == api.get_setup():
+        fail(401, "Creation of objects inside {} is not allowed".format(
+            api.get_path(container)
+        ))
+        return False
+
+    # Look for a CRUD-specific adapter for this portal type and container
+    adapter = queryAdapter(container, IPortalTypeCRUDInfo, name=portal_type)
+    if adapter:
+        return adapter.is_creation_allowed()
+
+    # Check if the portal_type is allowed in the container
+    container_info = container.getTypeInfo()
+    if container_info.filter_content_types:
+        if portal_type not in container_info.allowed_content_types:
+            fail(401, "Creation of {} inside {} is not allowed".format(
+                portal_type, api.get_path(container)
+            ))
+            return False
+
+    # Skip portal types that belong to "plone"-based product(s)
+    pt = api.get_tool("portal_types")
+    fti = pt.getTypeInfo(portal_type)
+    if fti.product in config.SKIP_CREATION_PORTAL_TYPES_PRODUCTS:
+        logger.warn("Creation of {} not supported".format(portal_type))
+        return False
+
+    return True
 
 
 def url_for(endpoint, default=DEFAULT_ENDPOINT, **values):
