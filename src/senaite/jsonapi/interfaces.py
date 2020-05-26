@@ -135,10 +135,20 @@ class IBatch(interface.Interface):
         """
 
 
-class IPortalTypeCRUDInfo(interface.Interface):
-    """Interface that provides portal_type-specific CRUD actions
+class ICreate(interface.Interface):
+    """Interface to handle creation of objects
     """
 
     def is_creation_allowed(self):
-        """ Return whether the creation of this portal type is allowed
+        """Returns whether the creation of this portal type for the given
+        container is allowed
+        """
+
+    def is_creation_delegated(self):
+        """Return whether the creation of this portal type has to be delegated
+        to this adapter
+        """
+
+    def create_object(self, **kwargs):
+        """Creates an object
         """

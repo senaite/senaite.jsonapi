@@ -30,6 +30,7 @@ Table of Contents:
    auth
    api
    crud
+   extend
    changelog
 
 

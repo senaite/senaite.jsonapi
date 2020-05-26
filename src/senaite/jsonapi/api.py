@@ -24,6 +24,7 @@ import json
 import plone.app.controlpanel as cp
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
+from senaite.jsonapi.interfaces import ICreate
 
 from bika.lims import api
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
@@ -45,7 +46,7 @@ from senaite.jsonapi.interfaces import ICatalogQuery
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.interfaces import IInfo
-from senaite.jsonapi.interfaces import IPortalTypeCRUDInfo
+from senaite.jsonapi.interfaces import ICreate
 from zope.component import getAdapter
 from zope.schema import getFieldNames
 from zope.schema import getFields
@@ -156,13 +157,13 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
             # find the container for content creation
             container = find_target_container(portal_type, record)
 
-        # check if it is allowed to create the portal_type
-        if not is_creation_allowed(portal_type, container):
-            fail(401, "Creation of '{}' is not allowed".format(portal_type))
-
         # Check if we have a container and a portal_type
         if not all([container, portal_type]):
             fail(400, "Please provide a container path/uid and portal_type")
+
+        # check if it is allowed to create the portal_type
+        if not is_creation_allowed(portal_type, container):
+            fail(401, "Creation of '{}' is not allowed".format(portal_type))
 
         # create the object and pass in the record data
         obj = create_object(container, portal_type, **record)
@@ -1096,11 +1097,6 @@ def is_creation_allowed(portal_type, container):
         ))
         return False
 
-    # Look for a CRUD-specific adapter for this portal type and container
-    adapter = queryAdapter(container, IPortalTypeCRUDInfo, name=portal_type)
-    if adapter:
-        return adapter.is_creation_allowed()
-
     # Check if the portal_type is allowed in the container
     container_info = container.getTypeInfo()
     if container_info.filter_content_types:
@@ -1109,6 +1105,11 @@ def is_creation_allowed(portal_type, container):
                 portal_type, api.get_path(container)
             ))
             return False
+
+    # Look for a create-specific adapter for this portal type and container
+    adapter = queryAdapter(container, ICreate, name=portal_type)
+    if adapter:
+        return adapter.is_creation_allowed()
 
     # Skip portal types that belong to "plone"-based product(s)
     pt = api.get_tool("portal_types")
