@@ -1388,6 +1388,14 @@ def create_object(container, portal_type, **data):
                     "generates a proper ID for you" .format(id))
 
     try:
+        # Is there any adapter registered to handle the creation of this type?
+        adapter = queryAdapter(container, ICreate, name=portal_type)
+        if adapter and adapter.is_creation_delegated():
+            logger.info("Delegating 'create' operation of '{}' in '{}'".format(
+                portal_type, api.get_path(container)
+            ))
+            return adapter.create_object(**data)
+
         # Special case for ARs
         # => return immediately w/o update
         if portal_type == "AnalysisRequest":

@@ -149,6 +149,6 @@ class ICreate(interface.Interface):
         to this adapter
         """
 
-    def create_object(self, **kwargs):
+    def create_object(self, **data):
         """Creates an object
         """

@@ -151,6 +151,7 @@ This adapter has to implement the `IInfo` interface.
 .. code-block:: python
 
     from senaite.jsonapi.interfaces import IInfo
+    from zope import interface
 
 
     class TodoAdapter(object):
@@ -223,9 +224,10 @@ This adapter has to implement the `IDataManager` interface.
 
 .. code-block:: python
 
-    from zope.annotation import IAnnotations
     from persistent.dict import PersistentDict
     from senaite.jsonapi.interfaces import IDataManager
+    from zope import interface
+    from zope.annotation import IAnnotations
 
 
     class TodoDataManager(object):
@@ -400,9 +402,9 @@ adapter has to implement the `ICatalog` interface.
 
 .. code-block:: python
 
-    from zope import interface
     from senaite.jsonapi.interfaces import ICatalog
     from senaite.jsonapi import api
+    from zope import interface
 
 
     class MyCatalog(object):
@@ -466,8 +468,8 @@ This adapter has to implement the `ICatalog` interface.
 
 .. code-block:: python
 
-    from zope import interface
     from senaite.jsonapi.interfaces import ICatalogQuery
+    from zope import interface
 
 
     class MyCatalogQuery(object):
@@ -545,7 +547,7 @@ the following signatures:
             to this adapter
             """
 
-        def create_object(self, **kwargs):
+        def create_object(self, **data):
             """Creates an object
             """
 
@@ -558,8 +560,8 @@ For instance, say you don't want to allow the creation of objects from type
 
 .. code-block:: python
 
-    from zope import interface
     from senaite.jsonapi.interfaces import ICreate
+    from zope import interface
 
 
     class TodoCreateAdapter(object):
@@ -618,3 +620,51 @@ for `IClient` type only:
     We've used here a custom `Todo` type, but you can use this approach for any
     type registered in the system, being it from `senaite.core` (e.g. `Client',
     `SampleType`, etc.) or from any other add-on.
+
+
+Custom creation of a content type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As we've explained before, you might want to have full control on the creation
+of a given portal type because you have to add additional logic. You can use
+the same adapter as before:
+
+.. code-block:: python
+
+    from Products.CMFPlone.utils import _createObjectByType
+    from senaite.jsonapi.interfaces import ICreate
+    from zope import interface
+
+
+    class TodoCreateAdapter(object):
+        """Custom adapter for the creation of Todo type
+        """
+        interface.implements(ICreate)
+
+        def __init__(self, container):
+            self.container = container
+
+        def is_creation_allowed(self):
+            """Returns whether the creation of the portal_type is allowed
+            """
+            return True
+
+        def is_creation_delegated(self):
+            """Returns whether the creation of this portal type has to be
+            delegated to this adapter
+            """
+            return True
+
+        def create_object(self):
+            """Creates an object
+            """
+            obj = _createObjectByType("Todo", self.container, tmpID())
+            obj.edit(**data)
+            obj.unmarkCreationFlag()
+            obj.reindexObject()
+            return obj
+
+With this example, `senaite.jsonapi` will not follow the default procedure of
+creation, it will rather delegate the operation of the `Todo` object to the
+function `create_object` of this adapter. Note the creation will only be
+delegated when the function `is_creation_delegated` returns True.
