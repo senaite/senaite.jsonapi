@@ -20,10 +20,3 @@
 
 # The creation of objects from portal types that belong to these products are
 # not supported, unless a custom adapter of ICreate is provided
-SKIP_CREATION_PORTAL_TYPES_PRODUCTS = [
-    "ATContentTypes",
-    "CMFCore",
-    "CMFPlone",
-    "plone.app.blob",
-    "plone.app.collection",
-]

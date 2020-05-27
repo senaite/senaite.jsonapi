@@ -34,7 +34,6 @@ from plone.jsonapi.core import router
 from Products.ATContentTypes.utils import DT2dt
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
-from senaite.jsonapi import config
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi import underscore as u
@@ -1083,12 +1082,6 @@ def is_creation_allowed(portal_type, container):
     adapter = queryAdapter(container, ICreate, name=portal_type)
     if adapter:
         return adapter.is_creation_allowed()
-
-    # Skip portal types that belong to "plone"-based product(s)
-    pt = api.get_tool("portal_types")
-    fti = pt.getTypeInfo(portal_type)
-    if fti.product in config.SKIP_CREATION_PORTAL_TYPES_PRODUCTS:
-        return False
 
     return True
 
