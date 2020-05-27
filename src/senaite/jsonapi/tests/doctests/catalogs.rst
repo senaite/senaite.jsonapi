@@ -14,8 +14,6 @@ Needed Imports:
     >>> import json
     >>> import transaction
     >>> import urllib
-    >>> from DateTime import DateTime
-    >>> from operator import itemgetter
     >>> from plone.app.testing import setRoles
     >>> from plone.app.testing import TEST_USER_ID
     >>> from plone.app.testing import TEST_USER_PASSWORD
