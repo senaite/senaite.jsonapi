@@ -1,29 +1,22 @@
-SENAITE JSON API v1
-===================
+VERSION
+-------
 
-Running this test from the buildout directory::
+Running this test from the buildout directory:
 
-    bin/test test_doctests -t JSONAPIv1
+    bin/test test_doctests -t version
 
 
 Test Setup
-----------
+~~~~~~~~~~
 
-Needed Imports::
+Needed Imports:
 
     >>> import transaction
-
+    >>> from plone.app.testing import setRoles
     >>> from plone.app.testing import TEST_USER_ID
     >>> from plone.app.testing import TEST_USER_PASSWORD
 
-    >>> from bika.lims import api
-
-Functional Helpers::
-
-    >>> def start_server():
-    ...     from Testing.ZopeTestCase.utils import startZServer
-    ...     ip, port = startZServer()
-    ...     return "http://{}:{}/{}".format(ip, port, portal.id)
+Functional Helpers:
 
     >>> def login(user=TEST_USER_ID, password=TEST_USER_PASSWORD):
     ...     browser.open(portal_url + "/login_form")
@@ -36,27 +29,39 @@ Functional Helpers::
     ...     browser.open(portal_url + "/logout")
     ...     assert("You are now logged out" in browser.contents)
 
-Variables::
+Variables:
 
     >>> portal = self.portal
     >>> portal_url = portal.absolute_url()
-    >>> bika_setup = portal.bika_setup
-    >>> bika_setup_url = portal_url + "/bika_setup"
     >>> browser = self.getBrowser()
+    >>> setRoles(portal, TEST_USER_ID, ["LabManager", "Manager"])
+    >>> transaction.commit()
 
-JSON API::
+JSON API:
 
     >>> api_base_url = portal_url + "/@@API/senaite/v1"
 
+Authenticated user
+~~~~~~~~~~~~~~~~~~
 
-Version
--------
+Authenticate:
 
-Ensure we are logged out::
+    >>> login()
+
+The version route should be visible to authenticated users:
+
+    >>> browser.open(api_base_url + "/version")
+    >>> browser.contents
+    '{"url": "http://nohost/plone/@@API/senaite/v1/version", "date": "...", "version": ..., "_runtime": ...}'
+
+Unauthenticated user
+~~~~~~~~~~~~~~~~~~~~
+
+Log out:
 
     >>> logout()
 
-The version route should be visible to unauthenticated users::
+The version route should be visible to unauthenticated users too:
 
     >>> browser.open(api_base_url + "/version")
     >>> browser.contents

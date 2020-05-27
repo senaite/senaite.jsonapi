@@ -7,10 +7,6 @@ version = "1.2.2"
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
-with open("src/senaite/jsonapi/docs/JSONAPIv1.rst", "r") as fh:
-    long_description += "\n\n"
-    long_description += fh.read()
-
 with open("docs/changelog.rst", "r") as fh:
     long_description += "\n\n"
     long_description += fh.read()
