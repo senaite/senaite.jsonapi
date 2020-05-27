@@ -11,6 +11,7 @@ Test Setup
 
 Needed Imports:
 
+    >>> import json
     >>> import transaction
     >>> import urllib
 
@@ -32,6 +33,18 @@ Functional Helpers:
     >>> def get(url):
     ...     browser.open("{}/{}".format(api_url, url))
     ...     return browser.contents
+
+    >>> def get_count(response):
+    ...     data = json.loads(response)
+    ...     return data.get("count")
+
+    >>> def get_items_ids(response, sort=True):
+    ...     data = json.loads(response)
+    ...     items = data.get("items")
+    ...     items = map(lambda it: it["id"], items)
+    ...     if sort:
+    ...         return sorted(items)
+    ...     return items
 
     >>> def init_data():
     ...     api.create(portal.clients, "Client", title="Happy Hills", ClientID="HH")
@@ -64,15 +77,25 @@ Authenticate:
 
 We can directly search by resource:
 
-    >>> get("client")
-    '{"count": 3, ... "id": "client-1", ...}'
+    >>> response = get("client")
+    >>> get_count(response)
+    3
+    >>> get_items_ids(response)
+    [u'client-1', u'client-2', u'client-3']
 
 We can also add search criteria as well:
 
-    >>> get("client?id=client-1")
-    '{"count": 1, ..."id": "client-1", ...}'
-    >>> get("client?getName=ACME")
-    '{"count": 1, ..."id": "client-2", ...}'
+    >>> response = get("client?id=client-1")
+    >>> get_count(response)
+    1
+    >>> get_items_ids(response)
+    [u'client-1']
+
+    >>> response = get("client?getName=ACME")
+    >>> get_count(response)
+    1
+    >>> get_items_ids(response)
+    [u'client-2']
 
 
 Sort and limit
@@ -80,12 +103,17 @@ Sort and limit
 
 We can use sort and limit too:
 
-    >>> get("client?sort_on=id&sort_order=asc")
-    '{"count": 3, ..."id": "client-1", ..."id": "client-2", ..."id": "client-3", ...}'
-    >>> get("client?sort_on=id&sort_order=desc")
-    '{"count": 3, ..."id": "client-3", ..."id": "client-2", ..."id": "client-1", ...}'
-    >>> get("client?sort_on=id&sort_order=desc&limit=2")
-    '{"count": 3, "pagesize": 2, ..."id": "client-3", ...}'
+    >>> response = get("client?sort_on=id&sort_order=asc")
+    >>> get_items_ids(response, sort=False)
+    [u'client-1', u'client-2', u'client-3']
+
+    >>> response = get("client?sort_on=id&sort_order=desc")
+    >>> get_items_ids(response, sort=False)
+    [u'client-3', u'client-2', u'client-1']
+
+    >>> response = get("client?sort_on=id&sort_order=desc&limit=2")
+    >>> get_items_ids(response, sort=False)
+    [u'client-3', u'client-2']
 
 
 Search without resource
@@ -93,15 +121,19 @@ Search without resource
 
 We can also omit the resource and search directly by portal_type:
 
-    >>> get("search?portal_type=Client")
-    '{"count": 3, ..."id": "client-1", ...}'
+    >>> response = get("search?portal_type=Client")
+    >>> get_items_ids(response)
+    [u'client-1', u'client-2', u'client-3']
 
 Additional search criteria and sorting works as well:
 
-    >>> get("search?portal_type=Client&getName=ACME")
-    '{"count": 1, ..."id": "client-2", ...}'
-    >>> get("search?portal_type=Client&sort_on=id&sort_order=desc&limit=2")
-    '{"count": 3, "pagesize": 2, ..."id": "client-3", ...}'
+    >>> response = get("search?portal_type=Client&getName=ACME")
+    >>> get_items_ids(response)
+    [u'client-2']
+
+    >>> response = get("search?portal_type=Client&sort_on=id&sort_order=desc&limit=2")
+    >>> get_items_ids(response, sort=False)
+    [u'client-3', u'client-2']
 
 
 Catalog search
@@ -110,14 +142,20 @@ Catalog search
 We can specify the catalog to use in searches. Sample Types are stored in both
 portal_catalog and setup_catalog:
 
-    >>> get("sampletype")
-    '{"count": 2, ... "id": "sampletype-1", ...}'
-    >>> get("sampletype?catalog=portal_catalog")
-    '{"count": 2, ... "id": "sampletype-1", ...}'
-    >>> get("sampletype?catalog=bika_setup_catalog")
-    '{"count": 2, ... "id": "sampletype-1", ...}'
+    >>> response = get("sampletype")
+    >>> get_items_ids(response)
+    [u'sampletype-1', u'sampletype-2']
+
+    >>> response = get("sampletype?catalog=portal_catalog")
+    >>> get_items_ids(response)
+    [u'sampletype-1', u'sampletype-2']
+
+    >>> response = get("sampletype?catalog=bika_setup_catalog")
+    >>> get_items_ids(response)
+    [u'sampletype-1', u'sampletype-2']
 
 But Sample Types are not stored in "bika_catalog":
 
-    >>> get("sampletype?catalog=bika_catalog")
-    '{"count": 0, ...}'
+    >>> response = get("sampletype?catalog=bika_catalog")
+    >>> get_items_ids(response)
+    []

@@ -77,7 +77,7 @@ in the request:
     >>> data = {"title": "Test client 1",
     ...         "ClientID": "TC1"}
     >>> post(url, data)
-    '{"count": 1, ..."url": ...clients/client-1", ...}'
+    '...clients/client-1"...'
 
 We can also omit the parent uid while defining the resource, but passing the
 uid of the container via post:
@@ -86,7 +86,7 @@ uid of the container via post:
     ...         "ClientID": "TC2",
     ...         "parent_uid": clients_uid}
     >>> post("client/create", data)
-    '{"count": 1, ..."url": ...clients/client-2", ...}'
+    '...clients/client-2"...'
 
 We can use `parent_path` instead of `parent_uid`:
 
@@ -94,7 +94,7 @@ We can use `parent_path` instead of `parent_uid`:
     ...         "ClientID": "TC3",
     ...         "parent_path": api.get_path(clients)}
     >>> post("client/create", data)
-    '{"count": 1, ..."url": ...clients/client-3", ...}'
+    '...clients/client-3"...'
 
 
 Create without resource
@@ -108,7 +108,7 @@ defining the portal_type via post:
     ...         "ClientID": "TC4",
     ...         "portal_type": "Client"}
     >>> post(url, data)
-    '{"count": 1, ..."url": ...clients/client-4", ...}'
+    '...clients/client-4"...'
 
 
 Create via post only
@@ -121,14 +121,14 @@ We can omit both the resource and container uid and pass everything via post:
     ...         "portal_type": "Client",
     ...         "parent_path": api.get_path(clients)}
     >>> post("create", data)
-    '{"count": 1, ..."url": ...clients/client-5", ...}'
+    '...clients/client-5"...'
 
     >>> data = {"title": "Test client 6",
     ...         "ClientID": "TC6",
     ...         "portal_type": "Client",
     ...         "parent_uid": clients_uid}
     >>> post("create", data)
-    '{"count": 1, ..."url": ...clients/client-6", ...}'
+    '...clients/client-6"...'
 
 If we do a search now for clients, we will get all them:
 
