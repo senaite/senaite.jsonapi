@@ -1403,9 +1403,9 @@ def create_object(container, portal_type, **data):
     try:
         update_object_with_data(obj, data)
     except APIError:
-
         # Failure in creation process, delete the invalid object
-        container.manage_delObjects(obj.id)
+        # NOTE: We bypass the permission checks
+        container._delObject(obj.id)
         # reraise the error
         raise
 

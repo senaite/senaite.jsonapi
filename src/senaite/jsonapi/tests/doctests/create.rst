@@ -14,6 +14,7 @@ Needed Imports:
     >>> import json
     >>> import transaction
     >>> import urllib
+    >>> from DateTime import DateTime
     >>> from operator import itemgetter
     >>> from plone.app.testing import setRoles
     >>> from plone.app.testing import TEST_USER_ID
@@ -38,6 +39,20 @@ Functional Helpers:
     ...     url = "{}/{}".format(api_url, url)
     ...     browser.post(url, urllib.urlencode(data))
     ...     return browser.contents
+
+    >>> def create(data):
+    ...     response = post("create", data)
+    ...     assert("items" in response)
+    ...     response = json.loads(response)
+    ...     items = response.get("items")
+    ...     assert(len(items)==1)
+    ...     item = response.get("items")[0]
+    ...     assert("uid" in item)
+    ...     return api.get_object(item["uid"])
+
+    >>> def get_items(url, output):
+    ...     output = json.loads(output)
+    ...     return output.get("items")
 
 Variables:
 
@@ -128,36 +143,38 @@ If we do a search now for clients, we will get all them:
     >>> sorted(items)
     [u'TC1', u'TC2', u'TC3', u'TC4', u'TC5', u'TC6']
 
-Restrictions
-~~~~~~~~~~~~
 
-We get a 401 error if we try to create an object inside portal root:
+Create a Client
+~~~~~~~~~~~~~~~
 
-    >>> data = {"title": "My clients folder",
-    ...         "portal_type": "ClientsFolder",
-    ...         "parent_path": api.get_path(portal)}
-    >>> post("create", data)
-    Traceback (most recent call last):
-    [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    >>> data = {"portal_type": "Client",
+    ...         "parent_path": api.get_path(clients),
+    ...         "title": "Omelette corp",
+    ...         "ClientID": "EC"}
+    >>> client = create(data)
+    >>> client.getClientID()
+    'EC'
 
-We get a 401 error if we try to create an object inside setup folder:
+Create a Client Contact
+~~~~~~~~~~~~~~~~~~~~~~~
 
-    >>> data = {"title": "My Analysis Categories folder",
-    ...         "portal_type": "AnalysisCategories",
-    ...         "parent_path": api.get_path(setup)}
-    >>> post("create", data)
-    Traceback (most recent call last):
-    [...]
-    HTTPError: HTTP Error 401: Unauthorized
+Client contact makes use of a `ICreate` adapter, cause it requires some
+additional logic on creation
 
-We get a 401 error when we try to create an object from a type that is not
-allowed by the container:
+    >>> data = {"portal_type": "Contact",
+    ...         "parent_path": api.get_path(client),
+    ...         "Firstname": "Proud",
+    ...         "Lastname": "Hen"}
+    >>> contact = create(data)
+    >>> contact.getFullname()
+    'Proud Hen'
 
-    >>> data = {"title": "My Client",
-    ...         "portal_type": "Method",
-    ...         "parent_path": api.get_path(clients)}
-    >>> post("create", data)
-    Traceback (most recent call last):
-    [...]
-    HTTPError: HTTP Error 401: Unauthorized
+Creating a Sample
+~~~~~~~~~~~~~~~~~
+
+The creation of a Sample (`AnalysisRequest` portal type) is handled differently
+from the rest of objects, an specific function in `senaite.core` must be used
+instead of the plone's default creation.
+
+Create some necessary objects first (by using `senaite.jsonapi`):
+
