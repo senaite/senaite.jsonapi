@@ -30,6 +30,8 @@ Table of Contents:
    auth
    api
    crud
+   extend
+   doctests
    changelog
 
 

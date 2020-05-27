@@ -133,3 +133,22 @@ class IBatch(interface.Interface):
     def make_prev_url():
         """ build and return the previous url
         """
+
+
+class ICreate(interface.Interface):
+    """Interface to handle creation of objects
+    """
+
+    def is_creation_allowed(self):
+        """Returns whether the creation of this portal type for the given
+        container is allowed
+        """
+
+    def is_creation_delegated(self):
+        """Return whether the creation of this portal type has to be delegated
+        to this adapter
+        """
+
+    def create_object(self, **data):
+        """Creates an object
+        """
