@@ -13,21 +13,11 @@ Needed Imports:
 
     >>> import json
     >>> import transaction
-    >>> import urllib
     >>> from plone.app.testing import setRoles
     >>> from plone.app.testing import TEST_USER_ID
     >>> from plone.app.testing import TEST_USER_PASSWORD
 
-    >>> from bika.lims import api
-
 Functional Helpers:
-
-    >>> def login(user=TEST_USER_ID, password=TEST_USER_PASSWORD):
-    ...     browser.open(portal_url + "/login_form")
-    ...     browser.getControl(name='__ac_name').value = user
-    ...     browser.getControl(name='__ac_password').value = password
-    ...     browser.getControl(name='submit').click()
-    ...     assert("__ac_password" not in browser.contents)
 
     >>> def get(url):
     ...     browser.open("{}/{}".format(api_url, url))
@@ -39,7 +29,6 @@ Variables:
     >>> portal = self.portal
     >>> portal_url = portal.absolute_url()
     >>> api_url = "{}/@@API/senaite/v1".format(portal_url)
-    >>> setup = api.get_setup()
     >>> browser = self.getBrowser()
     >>> setRoles(portal, TEST_USER_ID, ["LabManager", "Manager"])
     >>> transaction.commit()
