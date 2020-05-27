@@ -16,8 +16,6 @@ Needed Imports:
     >>> from plone.app.testing import TEST_USER_ID
     >>> from plone.app.testing import TEST_USER_PASSWORD
 
-    >>> from bika.lims import api
-
 Functional Helpers:
 
     >>> def get(url):
