@@ -31,6 +31,7 @@ Table of Contents:
    api
    crud
    extend
+   doctests
    changelog
 
 
