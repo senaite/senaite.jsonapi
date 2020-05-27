@@ -128,3 +128,36 @@ If we do a search now for clients, we will get all them:
     >>> sorted(items)
     [u'TC1', u'TC2', u'TC3', u'TC4', u'TC5', u'TC6']
 
+Restrictions
+~~~~~~~~~~~~
+
+We get a 401 error if we try to create an object inside portal root:
+
+    >>> data = {"title": "My clients folder",
+    ...         "portal_type": "ClientsFolder",
+    ...         "parent_path": api.get_path(portal)}
+    >>> post("create", data)
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 401: Unauthorized
+
+We get a 401 error if we try to create an object inside setup folder:
+
+    >>> data = {"title": "My Analysis Categories folder",
+    ...         "portal_type": "AnalysisCategories",
+    ...         "parent_path": api.get_path(setup)}
+    >>> post("create", data)
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 401: Unauthorized
+
+We get a 401 error when we try to create an object from a type that is not
+allowed by the container:
+
+    >>> data = {"title": "My Client",
+    ...         "portal_type": "Method",
+    ...         "parent_path": api.get_path(clients)}
+    >>> post("create", data)
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 401: Unauthorized

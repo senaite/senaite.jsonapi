@@ -1342,14 +1342,8 @@ def find_target_container(portal_type, record):
     :rtype: object
     """
     portal_type = portal_type or record.get("portal_type")
-    container = get_container_for(portal_type)
-    if container:
-        return container
-
     parent_uid = record.pop("parent_uid", None)
     parent_path = record.pop("parent_path", None)
-
-    target = None
 
     # Try to find the target object
     if parent_uid:
@@ -1357,7 +1351,8 @@ def find_target_container(portal_type, record):
     elif parent_path:
         target = get_object_by_path(parent_path)
     else:
-        fail(404, "No target UID/PATH information found")
+        # Try to get the default container from config
+        target = get_container_for(portal_type)
 
     if not target:
         fail(404, "No target container found")
