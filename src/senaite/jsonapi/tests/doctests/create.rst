@@ -1,5 +1,5 @@
 CREATE
-======
+------
 
 Running this test from the buildout directory:
 
@@ -7,7 +7,7 @@ Running this test from the buildout directory:
 
 
 Test Setup
-----------
+~~~~~~~~~~
 
 Needed Imports:
 
@@ -50,8 +50,8 @@ Variables:
     >>> transaction.commit()
 
 
-Create
-------
+Create with resource
+~~~~~~~~~~~~~~~~~~~~
 
 Authenticate:
 
@@ -68,34 +68,42 @@ in the request:
     >>> post(url, data)
     '{"count": 1, ..."url": ...clients/client-1", ...}'
 
+We can also omit the parent uid while defining the resource, but passing the
+uid of the container via post:
+
+    >>> data = {"title": "Test client 2",
+    ...         "ClientID": "TC2",
+    ...         "parent_uid": clients_uid}
+    >>> post("client/create", data)
+    '{"count": 1, ..."url": ...clients/client-2", ...}'
+
+We can use `parent_path` instead of `parent_uid`:
+
+    >>> data = {"title": "Test client 3",
+    ...         "ClientID": "TC3",
+    ...         "parent_path": api.get_path(clients)}
+    >>> post("client/create", data)
+    '{"count": 1, ..."url": ...clients/client-3", ...}'
+
+
+Create without resource
+~~~~~~~~~~~~~~~~~~~~~~~
+
 Or we can create an object without the resource, but with the parent uid and
 defining the portal_type via post:
 
     >>> url = "create/{}".format(clients_uid)
-    >>> data = {"title": "Test client 2",
-    ...         "ClientID": "TC2",
-    ...         "portal_type": "Client"}
-    >>> post(url, data)
-    '{"count": 1, ..."url": ...clients/client-2", ...}'
-
-We can also omit the parent uid while defining the resource, but passing the
-uid of the container via post:
-
-    >>> data = {"title": "Test client 3",
-    ...         "ClientID": "TC3",
-    ...         "parent_uid": clients_uid}
-    >>> post("client/create", data)
-    '{"count": 1, ..."url": ...clients/client-3", ...}'
-
-We can use `parent_path` instead of `parent_uid`:
-
     >>> data = {"title": "Test client 4",
     ...         "ClientID": "TC4",
-    ...         "parent_path": api.get_path(clients)}
-    >>> post("client/create", data)
+    ...         "portal_type": "Client"}
+    >>> post(url, data)
     '{"count": 1, ..."url": ...clients/client-4", ...}'
 
-And we can omit both the resource and uid and pass everything via post too:
+
+Create via post only
+~~~~~~~~~~~~~~~~~~~~
+
+We can omit both the resource and container uid and pass everything via post:
 
     >>> data = {"title": "Test client 5",
     ...         "ClientID": "TC5",

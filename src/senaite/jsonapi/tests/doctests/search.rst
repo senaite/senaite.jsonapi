@@ -1,5 +1,5 @@
 SEARCH
-======
+------
 
 Running this test from the buildout directory:
 
@@ -7,7 +7,7 @@ Running this test from the buildout directory:
 
 
 Test Setup
-----------
+~~~~~~~~~~
 
 Needed Imports:
 
@@ -55,8 +55,8 @@ Initialize the instance with some objects for testing:
     >>> init_data()
 
 
-Basic Search
-------------
+Basic search
+~~~~~~~~~~~~
 
 Authenticate:
 
@@ -74,7 +74,11 @@ We can also add search criteria as well:
     >>> get("client?getName=ACME")
     '{"count": 1, ..."id": "client-2", ...}'
 
-Limit and sort them too:
+
+Sort and limit
+~~~~~~~~~~~~~~
+
+We can use sort and limit too:
 
     >>> get("client?sort_on=id&sort_order=asc")
     '{"count": 3, ..."id": "client-1", ..."id": "client-2", ..."id": "client-3", ...}'
@@ -82,6 +86,10 @@ Limit and sort them too:
     '{"count": 3, ..."id": "client-3", ..."id": "client-2", ..."id": "client-1", ...}'
     >>> get("client?sort_on=id&sort_order=desc&limit=2")
     '{"count": 3, "pagesize": 2, ..."id": "client-3", ...}'
+
+
+Search without resource
+~~~~~~~~~~~~~~~~~~~~~~~
 
 We can also omit the resource and search directly by portal_type:
 
@@ -95,8 +103,9 @@ Additional search criteria and sorting works as well:
     >>> get("search?portal_type=Client&sort_on=id&sort_order=desc&limit=2")
     '{"count": 3, "pagesize": 2, ..."id": "client-3", ...}'
 
-Catalog Search
---------------
+
+Catalog search
+~~~~~~~~~~~~~~
 
 We can specify the catalog to use in searches. Sample Types are stored in both
 portal_catalog and setup_catalog:
