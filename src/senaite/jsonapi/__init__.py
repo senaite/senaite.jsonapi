@@ -22,6 +22,8 @@ import logging
 
 from plone.jsonapi.core import router
 
+PRODUCT_NAME = "senaite.jsonapi"
+
 logger = logging.getLogger("senaite.jsonapi")
 
 

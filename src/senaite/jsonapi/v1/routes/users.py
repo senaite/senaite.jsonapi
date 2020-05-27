@@ -37,7 +37,7 @@ def get_user_info(user):
             "username": current.getUserName(),
             "authenticated": False,
             "roles": current.getRoles(),
-            "api_url": api.url_for("plone.jsonapi.routes.users", username="current"),
+            "api_url": api.url_for("senaite.jsonapi.v1.users", username="current"),
         }
 
     # nothing to do

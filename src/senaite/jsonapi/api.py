@@ -24,6 +24,7 @@ import json
 import plone.app.controlpanel as cp
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
+
 from bika.lims import api
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 from DateTime import DateTime
@@ -33,7 +34,6 @@ from plone.jsonapi.core import router
 from Products.ATContentTypes.utils import DT2dt
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
-from senaite.jsonapi import config
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi import underscore as u
@@ -44,9 +44,11 @@ from senaite.jsonapi.interfaces import ICatalogQuery
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.interfaces import IInfo
+from senaite.jsonapi.interfaces import ICreate
 from zope.component import getAdapter
 from zope.schema import getFieldNames
 from zope.schema import getFields
+from zope.component import queryAdapter
 
 _marker = object()
 
@@ -149,17 +151,18 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
             # try to fetch the portal type out of the request data
             portal_type = record.pop("portal_type", None)
 
-        # check if it is allowed to create the portal_type
-        if not is_creation_allowed(portal_type):
-            fail(401, "Creation of '{}' is not allowed".format(portal_type))
-
         if container is None:
             # find the container for content creation
-            container = find_target_container(portal_type, record)
+            container = find_target_container(record)
 
         # Check if we have a container and a portal_type
         if not all([container, portal_type]):
             fail(400, "Please provide a container path/uid and portal_type")
+
+        # check if it is allowed to create the portal_type
+        if not is_creation_allowed(portal_type, container):
+            fail(401, "Creation of '{}' in '{}' is not allowed".format(
+                portal_type, api.get_path(container)))
 
         # create the object and pass in the record data
         obj = create_object(container, portal_type, **record)
@@ -1052,34 +1055,35 @@ def resource_to_portal_type(resource):
     return portal_type
 
 
-def get_container_for(portal_type):
-    """Returns the single holding container object of this content type
-
-    :param portal_type: The portal type requested
-    :type portal_type: string
-    :returns: Folderish container where the portal type can be created
-    :rtype: AT content object
-    """
-    container_paths = config.CONTAINER_PATHS_FOR_PORTAL_TYPES
-    container_path = container_paths.get(portal_type)
-
-    if container_path is None:
-        return None
-
-    portal_path = get_path(get_portal())
-    return get_object_by_path("/".join([portal_path, container_path]))
-
-
-def is_creation_allowed(portal_type):
+def is_creation_allowed(portal_type, container):
     """Checks if it is allowed to create the portal type
 
     :param portal_type: The portal type requested
     :type portal_type: string
+    :container container: The parent of the object to be created
     :returns: True if it is allowed to create this object
     :rtype: bool
     """
-    allowed_portal_types = config.ALLOWED_PORTAL_TYPES_TO_CREATE
-    return portal_type in allowed_portal_types
+    # Do not allow the creation of objects directly inside portal root
+    if container == api.get_portal():
+        return False
+
+    # Do not allow the creation of objects directly inside setup folder
+    if container == api.get_setup():
+        return False
+
+    # Check if the portal_type is allowed in the container
+    container_info = container.getTypeInfo()
+    if container_info.filter_content_types:
+        if portal_type not in container_info.allowed_content_types:
+            return False
+
+    # Look for a create-specific adapter for this portal type and container
+    adapter = queryAdapter(container, ICreate, name=portal_type)
+    if adapter:
+        return adapter.is_creation_allowed()
+
+    return True
 
 
 def url_for(endpoint, default=DEFAULT_ENDPOINT, **values):
@@ -1303,7 +1307,7 @@ def find_objects(uid=None):
     return objects
 
 
-def find_target_container(portal_type, record):
+def find_target_container(record):
     """Locates a target container for the given portal_type and record
 
     :param record: The dictionary representation of a content object
@@ -1311,23 +1315,15 @@ def find_target_container(portal_type, record):
     :returns: folder which contains the object
     :rtype: object
     """
-    portal_type = portal_type or record.get("portal_type")
-    container = get_container_for(portal_type)
-    if container:
-        return container
-
     parent_uid = record.pop("parent_uid", None)
     parent_path = record.pop("parent_path", None)
 
-    target = None
-
     # Try to find the target object
+    target = None
     if parent_uid:
         target = get_object_by_uid(parent_uid)
     elif parent_path:
         target = get_object_by_path(parent_path)
-    else:
-        fail(404, "No target UID/PATH information found")
 
     if not target:
         fail(404, "No target container found")
@@ -1349,6 +1345,14 @@ def create_object(container, portal_type, **data):
                     "generates a proper ID for you" .format(id))
 
     try:
+        # Is there any adapter registered to handle the creation of this type?
+        adapter = queryAdapter(container, ICreate, name=portal_type)
+        if adapter and adapter.is_creation_delegated():
+            logger.info("Delegating 'create' operation of '{}' in '{}'".format(
+                portal_type, api.get_path(container)
+            ))
+            return adapter.create_object(**data)
+
         # Special case for ARs
         # => return immediately w/o update
         if portal_type == "AnalysisRequest":
@@ -1370,9 +1374,9 @@ def create_object(container, portal_type, **data):
     try:
         update_object_with_data(obj, data)
     except APIError:
-
         # Failure in creation process, delete the invalid object
-        container.manage_delObjects(obj.id)
+        # NOTE: We bypass the permission checks
+        container._delObject(obj.id)
         # reraise the error
         raise
 
