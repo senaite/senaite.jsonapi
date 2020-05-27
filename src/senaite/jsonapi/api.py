@@ -24,7 +24,6 @@ import json
 import plone.app.controlpanel as cp
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
-from senaite.jsonapi.interfaces import ICreate
 
 from bika.lims import api
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
@@ -155,7 +154,7 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
 
         if container is None:
             # find the container for content creation
-            container = find_target_container(portal_type, record)
+            container = find_target_container(record)
 
         # Check if we have a container and a portal_type
         if not all([container, portal_type]):
@@ -1057,24 +1056,6 @@ def resource_to_portal_type(resource):
     return portal_type
 
 
-def get_container_for(portal_type):
-    """Returns the single holding container object of this content type
-
-    :param portal_type: The portal type requested
-    :type portal_type: string
-    :returns: Folderish container where the portal type can be created
-    :rtype: AT content object
-    """
-    container_paths = config.CONTAINER_PATHS_FOR_PORTAL_TYPES
-    container_path = container_paths.get(portal_type)
-
-    if container_path is None:
-        return None
-
-    portal_path = get_path(get_portal())
-    return get_object_by_path("/".join([portal_path, container_path]))
-
-
 def is_creation_allowed(portal_type, container):
     """Checks if it is allowed to create the portal type
 
@@ -1333,7 +1314,7 @@ def find_objects(uid=None):
     return objects
 
 
-def find_target_container(portal_type, record):
+def find_target_container(record):
     """Locates a target container for the given portal_type and record
 
     :param record: The dictionary representation of a content object
@@ -1341,18 +1322,15 @@ def find_target_container(portal_type, record):
     :returns: folder which contains the object
     :rtype: object
     """
-    portal_type = portal_type or record.get("portal_type")
     parent_uid = record.pop("parent_uid", None)
     parent_path = record.pop("parent_path", None)
 
     # Try to find the target object
+    target = None
     if parent_uid:
         target = get_object_by_uid(parent_uid)
     elif parent_path:
         target = get_object_by_path(parent_path)
-    else:
-        # Try to get the default container from config
-        target = get_container_for(portal_type)
 
     if not target:
         fail(404, "No target container found")
