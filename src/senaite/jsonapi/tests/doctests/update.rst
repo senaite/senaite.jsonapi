@@ -44,9 +44,6 @@ Functional Helpers:
     ...     response = get(uid)
     ...     return get_item_object(response)
 
-    >>> def update(data):
-    ...     response = post("update", data)
-    ...     return get_item_object(response)
 
     >>> def create(data):
     ...     response = post("create", data)
@@ -141,3 +138,36 @@ path of the container object:
     >>> obj = get_item_object(response)
     >>> obj.getClientID()
     'CC5'
+
+
+Update restrictions
+~~~~~~~~~~~~~~~~~~~
+
+We get a 401 error if we try to update an object from inside portal root:
+
+    >>> data = {"title": "My clients folder",
+    ...         "uid": api.get_uid(clients),}
+    >>> post("update", data)
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 401: Unauthorized
+
+We get a 401 error if we try to update an object from inside setup folder:
+
+    >>> cats_uid = api.get_uid(api.get_setup().bika_analysiscategories)
+    >>> data = {"title": "My Analysis Categories folder",
+    ...         "uid": cats_uid,}
+    >>> post("update", data)
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 401: Unauthorized
+
+We cannot update the `id` of an object:
+
+    >>> original_id = api.get_id(client1)
+    >>> data = {"id": "client-123123",
+    ...         "uid": client_uid }
+    >>> response = post("update", data)
+    >>> obj = get_item_object(response)
+    >>> api.get_id(obj) == original_id
+    True

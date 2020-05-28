@@ -60,6 +60,16 @@ Additional fields might be required depending on the resource to be created. For
 instance, for the creation of a `Client` object, values for two additional
 fields are required: `Name` and `ClientID`.
 
+.. important::
+   SENAITE.JSONAPI does not allow the creation of objects when:
+
+   - the container is the portal root (`senaite` path)
+   - the container is senaite's setup (`senaite/bika_setup` path)
+   - the container does not allow the specified `portal_type`
+
+   In such cases, `senaite.jsonapi` will always return a 401 response.
+
+
 The examples below show possible variations of a HTTP POST body sent to the
 JSON API with the header **Content-Type: application/json** set. Remember you
 can use the `Advanced Rest Client`_ Application to send POST requests. See
@@ -158,6 +168,20 @@ specify all the information in the HTTP POST body by using either:
 
 Alternatively, you can use `id` and `parent_path` parameters with the values
 from the parent container as well.
+
+.. important::
+   SENAITE.JSONAPI does not allow the update of objects when:
+
+   - the container is the portal root (`senaite` path)
+   - the container is senaite's setup (`senaite/bika_setup` path)
+
+   In such cases, `senaite.jsonapi` will always return a 401 response.
+
+
+The examples below show possible variations of a HTTP POST body sent to the
+JSON API with the header **Content-Type: application/json** set. Remember you
+can use the `Advanced Rest Client`_ Application to send POST requests. See
+:doc:`installation` for details.
 
 Example
 .......

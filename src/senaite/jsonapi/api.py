@@ -18,6 +18,7 @@
 # Copyright 2017-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+import copy
 import datetime
 import json
 
@@ -77,6 +78,8 @@ CONTROLPANEL_INTERFACE_MAPPING = {
     'site': [cp.site.ISiteSchema],
     'skins': [cp.skins.ISkinsSchema],
 }
+
+SKIP_UPDATE_FIELDS = ["id", ]
 
 
 # -----------------------------------------------------------------------------
@@ -224,8 +227,7 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
 
         # Can this object be updated?
         if not is_update_allowed(obj):
-            logger.warn("Update of {} is not allowed".format(api.get_path(obj)))
-            continue
+            fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
 
         # update the object with the given record data
         obj = update_object_with_data(obj, record)
@@ -1454,8 +1456,13 @@ def update_object_with_data(content, record):
     if dm is None:
         fail(400, "Update for this object is not allowed")
 
+    # Bail-out non-update-able fields
+    purged_records = copy.deepcopy(record)
+    for field_id in filter(lambda it: it in record, SKIP_UPDATE_FIELDS):
+        del(purged_records[field_id])
+
     # Iterate through record items
-    for k, v in record.items():
+    for k, v in purged_records.items():
         try:
             success = dm.set(k, v, **record)
         except Unauthorized:
