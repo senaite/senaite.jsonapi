@@ -1,4 +1,4 @@
-CREATE
+UPDATE
 ------
 
 Running this test from the buildout directory:
@@ -39,11 +39,6 @@ Functional Helpers:
     ...     item = response.get("items")[0]
     ...     assert("uid" in item)
     ...     return api.get_object(item["uid"])
-
-    >>> def read(uid):
-    ...     response = get(uid)
-    ...     return get_item_object(response)
-
 
     >>> def create(data):
     ...     response = post("create", data)
