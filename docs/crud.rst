@@ -2,7 +2,7 @@ CRUD
 ====
 
 Each content route provider shipped with this package, provides the basic CRUD
-:ref:`Operations` functionality to `get`, `create`, `delete` and `update` the
+:ref:`Operations` functionality to `create`, `read`, `update` and `delete` the
 resource handled, except that the `delete` operation tries to deactivate the
 resource instead of deleting it. The reason is that for traceability reasons,
 *delete* operation is not supported in SENAITE LIMS.
@@ -19,15 +19,6 @@ Unified API
 
 There is a convenient and unified way to fetch the content without knowing the
 resource. This unified resource is directly located at the :ref:`BASE_URL`.
-
-
-READ
-----
-
-Use the base url to retrieve a content by uid, as explained in :ref:`Operations`.
-E.g.:
-
-http://localhost:8080/senaite/@@API/senaite/v1/<uid>
 
 
 CREATE
@@ -152,6 +143,18 @@ where:
           explained in :ref:`Operations`.
           Remember that in SENAITE LIMS, the portal type that represents samples
           is `AnalysisRequest`.
+
+
+READ
+----
+
+The `read` route does not exist, use the base url to retrieve a content by uid,
+as explained in :ref:`Operations`. E.g.:
+
+http://localhost:8080/senaite/@@API/senaite/v1/<uid>
+
+Please, refer to :ref:`Search_Resource` section to learn how to search objects.
+
 
 UPDATE
 ------
