@@ -156,8 +156,8 @@ specify all the information in the HTTP POST body by using either:
 - `path` parameter, as the physical path to the object, or
 - `uid` parameter, as the UID of the object
 
-Alternatively, you can use `id` and `path` parameters with the values from the
-parent container as well.
+Alternatively, you can use `id` and `parent_path` parameters with the values
+from the parent container as well.
 
 Example
 .......
@@ -166,7 +166,8 @@ Given this Request URL:
 
 http://localhost:8080/senaite/@@API/senaite/v1/update/
 
-the following POSTs are equivalent, all them update the "Priority" of sample DBS-00012 to 2:
+the following POSTs are equivalent, all them update the "Priority" of sample
+DBS-00012 to 2:
 
 .. code-block:: javascript
 
@@ -186,7 +187,7 @@ the following POSTs are equivalent, all them update the "Priority" of sample DBS
 
     {
         "id": "DBS-00012",
-        "path": "/senaite/clients/client-1/",
+        "parent_path": "/senaite/clients/client-1",
         "Priority": 2,
     }
 
