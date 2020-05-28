@@ -79,7 +79,7 @@ Body Content type (application/json):
 
     {
         "portal_type": "Client",
-        "Name": "Test Client",
+        "title": "Test Client",
         "ClientID": "TEST-01",
         "parent_path": "/senaite/clients"
     }
@@ -107,7 +107,7 @@ Body Content type (application/json):
           "hours": 0,
           "minutes": 0
         },
-        "parent_path": "/bika_setup/bika_sampletypes"
+        "parent_path": "/senaite/bika_setup/bika_sampletypes"
     }
 
 
