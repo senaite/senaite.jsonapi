@@ -1,9 +1,9 @@
-VIEW
+READ
 ----
 
 Running this test from the buildout directory:
 
-    bin/test test_doctests -t view
+    bin/test test_doctests -t read
 
 
 Test Setup
