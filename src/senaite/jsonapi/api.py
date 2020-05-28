@@ -1450,31 +1450,42 @@ def update_object_with_data(content, record):
     # ensure we have a full content object
     content = get_object(content)
 
-    # get the proper data manager
-    dm = IDataManager(content)
+    # Look for an update-specific adapter for this object
+    adapter = queryAdapter(content, IUpdate)
+    if adapter and adapter.is_update_delegated():
+        # Use the adapter to update the object
+        logger.info("Delegating 'update' operation of '{}'".format(
+            api.get_path(content)
+        ))
+        adapter.update_object(**record)
 
-    if dm is None:
-        fail(400, "Update for this object is not allowed")
+    else:
+        # Fall-back to default update machinery
+        # get the proper data manager
+        dm = IDataManager(content)
 
-    # Bail-out non-update-able fields
-    purged_records = copy.deepcopy(record)
-    for field_id in filter(lambda it: it in record, SKIP_UPDATE_FIELDS):
-        del(purged_records[field_id])
+        if dm is None:
+            fail(400, "Update for this object is not allowed")
 
-    # Iterate through record items
-    for k, v in purged_records.items():
-        try:
-            success = dm.set(k, v, **record)
-        except Unauthorized:
-            fail(401, "Not allowed to set the field '%s'" % k)
-        except ValueError, exc:
-            fail(400, str(exc))
+        # Bail-out non-update-able fields
+        purged_records = copy.deepcopy(record)
+        for field_id in filter(lambda it: it in record, SKIP_UPDATE_FIELDS):
+            del(purged_records[field_id])
 
-        if not success:
-            logger.warn("update_object_with_data::skipping key=%r", k)
-            continue
+        # Iterate through record items
+        for k, v in purged_records.items():
+            try:
+                success = dm.set(k, v, **record)
+            except Unauthorized:
+                fail(401, "Not allowed to set the field '%s'" % k)
+            except ValueError, exc:
+                fail(400, str(exc))
 
-        logger.debug("update_object_with_data::field %r updated", k)
+            if not success:
+                logger.warn("update_object_with_data::skipping key=%r", k)
+                continue
+
+            logger.debug("update_object_with_data::field %r updated", k)
 
     # Validate the entire content object
     invalid = validate_object(content, record)
