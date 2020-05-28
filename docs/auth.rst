@@ -49,13 +49,13 @@ Response
 Logout
 ------
 
-:URL Schema: ``<BASE URL>/logout``
+:URL Schema: ``<BASE URL>/users/logout``
 
 The response will expire the `__ac` cookie for further requests.
 
 Example
 
-``http://localhost:8080/senaite/@@API/senaite/v1/logout``
+``http://localhost:8080/senaite/@@API/senaite/v1/users/logout``
 
 Response
 

@@ -13,7 +13,6 @@ Needed Imports:
 
     >>> import json
     >>> import transaction
-    >>> import urllib
 
     >>> from plone.app.testing import setRoles
     >>> from plone.app.testing import TEST_USER_ID
@@ -22,13 +21,6 @@ Needed Imports:
     >>> from bika.lims import api
 
 Functional Helpers:
-
-    >>> def login(user=TEST_USER_ID, password=TEST_USER_PASSWORD):
-    ...     browser.open(portal_url + "/login_form")
-    ...     browser.getControl(name='__ac_name').value = user
-    ...     browser.getControl(name='__ac_password').value = password
-    ...     browser.getControl(name='submit').click()
-    ...     assert("__ac_password" not in browser.contents)
 
     >>> def get(url):
     ...     browser.open("{}/{}".format(api_url, url))
@@ -70,10 +62,6 @@ Initialize the instance with some objects for testing:
 
 Basic search
 ~~~~~~~~~~~~
-
-Authenticate:
-
-    >>> login()
 
 We can directly search by resource:
 

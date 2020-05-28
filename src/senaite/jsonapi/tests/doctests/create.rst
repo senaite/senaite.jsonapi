@@ -15,7 +15,6 @@ Needed Imports:
     >>> import transaction
     >>> import urllib
     >>> from DateTime import DateTime
-    >>> from operator import itemgetter
     >>> from plone.app.testing import setRoles
     >>> from plone.app.testing import TEST_USER_ID
     >>> from plone.app.testing import TEST_USER_PASSWORD
@@ -23,13 +22,6 @@ Needed Imports:
     >>> from bika.lims import api
 
 Functional Helpers:
-
-    >>> def login(user=TEST_USER_ID, password=TEST_USER_PASSWORD):
-    ...     browser.open(portal_url + "/login_form")
-    ...     browser.getControl(name='__ac_name').value = user
-    ...     browser.getControl(name='__ac_password').value = password
-    ...     browser.getControl(name='submit').click()
-    ...     assert("__ac_password" not in browser.contents)
 
     >>> def get(url):
     ...     browser.open("{}/{}".format(api_url, url))
@@ -63,10 +55,6 @@ Variables:
 
 Create with resource
 ~~~~~~~~~~~~~~~~~~~~
-
-Authenticate:
-
-    >>> login()
 
 We can create an object by providing the resource and the parent uid directly
 in the request:

@@ -18,13 +18,6 @@ Needed Imports:
 
 Functional Helpers:
 
-    >>> def login(user=TEST_USER_ID, password=TEST_USER_PASSWORD):
-    ...     browser.open(portal_url + "/login_form")
-    ...     browser.getControl(name='__ac_name').value = user
-    ...     browser.getControl(name='__ac_password').value = password
-    ...     browser.getControl(name='submit').click()
-    ...     assert("__ac_password" not in browser.contents)
-
     >>> def logout():
     ...     browser.open(portal_url + "/logout")
     ...     assert("You are now logged out" in browser.contents)
@@ -43,10 +36,6 @@ JSON API:
 
 Authenticated user
 ~~~~~~~~~~~~~~~~~~
-
-Authenticate:
-
-    >>> login()
 
 The version route should be visible to authenticated users:
 
