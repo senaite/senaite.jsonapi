@@ -61,13 +61,13 @@ Operations
 ----------
 
 The API understands the basic `CRUD`_ operations on the *content resources*.
-Only the VIEW operation is accessible via a HTTP GET request. All other
+Only the READ operation is accessible via a HTTP GET request. All other
 operations have to be sent via a HTTP POST request.
 
 +-----------+---------------------------------------------+--------+
 | OPERATION | URL                                         | METHOD |
 +===========+=============================================+========+
-| VIEW      | <BASE URL>/<RESOURCE>/<uid:optional>        | GET    |
+| READ      | <BASE URL>/<RESOURCE>/<uid:optional>        | GET    |
 +-----------+---------------------------------------------+--------+
 | CREATE    | <BASE URL>/<RESOURCE>/create/<uid:optional> | POST   |
 +-----------+---------------------------------------------+--------+
@@ -91,7 +91,7 @@ DELETE too. When the UID is directly used, <RESOURCE> becomes optional:
 +-----------+---------------------------------------------+--------+
 | OPERATION | URL                                         | METHOD |
 +===========+=============================================+========+
-| VIEW      | <BASE URL>/<RESOURCE:optional>/<uid>        | GET    |
+| READ      | <BASE URL>/<RESOURCE:optional>/<uid>        | GET    |
 +-----------+---------------------------------------------+--------+
 | CREATE    | <BASE URL>/<RESOURCE:optional>/create/<uid> | POST   |
 +-----------+---------------------------------------------+--------+
