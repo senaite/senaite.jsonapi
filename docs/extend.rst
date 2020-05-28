@@ -802,4 +802,4 @@ same time. You can use the same adapter as before:
 With this example, `senaite.jsonapi` will not follow the default procedure of
 update, but delegate the operation to the function `update_object` of this
 adapter. Note the update will only be delegated when the function
-`is_creation_delegated` returns True.
+`is_update_delegated` returns True.
