@@ -21,11 +21,11 @@ There is a convenient and unified way to fetch the content without knowing the
 resource. This unified resource is directly located at the :ref:`BASE_URL`.
 
 
-GET
----
+READ
+----
 
-The `get` route is obsolete. Please use the base url to retrieve a content by
-uid, as explained in :ref:`Operations`. E.g.:
+Use the base url to retrieve a content by uid, as explained in :ref:`Operations`.
+E.g.:
 
 http://localhost:8080/senaite/@@API/senaite/v1/<uid>
 
