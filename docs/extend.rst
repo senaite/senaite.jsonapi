@@ -742,7 +742,7 @@ Register the adapter in your `configure.zcml` file for your special interface:
     <configure
         xmlns="http://namespaces.zope.org/zope">
 
-        <!-- Adapter for a creation custom adapter -->
+        <!-- Adapter for custom update -->
         <adapter
           factory=".TodoUpdateAdapter"
           provides="senaite.jsonapi.interfaces.IUpdate"
