@@ -24,6 +24,7 @@ import json
 import plone.app.controlpanel as cp
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
+from senaite.jsonapi.interfaces import IUpdate
 
 from bika.lims import api
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
@@ -204,6 +205,11 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
     obj = get_object_by_uid(uid)
     if obj:
         record = records[0]  # ignore other records if we got an uid
+
+        # Can this object be updated?
+        if not is_update_allowed(obj):
+            fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
+
         obj = update_object_with_data(obj, record)
         return make_items_for([obj], endpoint=endpoint)
 
@@ -214,6 +220,11 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
 
         # no object found for this record
         if obj is None:
+            continue
+
+        # Can this object be updated?
+        if not is_update_allowed(obj):
+            logger.warn("Update of {} is not allowed".format(api.get_path(obj)))
             continue
 
         # update the object with the given record data
@@ -1084,6 +1095,32 @@ def is_creation_allowed(portal_type, container):
         return adapter.is_creation_allowed()
 
     return True
+
+
+def is_update_allowed(obj):
+    """Returns whether the update of the object passed in is supported
+
+    :param obj: The object to be updated
+    :type obj: ATContentType/DexterityContentType
+    :returns: True if it is allowed to update this object
+    :rtype: bool
+    """
+    # Do not allow the update of objects that belong to site root folder
+    parent = api.get_parent(obj)
+    if api.is_portal(parent):
+        return False
+
+    # Do not allow the update of objects that belong to setup folder
+    if parent == api.get_setup():
+        return False
+
+    # Look for an update-specific adapter for this object
+    adapter = queryAdapter(obj, IUpdate)
+    if adapter:
+        return adapter.is_update_allowed()
+
+    # We do not support the update of inactive objects
+    return api.is_active(obj)
 
 
 def url_for(endpoint, default=DEFAULT_ENDPOINT, **values):
