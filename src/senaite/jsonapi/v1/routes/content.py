@@ -30,7 +30,7 @@ ACTIONS = "create,update,delete"
            "senaite.jsonapi.v1.get", methods=["GET"])
 #
 # /<resource (portal_type)>/<uid>
-@add_route("/<string:resource>/<string(maxlength=32):uid>",
+@add_route("/<string:resource>/<string(length=32):uid>",
            "senaite.jsonapi.v1.get", methods=["GET"])
 @add_route("/<string:resource>/<string(length=32):uid>",
            "senaite.jsonapi.v1.get", methods=["GET"])
@@ -59,26 +59,19 @@ def get(context, request, resource=None, uid=None):
 # http://werkzeug.pocoo.org/docs/0.11/routing/#custom-converters
 @add_route("/<any(" + ACTIONS + "):action>",
            "senaite.jsonapi.v1.action", methods=["POST"])
-@add_route("/<string:resource>",
+@add_route("/<string:resource>/<string(length=32):uid>",
            "senaite.jsonapi.v1.action", methods=["POST"])
-@add_route("/<string:resource>/<string(maxlength=32):uid>",
-           "senaite.jsonapi.v1.action", methods=["POST"])
-@add_route("/<any(" + ACTIONS + "):action>/<string(maxlength=32):uid>",
+@add_route("/<any(" + ACTIONS + "):action>/<string(length=32):uid>",
            "senaite.jsonapi.v1.action", methods=["POST"])
 @add_route("/<string(length=32):uid>",
            "senaite.jsonapi.v1.action", methods=["POST"])
 @add_route("/<string:resource>/<any(" + ACTIONS + "):action>",
            "senaite.jsonapi.v1.action", methods=["POST"])
-@add_route("/<string:resource>/<any(" + ACTIONS + "):action>/<string(maxlength=32):uid>",
+@add_route("/<string:resource>/<any(" + ACTIONS + "):action>/<string(length=32):uid>",
            "senaite.jsonapi.v1.action", methods=["POST"])
 def action(context, request, action=None, resource=None, uid=None):
     """Various HTTP POST actions
     """
-
-    # allow to set the method via the header
-    if action is None:
-        action = request.get_header("HTTP_X_HTTP_METHOD_OVERRIDE", "CREATE").lower()
-
     # Fetch and call the action function of the API
     func_name = "{}_items".format(action)
     action_func = getattr(api, func_name, None)
