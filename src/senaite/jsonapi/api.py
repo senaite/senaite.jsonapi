@@ -1469,8 +1469,7 @@ def update_object_with_data(content, record):
 
         # Bail-out non-update-able fields
         purged_records = copy.deepcopy(record)
-        for field_id in filter(lambda it: it in record, SKIP_UPDATE_FIELDS):
-            del(purged_records[field_id])
+        map(lambda key: purged_records.pop(key, None), SKIP_UPDATE_FIELDS)
 
         # Iterate through record items
         for k, v in purged_records.items():
