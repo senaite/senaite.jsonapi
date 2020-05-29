@@ -72,6 +72,12 @@ def get(context, request, resource=None, uid=None):
 def action(context, request, action=None, resource=None, uid=None):
     """Various HTTP POST actions
     """
+    # Allow to set the method via the header
+    # This is used to support Backbone.js REST API
+    if action is None:
+        action = request.get_header("HTTP_X_HTTP_METHOD_OVERRIDE", None)
+        action = action and action.lower() or None
+
     # Fetch and call the action function of the API
     func_name = "{}_items".format(action)
     action_func = getattr(api, func_name, None)
