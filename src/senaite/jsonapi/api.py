@@ -1107,6 +1107,10 @@ def is_update_allowed(obj):
     :returns: True if it is allowed to update this object
     :rtype: bool
     """
+    # Do not allow to update the site itself
+    if api.is_portal(obj):
+        return False
+
     # Do not allow the update of objects that belong to site root folder
     parent = api.get_parent(obj)
     if api.is_portal(parent):
@@ -1121,8 +1125,7 @@ def is_update_allowed(obj):
     if adapter:
         return adapter.is_update_allowed()
 
-    # We do not support the update of inactive objects
-    return api.is_active(obj)
+    return True
 
 
 def url_for(endpoint, default=DEFAULT_ENDPOINT, **values):
