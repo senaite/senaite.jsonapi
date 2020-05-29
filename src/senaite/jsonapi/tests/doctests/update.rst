@@ -134,6 +134,32 @@ path of the container object:
     >>> obj.getClientID()
     'CC5'
 
+Do a transition
+~~~~~~~~~~~~~~~
+
+We can transition the objects by using the keyord `transition` in the data sent
+via POST:
+
+    >>> api.is_active(client1)
+    True
+    >>> data = {"uid": api.get_uid(client1),
+    ...         "transition": "deactivate"}
+    >>> response = post("update", data)
+    >>> obj = get_item_object(response)
+    >>> api.is_active(obj)
+    False
+
+We can update and transition at same time:
+
+    >>> data = {"uid": api.get_uid(client1),
+    ...         "ClientID": "CC6",
+    ...         "transition": "activate"}
+    >>> response = post("update", data)
+    >>> obj = get_item_object(response)
+    >>> api.is_active(obj)
+    True
+    >>> obj.getClientID()
+    'CC6'
 
 Update restrictions
 ~~~~~~~~~~~~~~~~~~~

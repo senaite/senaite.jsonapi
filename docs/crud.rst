@@ -180,6 +180,8 @@ from the parent container as well.
 
    In such cases, `senaite.jsonapi` will always return a 401 response.
 
+The `update` route can also be used to perform transitions by using the keyword
+`transition` in the HTTP POST body.
 
 The examples below show possible variations of a HTTP POST body sent to the
 JSON API with the header **Content-Type: application/json** set. Remember you
@@ -191,7 +193,7 @@ Example
 
 Given this Request URL:
 
-http://localhost:8080/senaite/@@API/senaite/v1/update/
+http://localhost:8080/senaite/@@API/senaite/v1/update
 
 the following POSTs are equivalent, all them update the "Priority" of sample
 DBS-00012 to 2:
@@ -217,6 +219,21 @@ DBS-00012 to 2:
         "parent_path": "/senaite/clients/client-1",
         "Priority": 2,
     }
+
+Using the same URL with this HTTP POST body:
+
+.. code-block:: javascript
+
+    {
+        "uid": <uid_of_sample_DBS-00012>,
+        "Priority": 2,
+        "transition": "receive"
+    }
+
+will update the "Priority" field of the sample to `2` and will perform the
+transition "receive" to the Sample with id `DBS-00012`. This transition will
+only take place if the sample is in a suitable status and the user has enough
+privileges for the transition to take place.
 
 DELETE
 ------
