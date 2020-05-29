@@ -4,6 +4,13 @@ Changelog
 1.2.3 (unreleased)
 ------------------
 
+- #40 Prevent the id of objects of being accidentally updated
+- #40 Do not allow to update objects from setup folder
+- #40 Do not allow to update objects from portal root
+- #40 Fix upgrade does not work on post-only mode
+- #40 Adapter for custom handling of `update` operation
+- #37 Do not allow to create objects in setup folder
+- #37 Do not allow to create objects in portal root
 - #37 Adapter for custom handling of `create` operation
 - #37 Make the creation operation to be portal_type-naive
 - #35 Added `catalogs` route

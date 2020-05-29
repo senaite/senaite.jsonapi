@@ -152,3 +152,16 @@ class ICreate(interface.Interface):
     def create_object(self, **data):
         """Creates an object
         """
+
+
+class IUpdate(interface.Interface):
+    """Interface to handle update of objects
+    """
+
+    def is_update_allowed(self):
+        """Returns whether the update of the object is allowed
+        """
+
+    def update_object(self, **data):
+        """Updates the object
+        """

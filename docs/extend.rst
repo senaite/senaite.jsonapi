@@ -655,7 +655,7 @@ the same adapter as before:
             """
             return True
 
-        def create_object(self):
+        def create_object(self, **data):
             """Creates an object
             """
             obj = _createObjectByType("Todo", self.container, tmpID())
@@ -665,6 +665,129 @@ the same adapter as before:
             return obj
 
 With this example, `senaite.jsonapi` will not follow the default procedure of
-creation, it will rather delegate the operation of the `Todo` object to the
-function `create_object` of this adapter. Note the creation will only be
-delegated when the function `is_creation_delegated` returns True.
+creation, but delegate the operation to the function `create_object` of this
+adapter. Note the creation will only be delegated when the function
+`is_creation_delegated` returns True.
+
+
+.. _ADAPTER_UPDATE:
+
+Adding an adapter for update operation
+--------------------------------------
+
+Sometimes, one might want to handle the update of a given object differently,
+either because:
+
+- you want an object to never be updated through `senaite.jsonapi`
+- you want an object to only be updated in some specific circumstances
+- you want to add some additional logic within the update process
+- etc.
+
+:ref:`DATA_MANAGER` or :ref:`FIELD_MANAGER` allows to achieve these goals
+partially, cause their scope is at field level. If you need full control over
+the update process, you can also create an adapter implementing `IUpdate`
+interface. This interface allows you to handle the `update` operation by your
+own. This interface provides the folllowing signatures:
+
+.. code-block:: python
+
+    class IUpdate(interface.Interface):
+        """Interface to handle update of objects
+        """
+
+        def is_update_allowed(self):
+            """Returns whether the update of the object is allowed
+            """
+
+        def update_object(self, **data):
+            """Updates the object
+            """
+
+
+Allow/disallow to update an object
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For instance, say you don't want to allow the update of objects from type
+`Todo` through the `senaite.jsonapi`:
+
+.. code-block:: python
+
+    from senaite.jsonapi.interfaces import IUpdate
+    from zope import interface
+
+
+    class TodoUpdateAdapter(object):
+        """Custom adapter for the update of objects from Todo type
+        """
+        interface.implements(IUpdate)
+
+        def __init__(self, context):
+            self.context = context
+
+        def is_update_allowed(self):
+            """Returns whether the update of the object is allowed
+            """
+            return False
+
+
+Register the adapter in your `configure.zcml` file for your special interface:
+
+.. code-block:: xml
+
+    <configure
+        xmlns="http://namespaces.zope.org/zope">
+
+        <!-- Adapter for custom update -->
+        <adapter
+          factory=".TodoUpdateAdapter"
+          provides="senaite.jsonapi.interfaces.IUpdate"
+          for="my.addon.interfaces.ITodo" />
+
+    </configure>
+
+
+.. note::
+    This adapter is initialized with `context`, the object to be updated.
+
+.. note::
+    We've used here a custom `Todo` type, but you can use this approach for any
+    type registered in the system, being it from `senaite.core` (e.g. `Client',
+    `SampleType`, etc.) or from any other add-on.
+
+
+Custom update of an object
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Imagine that besides updating your object, you want to add a `Remarks` at the
+same time. You can use the same adapter as before:
+
+.. code-block:: python
+
+    from senaite.jsonapi.interfaces import IUpdate
+    from zope import interface
+
+
+    class TodoUpdateAdapter(object):
+        """Custom adapter for the update of objects from Todo type
+        """
+        interface.implements(IUpdate)
+
+        def __init__(self, context):
+            self.context = context
+
+        def is_update_allowed(self):
+            """Returns whether the update of the object is allowed
+            """
+            return True
+
+        def update_object(self, **data):
+            """Updates the object
+            """
+            self.context.setRemarks("Updated through json.api")
+            self.context.edit(**data)
+            self.context.reindexObject()
+
+
+With this example, `senaite.jsonapi` will not follow the default procedure of
+update, but delegate the operation to the function `update_object` of this
+adapter.
