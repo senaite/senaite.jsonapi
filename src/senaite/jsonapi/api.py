@@ -1455,7 +1455,7 @@ def update_object_with_data(content, record):
 
     # Look for an update-specific adapter for this object
     adapter = queryAdapter(content, IUpdate)
-    if adapter and adapter.is_update_delegated():
+    if adapter:
         # Use the adapter to update the object
         logger.info("Delegating 'update' operation of '{}'".format(
             api.get_path(content)

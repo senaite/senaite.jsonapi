@@ -162,11 +162,6 @@ class IUpdate(interface.Interface):
         """Returns whether the update of the object is allowed
         """
 
-    def is_update_delegated(self):
-        """Returns whether the update of this object has to be delegated to
-        this adapter
-        """
-
     def update_object(self, **data):
         """Updates the object
         """

@@ -699,11 +699,6 @@ own. This interface provides the folllowing signatures:
             """Returns whether the update of the object is allowed
             """
 
-        def is_update_delegated(self):
-            """Returns whether the update of this object has to be delegated to
-            this adapter
-            """
-
         def update_object(self, **data):
             """Updates the object
             """
@@ -785,21 +780,14 @@ same time. You can use the same adapter as before:
             """
             return True
 
-        def is_update_delegated(self):
-            """Returns whether the update of this object has to be delegated to
-            this adapter
-            """
-            return True
-
         def update_object(self, **data):
             """Updates the object
             """
-            self.context.setRemarks("Updated throuh json.api")
+            self.context.setRemarks("Updated through json.api")
             self.context.edit(**data)
             self.context.reindexObject()
 
 
 With this example, `senaite.jsonapi` will not follow the default procedure of
 update, but delegate the operation to the function `update_object` of this
-adapter. Note the update will only be delegated when the function
-`is_update_delegated` returns True.
+adapter.
