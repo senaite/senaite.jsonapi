@@ -18,11 +18,13 @@
 # Copyright 2017-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+import copy
 import datetime
 import json
 
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
+from senaite.jsonapi.interfaces import IUpdate
 
 from bika.lims import api
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
@@ -62,6 +64,8 @@ CONTROLPANEL_INTERFACE_MAPPING = {
                    cp.usergroups.ISecuritySchema],
     'maintenance': [cp.maintenance.IMaintenanceSchema],
 }
+
+SKIP_UPDATE_FIELDS = ["id", ]
 
 
 # -----------------------------------------------------------------------------
@@ -190,6 +194,11 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
     obj = get_object_by_uid(uid)
     if obj:
         record = records[0]  # ignore other records if we got an uid
+
+        # Can this object be updated?
+        if not is_update_allowed(obj):
+            fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
+
         obj = update_object_with_data(obj, record)
         return make_items_for([obj], endpoint=endpoint)
 
@@ -201,6 +210,10 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
         # no object found for this record
         if obj is None:
             continue
+
+        # Can this object be updated?
+        if not is_update_allowed(obj):
+            fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
 
         # update the object with the given record data
         obj = update_object_with_data(obj, record)
@@ -1072,6 +1085,35 @@ def is_creation_allowed(portal_type, container):
     return True
 
 
+def is_update_allowed(obj):
+    """Returns whether the update of the object passed in is supported
+
+    :param obj: The object to be updated
+    :type obj: ATContentType/DexterityContentType
+    :returns: True if it is allowed to update this object
+    :rtype: bool
+    """
+    # Do not allow to update the site itself
+    if api.is_portal(obj):
+        return False
+
+    # Do not allow the update of objects that belong to site root folder
+    parent = api.get_parent(obj)
+    if api.is_portal(parent):
+        return False
+
+    # Do not allow the update of objects that belong to setup folder
+    if parent == api.get_setup():
+        return False
+
+    # Look for an update-specific adapter for this object
+    adapter = queryAdapter(obj, IUpdate)
+    if adapter:
+        return adapter.is_update_allowed()
+
+    return True
+
+
 def url_for(endpoint, default=DEFAULT_ENDPOINT, **values):
     """Looks up the API URL for the given endpoint
 
@@ -1397,26 +1439,41 @@ def update_object_with_data(content, record):
     # ensure we have a full content object
     content = get_object(content)
 
-    # get the proper data manager
-    dm = IDataManager(content)
+    # Look for an update-specific adapter for this object
+    adapter = queryAdapter(content, IUpdate)
+    if adapter:
+        # Use the adapter to update the object
+        logger.info("Delegating 'update' operation of '{}'".format(
+            api.get_path(content)
+        ))
+        adapter.update_object(**record)
 
-    if dm is None:
-        fail(400, "Update for this object is not allowed")
+    else:
+        # Fall-back to default update machinery
+        # get the proper data manager
+        dm = IDataManager(content)
 
-    # Iterate through record items
-    for k, v in record.items():
-        try:
-            success = dm.set(k, v, **record)
-        except Unauthorized:
-            fail(401, "Not allowed to set the field '%s'" % k)
-        except ValueError, exc:
-            fail(400, str(exc))
+        if dm is None:
+            fail(400, "Update for this object is not allowed")
 
-        if not success:
-            logger.warn("update_object_with_data::skipping key=%r", k)
-            continue
+        # Bail-out non-update-able fields
+        purged_records = copy.deepcopy(record)
+        map(lambda key: purged_records.pop(key, None), SKIP_UPDATE_FIELDS)
 
-        logger.debug("update_object_with_data::field %r updated", k)
+        # Iterate through record items
+        for k, v in purged_records.items():
+            try:
+                success = dm.set(k, v, **record)
+            except Unauthorized:
+                fail(401, "Not allowed to set the field '%s'" % k)
+            except ValueError, exc:
+                fail(400, str(exc))
+
+            if not success:
+                logger.warn("update_object_with_data::skipping key=%r", k)
+                continue
+
+            logger.debug("update_object_with_data::field %r updated", k)
 
     # Validate the entire content object
     invalid = validate_object(content, record)

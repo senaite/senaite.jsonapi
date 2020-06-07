@@ -2,7 +2,7 @@ CRUD
 ====
 
 Each content route provider shipped with this package, provides the basic CRUD
-:ref:`Operations` functionality to `get`, `create`, `delete` and `update` the
+:ref:`Operations` functionality to `create`, `read`, `update` and `delete` the
 resource handled, except that the `delete` operation tries to deactivate the
 resource instead of deleting it. The reason is that for traceability reasons,
 *delete* operation is not supported in SENAITE LIMS.
@@ -19,15 +19,6 @@ Unified API
 
 There is a convenient and unified way to fetch the content without knowing the
 resource. This unified resource is directly located at the :ref:`BASE_URL`.
-
-
-GET
----
-
-The `get` route is obsolete. Please use the base url to retrieve a content by
-uid, as explained in :ref:`Operations`. E.g.:
-
-http://localhost:8080/senaite/@@API/senaite/v1/<uid>
 
 
 CREATE
@@ -60,6 +51,16 @@ Additional fields might be required depending on the resource to be created. For
 instance, for the creation of a `Client` object, values for two additional
 fields are required: `Name` and `ClientID`.
 
+.. important::
+   SENAITE.JSONAPI does not allow the creation of objects when:
+
+   - the container is the portal root (`senaite` path)
+   - the container is senaite's setup (`senaite/bika_setup` path)
+   - the container does not allow the specified `portal_type`
+
+   In such cases, `senaite.jsonapi` will always return a 401 response.
+
+
 The examples below show possible variations of a HTTP POST body sent to the
 JSON API with the header **Content-Type: application/json** set. Remember you
 can use the `Advanced Rest Client`_ Application to send POST requests. See
@@ -79,7 +80,7 @@ Body Content type (application/json):
 
     {
         "portal_type": "Client",
-        "Name": "Test Client",
+        "title": "Test Client",
         "ClientID": "TEST-01",
         "parent_path": "/senaite/clients"
     }
@@ -107,7 +108,7 @@ Body Content type (application/json):
           "hours": 0,
           "minutes": 0
         },
-        "parent_path": "/bika_setup/bika_sampletypes"
+        "parent_path": "/senaite/bika_setup/bika_sampletypes"
     }
 
 
@@ -143,6 +144,18 @@ where:
           Remember that in SENAITE LIMS, the portal type that represents samples
           is `AnalysisRequest`.
 
+
+READ
+----
+
+The `read` route does not exist, use the base url to retrieve a content by uid,
+as explained in :ref:`Operations`. E.g.:
+
+http://localhost:8080/senaite/@@API/senaite/v1/<uid>
+
+Please, refer to :ref:`Search_Resource` section to learn how to search objects.
+
+
 UPDATE
 ------
 
@@ -156,17 +169,34 @@ specify all the information in the HTTP POST body by using either:
 - `path` parameter, as the physical path to the object, or
 - `uid` parameter, as the UID of the object
 
-Alternatively, you can use `id` and `path` parameters with the values from the
-parent container as well.
+Alternatively, you can use `id` and `parent_path` parameters with the values
+from the parent container as well.
+
+.. important::
+   SENAITE.JSONAPI does not allow the update of objects when:
+
+   - the container is the portal root (`senaite` path)
+   - the container is senaite's setup (`senaite/bika_setup` path)
+
+   In such cases, `senaite.jsonapi` will always return a 401 response.
+
+The `update` route can also be used to perform transitions by using the keyword
+`transition` in the HTTP POST body.
+
+The examples below show possible variations of a HTTP POST body sent to the
+JSON API with the header **Content-Type: application/json** set. Remember you
+can use the `Advanced Rest Client`_ Application to send POST requests. See
+:doc:`installation` for details.
 
 Example
 .......
 
 Given this Request URL:
 
-http://localhost:8080/senaite/@@API/senaite/v1/update/
+http://localhost:8080/senaite/@@API/senaite/v1/update
 
-the following POSTs are equivalent, all them update the "Priority" of sample DBS-00012 to 2:
+the following POSTs are equivalent, all them update the "Priority" of sample
+DBS-00012 to 2:
 
 .. code-block:: javascript
 
@@ -186,9 +216,24 @@ the following POSTs are equivalent, all them update the "Priority" of sample DBS
 
     {
         "id": "DBS-00012",
-        "path": "/senaite/clients/client-1/",
+        "parent_path": "/senaite/clients/client-1",
         "Priority": 2,
     }
+
+Using the same URL with this HTTP POST body:
+
+.. code-block:: javascript
+
+    {
+        "uid": <uid_of_sample_DBS-00012>,
+        "Priority": 2,
+        "transition": "receive"
+    }
+
+will update the "Priority" field of the sample to `2` and will perform the
+transition "receive" to the Sample with id `DBS-00012`. This transition will
+only take place if the sample is in a suitable status and the user has enough
+privileges for the transition to take place.
 
 DELETE
 ------

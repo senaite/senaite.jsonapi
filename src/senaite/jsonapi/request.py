@@ -216,7 +216,7 @@ def get_request_data():
     request = get_request()
     data = request.get("BODY", "{}")
     if not is_json_deserializable(data):
-        from plone.jsonapi.routes.exceptions import APIError
+        from senaite.jsonapi.exceptions import APIError
         raise APIError(400, "Request Data is not JSON deserializable – Check JSON Syntax!")
     out_data = json.loads(data)
 
