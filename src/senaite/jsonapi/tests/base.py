@@ -20,7 +20,6 @@
 
 import transaction
 import unittest2 as unittest
-from senaite.core.tests.layers import BASE_TESTING
 from plone.app.testing import PLONE_FIXTURE
 from plone.app.testing import SITE_OWNER_NAME
 from plone.app.testing import TEST_USER_ID
@@ -34,6 +33,7 @@ from plone.app.testing import logout
 from plone.app.testing import setRoles
 from plone.testing import z2
 from plone.testing.z2 import Browser
+from senaite.core.tests.layers import BASE_TESTING
 
 
 class SimpleTestLayer(PloneSandboxLayer):
