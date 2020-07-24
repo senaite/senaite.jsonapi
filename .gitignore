@@ -10,3 +10,12 @@ var
 *.pyc
 *egg-info
 src/senaite.core
+/.Python
+/include/
+/lib/
+/pyvenv.cfg
+src/senaite.core.listing/
+src/senaite.core.spotlight/
+src/senaite.core.supermodel/
+src/senaite.impress/
+src/senaite.lims/

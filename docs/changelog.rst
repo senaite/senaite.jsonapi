@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.0.0rc1 (2020-07-24)
+---------------------
+
+- Compatibility with `senaite.core` 2.x
+
+
 1.2.3 (unreleased)
 ------------------
 
