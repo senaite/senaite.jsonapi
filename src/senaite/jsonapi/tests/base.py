@@ -18,8 +18,9 @@
 # Copyright 2017-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+import transaction
 import unittest2 as unittest
-from bika.lims.testing import BASE_TESTING
+from senaite.core.tests.layers import BASE_TESTING
 from plone.app.testing import PLONE_FIXTURE
 from plone.app.testing import SITE_OWNER_NAME
 from plone.app.testing import TEST_USER_ID
@@ -81,15 +82,13 @@ class SimpleTestLayer(PloneSandboxLayer):
                     if group:
                         group.addMember(username)
                     # Add user to all specified roles
-                    member._addRole(role)
+                    member._user._roles[role] = 1
                 except ValueError:
                     pass  # user exists
 
         logout()
-
-    def tearDownZope(self, app):
-        # Uninstall product
-        z2.uninstallProduct(app, "senaite.jsonapi")
+        applyProfile(portal, "senaite.core:default")
+        transaction.commit()
 
 
 ###
@@ -121,12 +120,25 @@ class SimpleTestCase(unittest.TestCase):
 
         # Instantiate and return a testbrowser for convenience
         browser = Browser(self.portal)
-        browser.addHeader('Accept-Language', 'en-US')
+        browser.addHeader("Accept-Language", "en-US")
         browser.handleErrors = False
         if loggedIn:
             browser.open(self.portal.absolute_url())
-            browser.getControl('Login Name').value = username
-            browser.getControl('Password').value = password
-            browser.getControl('Log in').click()
-            self.assertTrue('You are now logged in' in browser.contents)
+            browser.getControl("Login Name").value = username
+            browser.getControl("Password").value = password
+            browser.getControl("Log in").click()
+            self.assertTrue("You are now logged in" in browser.contents)
         return browser
+
+
+class FunctionalTestCase(unittest.TestCase):
+    layer = SIMPLE_TESTING
+
+    def setUp(self):
+        super(FunctionalTestCase, self).setUp()
+
+        self.app = self.layer["app"]
+        self.portal = self.layer["portal"]
+        self.request = self.layer["request"]
+        self.request["ACTUAL_URL"] = self.portal.absolute_url()
+        setRoles(self.portal, TEST_USER_ID, ["LabManager", "Member"])

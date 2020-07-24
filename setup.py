@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-version = "2.0.0"
+version = "2.0.0rc1"
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
@@ -41,7 +41,6 @@ setup(
     ],
     extras_require={
         "test": [
-            "Products.PloneTestCase",
             "Products.SecureMailHost",
             "plone.app.testing",
             "unittest2",
