@@ -50,12 +50,12 @@ Logout
 
 User can logout easily too:
 
-    >>> get("users/logout")
+    >>> get("logout")
     '..."authenticated": false...'
 
 And `auth` route rises an unauthorized response 401:
 
     >>> get("auth")
     Traceback (most recent call last):
-    [...]
+    ...
     HTTPError: HTTP Error 401: Unauthorized

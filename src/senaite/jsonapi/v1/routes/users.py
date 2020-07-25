@@ -52,7 +52,7 @@ def get_user_info(user):
         "username": user.getUserName(),
         "roles": user.getRoles(),
         "groups": pu.getGroups(),
-        "authenticated": current == user,
+        "authenticated": current.getId() == user.getId(),
         "api_url": api.url_for("senaite.jsonapi.v1.users", username=user.getId()),
     }
 
@@ -148,7 +148,7 @@ def login(context, request):
     # XXX hard coded
     acl_users.credentials_cookie_auth.login()
 
-    # XXX amin user won't be logged in if I use this approach
+    # XXX admin user won't be logged in if I use this approach
     # acl_users.login()
     # response = request.response
     # acl_users.updateCredentials(request, response, __ac_name, __ac_password)
@@ -165,12 +165,17 @@ def login(context, request):
 def logout(context, request):
     """ Logout Route
     """
+
     logger.info("*** LOGOUT ***")
+
+    # Avoid redirect after logout
+    request.set("HTTP_REFERER", "")
 
     acl_users = api.get_tool("acl_users")
     acl_users.logout(request)
 
     return {
         "url": api.url_for("senaite.jsonapi.v1.users"),
-        "success": True
+        "authenticated": False,
+        "success": True,
     }

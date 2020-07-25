@@ -31,8 +31,9 @@ from plone.app.testing import applyProfile
 from plone.app.testing import login
 from plone.app.testing import logout
 from plone.app.testing import setRoles
-from plone.testing import z2
-from plone.testing.z2 import Browser
+from plone.protect.authenticator import createToken
+from plone.testing import zope
+from plone.testing.zope import Browser
 from senaite.core.tests.layers import BASE_TESTING
 
 
@@ -45,28 +46,64 @@ class SimpleTestLayer(PloneSandboxLayer):
         super(SimpleTestLayer, self).setUpZope(app, configurationContext)
 
         # Load ZCML
+        import Products.TextIndexNG3
         import bika.lims
+        import senaite.core
+        import senaite.core.listing
+        import senaite.impress
+        import senaite.core.spotlight
         import senaite.jsonapi
 
+        # XXX HACK
+        # The `senaite.core` module refers to the `senaite.core.supermodel`
+        # middle namespace package because of the `sys.path` order of the
+        # `bin/test` script:
+        #
+        # <module 'senaite.core' from 'senaite.core.listing/src/senaite/core/__init__.pyc'>   # noqa
+        #
+        # Maybe we should move all senaite.core.* packages into a new namespace
+        # which is unused, e.g. `senaite.app.*`?
+        senaite.core.__path__ = filter(
+            lambda p: p.endswith("senaite.core/src/senaite/core"),
+            senaite.core.__path__)
+
+        # Load ZCML
+        self.loadZCML(package=Products.TextIndexNG3)
         self.loadZCML(package=bika.lims)
+        self.loadZCML(package=senaite.core)
+        self.loadZCML(package=senaite.core.listing)
+        self.loadZCML(package=senaite.impress)
+        self.loadZCML(package=senaite.core.spotlight)
         self.loadZCML(package=senaite.jsonapi)
 
         # Install product and call its initialize() function
-        z2.installProduct(app, "senaite.jsonapi")
+        zope.installProduct(app, "Products.TextIndexNG3")
+        zope.installProduct(app, "bika.lims")
+        zope.installProduct(app, "senaite.core")
+        zope.installProduct(app, "senaite.core.listing")
+        zope.installProduct(app, "senaite.impress")
+        zope.installProduct(app, "senaite.core.spotlight")
 
     def setUpPloneSite(self, portal):
         super(SimpleTestLayer, self).setUpPloneSite(portal)
 
         # Apply Setup Profile (portal_quickinstaller)
-        # applyProfile(portal, "senaite.jsonapi:default")
+        applyProfile(portal, "senaite.core:default")
 
+        # Add test users
+        self.add_test_users(portal)
+
+        transaction.commit()
+
+    def add_test_users(self, portal, count=2):
+        """Add some test users
+        """
         login(portal.aq_parent, SITE_OWNER_NAME)
 
-        # Add some test users
         ROLES = ["LabManager", "LabClerk", "Analyst"]
         for role in ROLES:
 
-            for user_nr in range(2):
+            for user_nr in range(count):
                 username = "test_%s_%s" % (role.lower(), user_nr)
                 try:
                     member = portal.portal_registration.addMember(
@@ -87,8 +124,6 @@ class SimpleTestLayer(PloneSandboxLayer):
                     pass  # user exists
 
         logout()
-        applyProfile(portal, "senaite.core:default")
-        transaction.commit()
 
 
 ###
@@ -112,6 +147,16 @@ class SimpleTestCase(unittest.TestCase):
         self.request = self.layer["request"]
         self.request["ACTUAL_URL"] = self.portal.absolute_url()
         setRoles(self.portal, TEST_USER_ID, ["LabManager", "Manager"])
+
+        # Disable plone.protect for these tests
+        self.request.form["_authenticator"] = createToken()
+        # Eventuelly you find this also useful
+        self.request.environ["REQUEST_METHOD"] = "POST"
+
+        # Default skin is set to "Sunburst Theme"!
+        # => This causes an `AttributeError` when we want to access
+        #    e.g. 'guard_handler' FSPythonScript
+        self.portal.changeSkin("Plone Default")
 
     def getBrowser(self,
                    username=TEST_USER_NAME,

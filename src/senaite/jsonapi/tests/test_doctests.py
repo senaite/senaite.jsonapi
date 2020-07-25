@@ -21,8 +21,9 @@
 import doctest
 from os.path import join
 
-import unittest2 as unittest
 from pkg_resources import resource_listdir
+
+import unittest2 as unittest
 from senaite.jsonapi import PRODUCT_NAME
 from Testing import ZopeTestCase as ztc
 
