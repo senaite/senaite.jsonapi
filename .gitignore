@@ -14,8 +14,8 @@ src/senaite.core
 /include/
 /lib/
 /pyvenv.cfg
-src/senaite.core.listing/
-src/senaite.core.spotlight/
-src/senaite.core.supermodel/
+src/senaite.app.listing/
+src/senaite.app.spotlight/
+src/senaite.app.supermodel/
 src/senaite.impress/
 src/senaite.lims/
