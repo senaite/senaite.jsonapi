@@ -18,6 +18,8 @@
 # Copyright 2017-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+from collections import defaultdict
+
 from senaite.jsonapi import api
 from senaite.jsonapi import request as req
 from senaite.jsonapi.v1 import add_route
@@ -30,21 +32,20 @@ def get(context, request, catalog_id=None):
     the information about the catalog name passed in
     """
     archetype_tool = api.get_tool("archetype_tool")
+    types_for_catalog = defaultdict(list)
+
+    for pt, cat_ids in archetype_tool.listCatalogs().items():
+        for cat_id in cat_ids:
+            types_for_catalog[cat_id].append(pt)
 
     def get_data(catalog):
-        portal_types = catalog.getPortalTypes()
-
-        # Bail out portal types not present in this catalog
-        pt_catalogs = map(archetype_tool.getCatalogsByType, portal_types)
-        pt_catalogs = map(lambda pts: catalog in pts, pt_catalogs)
-        pt_catalogs = zip(pt_catalogs, portal_types)
-        portal_types = filter(lambda it: it[0], pt_catalogs)
+        cat_id = catalog.getId()
 
         return {
-            "id": catalog.id,
+            "id": cat_id,
             "indexes": sorted(catalog.indexes()),
             "schema": sorted(catalog.schema()),
-            "portal_types": sorted(map(lambda it: it[1], portal_types)),
+            "portal_types": types_for_catalog.get(cat_id) or []
         }
 
     if catalog_id:
