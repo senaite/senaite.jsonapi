@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.2.3 (unreleased)
+1.2.3 (2020-08-05)
 ------------------
 
 - #40 Prevent the id of objects of being accidentally updated
@@ -15,6 +15,7 @@ Changelog
 - #37 Make the creation operation to be portal_type-naive
 - #35 Added `catalogs` route
 - #34 Make senaite.jsonapi catalog-agnostic on searches
+
 
 1.2.2 (2020-03-03)
 ------------------
