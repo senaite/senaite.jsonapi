@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.2.4 (unreleased)
+------------------
+
+- #41 Push endpoint for custom jobs
+
+
 1.2.3 (2020-08-05)
 ------------------
 
