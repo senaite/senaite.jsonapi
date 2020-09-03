@@ -834,16 +834,21 @@ Add the following adapter in your add-on:
             emails = self.get_emails()
 
             # Send the emails
-            for email in emails:
-                self.compose_and_send(email, message)
+            success = map(lambda e: self.send(e, subject, message), emails)
+            return any(success)
 
         def get_emails(self):
+            """Returns the emails from all registered contacts
+            """
             query = {"portal_type": ["Contact", "LabContact"]}
             contacts = map(api.get_object, api.search(query, "portal_catalog"))
             emails = map(lambda c: c.getEmailAddress(), contacts)
-            return filter(None, emails)
+            emails = filter(None, emails)
+            return list(OrderedDict.fromkeys(uids))
 
-        def compose_and_send(self, email, subject, body):
+        def send(self, email, subject, body):
+            """Creates and sends an email message
+            """
             lab = api.get_setup().laboratory
             from_addr = lab.getEmailAddress()
             msg = mailapi.compose(from_addr, email, subject, body)
