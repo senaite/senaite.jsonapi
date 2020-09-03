@@ -882,6 +882,7 @@ Body Content type (application/json):
 
     {
         "consumer": "my.addon.push.emailnotifier",
+        "subject": "Sheduled LIMS maintenance",
         "message": "System will not be available from 16:00 to 18:00",
     }
 
