@@ -791,3 +791,95 @@ same time. You can use the same adapter as before:
 With this example, `senaite.jsonapi` will not follow the default procedure of
 update, but delegate the operation to the function `update_object` of this
 adapter.
+
+
+.. __PUSH:
+
+PUSH endpoint. Custom jobs
+--------------------------
+
+Sometimes is useful to have and endpoint to allow the execution of custom logic
+without bothering about creating views, handing JSON, etc. This add-on provides
+and end-point `push` that acts as a gateway for custom processes or actions.
+
+Imagine you want to ask SENAITE to send an email to all contacts telling them
+that the system won't be available for maintenance reasons for a while.
+
+Add the following adapter in your add-on:
+
+.. code-block:: python
+
+    from bika.lims import api
+    from bika.lims.api import mail as mailapi
+    from senaite.jsonapi.interfaces import IPushConsumer
+    from zope import interface
+
+
+    class EmailNotifier(object):
+        """Custom adapter for sending e-mail notifications to contacts
+        """
+        interface.implements(IPushConsumer)
+
+        def __init__(self, data):
+            self.data = data
+
+        def process(self):
+            """Send notifications to contacts
+            """
+            # Get the subject and body to be sent
+            subject = data.get("subject")
+            message = data.get("message")
+
+            # Get e-mail addresses from all contacts
+            emails = self.get_emails()
+
+            # Send the emails
+            for email in emails:
+                self.compose_and_send(email, message)
+
+        def get_emails(self):
+            query = {"portal_type": ["Contact", "LabContact"]}
+            contacts = map(api.get_object, api.search(query, "portal_catalog"))
+            emails = map(lambda c: c.getEmailAddress(), contacts)
+            return filter(None, emails)
+
+        def compose_and_send(self, email, subject, body):
+            lab = api.get_setup().laboratory
+            from_addr = lab.getEmailAddress()
+            msg = mailapi.compose(from_addr, email, subject, body)
+            return mailapi.send_email(mime_msg)
+
+
+And register the adapter in your `configure.zcml` as follows:
+
+.. code-block:: xml
+
+    <configure
+        xmlns="http://namespaces.zope.org/zope">
+
+        <!-- Adapter for processing email notifications -->
+        <adapter
+          name="my.addon.push.emailnotifier"
+          factory=".EmailNotifier"
+          provides="senaite.jsonapi.interfaces.IPushConsumer"
+          for="*" />
+
+    </configure>
+
+
+You can now make use of `push` end-point to send messages:
+
+http://localhost:8080/senaite/@@API/senaite/v1/push
+
+Body Content type (application/json):
+
+.. code-block:: javascript
+
+    {
+        "consumer": "my.addon.push.emailnotifier",
+        "message": "System will not be available from 16:00 to 18:00",
+    }
+
+Note the field `consumer` is mandatory and it's value must match with the name
+of the adapter to use to process the job. You can add as many fields as required
+by the job processor (consumer).
