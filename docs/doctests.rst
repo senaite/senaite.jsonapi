@@ -9,3 +9,4 @@ Doctests
 .. include:: ../src/senaite/jsonapi/tests/doctests/create.rst
 .. include:: ../src/senaite/jsonapi/tests/doctests/read.rst
 .. include:: ../src/senaite/jsonapi/tests/doctests/update.rst
+.. include:: ../src/senaite/jsonapi/tests/doctests/push.rst
