@@ -4,13 +4,19 @@ Changelog
 2.0.0rc2 (unreleased)
 ---------------------
 
-- no changes yet
+- Merged #41
 
 
 2.0.0rc1 (2020-08-05)
 ---------------------
 
 - Compatibility with `senaite.core` 2.x
+
+
+1.2.4 (unreleased)
+------------------
+
+- #41 Push endpoint for custom jobs
 
 
 1.2.3 (2020-08-05)

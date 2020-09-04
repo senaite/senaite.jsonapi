@@ -165,3 +165,16 @@ class IUpdate(interface.Interface):
     def update_object(self, **data):
         """Updates the object
         """
+
+
+class IPushConsumer(interface.Interface):
+    """Interface to handle hetergeneous jobs
+    """
+
+    def __init__(self, record):
+        """Record containing the job required information
+        """
+
+    def process(self):
+        """Processes the job or raises an Exception if unable to succeed
+        """
