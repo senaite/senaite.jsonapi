@@ -1,10 +1,10 @@
 Changelog
 =========
 
-2.0.0rc2 (unreleased)
+2.0.0rc2 (2020-10-13)
 ---------------------
 
-- Merged #41
+- #41 Added push endpoint for custom jobs
 
 
 2.0.0rc1 (2020-08-05)
