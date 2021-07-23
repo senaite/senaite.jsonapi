@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.2.4 (unreleased)
+1.2.4 (2021-07-23)
 ------------------
 
 - #41 Push endpoint for custom jobs
