@@ -625,7 +625,7 @@ def get_portal():
 def get_tool(name, default=_marker):
     """Proxy to senaite.api.get_tool
     """
-    return api.get_tool(name, default)
+    return api.get_tool(name, default=default)
 
 
 def get_object(brain_or_object):
