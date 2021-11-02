@@ -5,7 +5,7 @@ Changelog
 2.0.1 (unreleased)
 ------------------
 
-
+- #43 Fix malformed API call
 
 
 2.0.0 (2021-07-27)
