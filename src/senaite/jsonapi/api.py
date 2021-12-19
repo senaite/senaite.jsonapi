@@ -199,7 +199,7 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
         if not is_update_allowed(obj):
             fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
 
-        obj = update_object_with_data(obj, record)
+        obj = update_object_with_data(obj, **record)
         return make_items_for([obj], endpoint=endpoint)
 
     # no uid -> go through the record items
@@ -216,7 +216,7 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
             fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
 
         # update the object with the given record data
-        obj = update_object_with_data(obj, record)
+        obj = update_object_with_data(obj, **record)
         results.append(obj)
 
     if not results:
