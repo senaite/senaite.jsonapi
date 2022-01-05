@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-2.0.1 (unreleased)
+2.1.0 (2022-01-05)
 ------------------
 
 - #43 Fix malformed API call
