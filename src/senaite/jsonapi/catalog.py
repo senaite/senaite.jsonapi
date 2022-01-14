@@ -22,6 +22,7 @@
 from bika.lims import api as senaiteapi
 from DateTime import DateTime
 from Products.CMFPlone.CatalogTool import CatalogTool
+from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
@@ -30,6 +31,13 @@ from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
 from zope import interface
 from ZPublisher import HTTPRequest
+
+
+SEARCHABLE_TEXT_INDEXES = [
+    "listing_searchable_text",
+    "SearchableText",
+    "Title",
+]
 
 
 class Catalog(object):
@@ -87,6 +95,17 @@ class Catalog(object):
         logger.debug("get_index={} of catalog '{}' --> {}".format(
             name, catalog.__name__, index))
         return index
+
+    def get_searchable_text_indexes(self):
+        """Returns a list of searchable text indexes
+        """
+        catalog = self.get_catalog()
+        indexes = catalog._catalog.indexes
+        searchable_text_indexes = []
+        for k, v in indexes.items():
+            if type(v) == ZCTextIndex:
+                searchable_text_indexes.append(k)
+        return searchable_text_indexes
 
     def to_index_value(self, value, index):
         """Convert the value for a given index
@@ -174,7 +193,7 @@ class CatalogQuery(object):
 
         Parameters which get extracted from the request:
 
-            `q`: Passes the value to the `SearchableText`
+            `q`: Passes the value to an ZCTextIndex
             `path`: Creates a path query
             `recent_created`: Creates a date query
             `recent_modified`: Creates a date query
@@ -189,7 +208,25 @@ class CatalogQuery(object):
         # searchable text queries
         q = req.get_query()
         if q:
-            query["SearchableText"] = q
+            # search index to use
+            search_index = None
+            # get all available ZCTextIndexes
+            indexes = self.catalog.get_searchable_text_indexes()
+            # prioritize search indexes
+            for idx in SEARCHABLE_TEXT_INDEXES:
+                if idx in indexes:
+                    search_index = idx
+                    break
+
+            if search_index:
+                # use the found search index
+                query[search_index] = q
+            elif len(indexes) > 0:
+                # use any first found ZCTextIndex
+                query[indexes[0]] = q
+            else:
+                logger.warn("No ZCTextIndex found in the catalog "
+                            "to search for 'q=%s'" % q)
 
         # physical path queries
         path = req.get_path()
