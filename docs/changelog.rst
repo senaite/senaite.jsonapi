@@ -5,7 +5,7 @@ Changelog
 2.2.0 (unreleased)
 ------------------
 
-- no changes yet
+- #46 Fix ZCTextIndex lookup for custom searchable text query
 
 
 2.1.0 (2022-01-05)
