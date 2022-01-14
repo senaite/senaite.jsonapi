@@ -24,6 +24,7 @@ import urlparse
 
 import pkg_resources
 
+from bika.lims import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import underscore as _
 from zope import interface
@@ -177,7 +178,8 @@ def get_query():
     """ returns the 'query' from the request
     """
     q = get("q", "")
-    tokens = re.split(r"[^a-zA-Z0-9]", q, flags=re.IGNORECASE)
+    term = api.safe_unicode(q)
+    tokens = re.split(r"[^\w]", term, flags=re.U | re.I)
     tokens = filter(None, tokens)
     tokens = map(lambda t: t + "*", tokens)
     return " AND ".join(tokens)
