@@ -19,11 +19,15 @@
 # Some rights reserved, see README and LICENSE.
 
 import json
+import re
 import urlparse
+
 import pkg_resources
 
+from bika.lims import api
+from senaite.jsonapi import logger
+from senaite.jsonapi import underscore as _
 from zope import interface
-
 from zope.globalrequest import getRequest
 
 try:
@@ -33,9 +37,6 @@ except (pkg_resources.DistributionNotFound, ImportError):
     HAS_PLONE_PROTECT = False
 else:
     HAS_PLONE_PROTECT = True
-
-from senaite.jsonapi import logger
-from senaite.jsonapi import underscore as _
 
 
 # These values evaluate to True
@@ -177,11 +178,11 @@ def get_query():
     """ returns the 'query' from the request
     """
     q = get("q", "")
-
-    qs = q.lstrip("*.!$%&/()=#-+:'`´^")
-    if qs and not qs.endswith("*"):
-        qs += "*"
-    return qs
+    term = api.safe_unicode(q)
+    tokens = re.split(r"[^\w]", term, flags=re.U | re.I)
+    tokens = filter(None, tokens)
+    tokens = map(lambda t: t + "*", tokens)
+    return " AND ".join(tokens)
 
 
 def get_path():
