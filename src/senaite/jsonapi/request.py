@@ -19,12 +19,11 @@
 # Some rights reserved, see README and LICENSE.
 
 import json
-import re
 import urlparse
 
 import pkg_resources
 
-from bika.lims import api
+from senaite.core.api.catalog import to_searchable_text_qs
 from senaite.jsonapi import logger
 from senaite.jsonapi import underscore as _
 from zope import interface
@@ -177,12 +176,8 @@ def get_sort_order():
 def get_query():
     """ returns the 'query' from the request
     """
-    q = get("q", "")
-    term = api.safe_unicode(q)
-    tokens = re.split(r"[^\w]", term, flags=re.U | re.I)
-    tokens = filter(None, tokens)
-    tokens = map(lambda t: t + "*", tokens)
-    return " AND ".join(tokens)
+    qs = get("q", "")
+    return to_searchable_text_qs(qs)
 
 
 def get_path():
