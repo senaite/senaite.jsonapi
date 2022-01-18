@@ -5,6 +5,7 @@ Changelog
 2.2.0 (unreleased)
 ------------------
 
+- #47 Use searchable text index converter from catalog API
 - #46 Fix ZCTextIndex lookup for custom searchable text query
 
 
