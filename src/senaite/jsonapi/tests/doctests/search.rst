@@ -138,12 +138,12 @@ portal_catalog and setup_catalog:
     >>> get_items_ids(response)
     [u'sampletype-1', u'sampletype-2']
 
-    >>> response = get("sampletype?catalog=bika_setup_catalog")
+    >>> response = get("sampletype?catalog=senaite_catalog_setup")
     >>> get_items_ids(response)
     [u'sampletype-1', u'sampletype-2']
 
-But Sample Types are not stored in "bika_catalog":
+But Sample Types are not stored in "senaite_catalog":
 
-    >>> response = get("sampletype?catalog=bika_catalog")
+    >>> response = get("sampletype?catalog=senaite_catalog")
     >>> get_items_ids(response)
     []

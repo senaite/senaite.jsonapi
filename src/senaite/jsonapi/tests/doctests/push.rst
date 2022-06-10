@@ -60,6 +60,7 @@ Push with success
     >>> post("push", {"consumer": "dummy", "target": "defined"})
     '..."success": true...'
 
+
 Push without success
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -67,6 +68,7 @@ If an adapter is registered, but it rises an exception, the outcome is failed:
 
     >>> post("push", {"consumer": "dummy"})
     '..."success": false...'
+
 
 Non-registered adapter
 ~~~~~~~~~~~~~~~~~~~~~~

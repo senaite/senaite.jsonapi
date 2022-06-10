@@ -44,7 +44,7 @@ registered in the system:
     >>> items = data.get("items")
     >>> catalog_ids = map(lambda cat: cat["id"], items)
     >>> sorted(catalog_ids)
-    [u'auditlog_catalog', ..., u'portal_catalog']
+    [u'portal_catalog', ...]
 
 Catalogs for internal use are not included though:
 

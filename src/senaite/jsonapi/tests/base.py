@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2017-2020 by it's authors.
+# Copyright 2017-2022 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import transaction
@@ -46,7 +46,6 @@ class SimpleTestLayer(PloneSandboxLayer):
         super(SimpleTestLayer, self).setUpZope(app, configurationContext)
 
         # Load ZCML
-        import Products.TextIndexNG3
         import bika.lims
         import senaite.core
         import senaite.app.listing
@@ -55,7 +54,6 @@ class SimpleTestLayer(PloneSandboxLayer):
         import senaite.jsonapi
 
         # Load ZCML
-        self.loadZCML(package=Products.TextIndexNG3)
         self.loadZCML(package=bika.lims)
         self.loadZCML(package=senaite.core)
         self.loadZCML(package=senaite.app.listing)
@@ -64,7 +62,6 @@ class SimpleTestLayer(PloneSandboxLayer):
         self.loadZCML(package=senaite.jsonapi)
 
         # Install product and call its initialize() function
-        zope.installProduct(app, "Products.TextIndexNG3")
         zope.installProduct(app, "bika.lims")
         zope.installProduct(app, "senaite.core")
         zope.installProduct(app, "senaite.app.listing")

@@ -207,6 +207,7 @@ Create a Department
 ~~~~~~~~~~~~~~~~~~~
 
     >>> data = {"portal_type": "Department",
+    ...          "DepartmentID": "MB",
     ...         "parent_path": api.get_path(setup.bika_departments),
     ...         "title": "Microbiology",
     ...         "Manager": api.get_uid(lab_contact)}
@@ -215,6 +216,7 @@ Create a Department
     'Microbiology'
     >>> api.get_parent(department)
     <Departments at /plone/bika_setup/bika_departments>
+
 
 Create an Analysis Category
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
