@@ -791,6 +791,7 @@ def is_path(path):
         return False
     return True
 
+
 def calculate_delta_date(literal):
     """Calculate the date in the past from the given literal
     :param literal: A date literal, e.g. "today"
@@ -1606,6 +1607,7 @@ def get_settings_from_interface(iface):
 # -----------------------------------------------------------------------------
 #   Batching Helpers
 # -----------------------------------------------------------------------------
+
 
 def get_batch(sequence, size, start=0, endpoint=None, complete=False):
     """ create a batched result record out of a sequence (catalog brains)
