@@ -31,7 +31,7 @@ def version(context, request):
     """get the version, build number and date of this API
     """
     return {
-        "url":     url_for("senaite.jsonapi.v1.version"),
+        "url": url_for("senaite.jsonapi.v1.version"),
         "version": __version__,
-        "date":    __date__,
+        "date": __date__,
     }
