@@ -44,17 +44,17 @@ class BaseDataManager(object):
     def get(self, name):
         """Get the value for name
         """
-        raise NotImplemented("Getter must be implemented by subclass")
+        raise NotImplementedError("Getter must be implemented by subclass")
 
     def set(self, name, value, **kw):
         """Set the value for name
         """
-        raise NotImplemented("Setter must be implemented by subclass")
+        raise NotImplementedError("Setter must be implemented by subclass")
 
     def json_data(self, name, default=None):
         """Get a JSON compatible value of the field
         """
-        raise NotImplemented("Get Info must be implemented by subclass")
+        raise NotImplementedError("Get Info must be implemented by subclass")
 
 
 class BrainDataManager(BaseDataManager):
