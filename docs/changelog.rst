@@ -5,6 +5,7 @@ Changelog
 2.3.0 (unreleased)
 ------------------
 
+- #49 Fix no error message is sent back for push consumer calls
 - no changes yet
 
 
