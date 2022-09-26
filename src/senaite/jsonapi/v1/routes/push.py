@@ -58,7 +58,7 @@ def push(context, request):
     try:
         success = consumer.process()
     except Exception as e:
-        api.fail(500, e.message)
+        api.fail(500, str(e))
 
     return {
         "url": api.url_for("senaite.jsonapi.v1.push"),
