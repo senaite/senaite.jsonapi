@@ -136,6 +136,7 @@ required attribute:
 
     >>> data = {"portal_type": "SampleType",
     ...         "parent_path": api.get_path(setup.bika_sampletypes),
+    ...         "MinimumVolume": "20 ml",
     ...         "title": "Fresh Egg",
     ...         "Prefix": "FE"}
     >>> post("create", data)
@@ -179,6 +180,7 @@ Create a Sample Type
     ...         "parent_path": api.get_path(setup.bika_sampletypes),
     ...         "title": "Fresh Egg",
     ...         "MinimumVolume": "10 gr",
+    ...         "AdmittedStickerTemplates": [{"admitted": ["QR_1x14mmx39mm.pt"], "small_default": ["QR_1x14mmx39mm.pt"], "large_default": ["QR_1x14mmx39mm.pt"]}],
     ...         "Prefix": "FE"}
     >>> sample_type = create(data)
     >>> sample_type.Title()
