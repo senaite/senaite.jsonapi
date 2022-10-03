@@ -2,11 +2,10 @@ Changelog
 =========
 
 
-2.3.0 (unreleased)
+2.3.0 (2022-10-03)
 ------------------
 
 - #49 Fix no error message is sent back for push consumer calls
-- no changes yet
 
 
 2.2.0 (2022-06-10)
