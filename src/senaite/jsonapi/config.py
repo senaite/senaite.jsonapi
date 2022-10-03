@@ -17,6 +17,3 @@
 #
 # Copyright 2017-2022 by it's authors.
 # Some rights reserved, see README and LICENSE.
-
-# The creation of objects from portal types that belong to these products are
-# not supported, unless a custom adapter of ICreate is provided

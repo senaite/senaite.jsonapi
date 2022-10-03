@@ -25,7 +25,7 @@ from senaite.jsonapi.v1 import routes
 from senaite.jsonapi import add_route as add_senaite_route
 
 __version__ = "2.3.0"
-__date__ = "2022-06-10"
+__date__ = "2022-10-03"
 
 BASE_URL = "/senaite/v1"
 
