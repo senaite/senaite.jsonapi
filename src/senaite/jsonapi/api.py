@@ -395,7 +395,14 @@ def get_parent_info(brain_or_object, endpoint=None):
         return {}
 
     # get the parent object
-    parent = get_parent(brain_or_object)
+    try:
+        parent = get_parent(brain_or_object)
+    except Unauthorized:
+        return {
+            "parent_id": "",
+            "parent_uid": "",
+            "parent_url": "",
+        }
     portal_type = get_portal_type(parent)
     resource = portal_type_to_resource(portal_type)
 
