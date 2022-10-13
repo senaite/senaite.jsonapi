@@ -4,7 +4,7 @@ Changelog
 2.4.0 (unreleased)
 ------------------
 
-- no changes yet
+- #51 Handle no access to parent object gracefully
 
 
 2.3.0 (2022-10-03)
