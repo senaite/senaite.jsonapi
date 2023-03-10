@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2017-2022 by it's authors.
+# Copyright 2017-2023 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import pkgutil
@@ -25,7 +25,7 @@ from senaite.jsonapi.v1 import routes
 from senaite.jsonapi import add_route as add_senaite_route
 
 __version__ = "2.4.0"
-__date__ = "2022-10-03"
+__date__ = "2023-03-10"
 
 BASE_URL = "/senaite/v1"
 

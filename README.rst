@@ -65,7 +65,7 @@ Feedback and support
 License
 -------
 
-**SENAITE.JSONAPI** Copyright (C) 2017-2022 RIDING BYTES & NARALABS
+**SENAITE.JSONAPI** Copyright (C) RIDING BYTES & NARALABS
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the `GNU General Public License version 2
