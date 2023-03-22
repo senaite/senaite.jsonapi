@@ -64,9 +64,9 @@ class Catalog(object):
 
     def get_catalog(self):
         name = req.get("catalog")
-        catalogs = senaiteapi.get_catalogs_for(self.context)
-        if len(catalogs) > 0:
-            name = catalogs[0].getId()
+        if not name:
+            catalogs = senaiteapi.get_catalogs_for(self.context)
+            name = catalogs[0].getId() if len(catalogs) > 0 else None
         if name not in self._catalogs:
             # Get the catalog directly from senaite api
             cat = senaiteapi.get_tool(name)
