@@ -20,7 +20,7 @@
 
 from bika.lims import api as senaiteapi
 from DateTime import DateTime
-from Products.CMFPlone.CatalogTool import CatalogTool
+from plone.memoize import view
 from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
@@ -30,7 +30,6 @@ from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
 from zope import interface
 from ZPublisher import HTTPRequest
-
 
 SEARCHABLE_TEXT_INDEXES = [
     "listing_searchable_text",
@@ -46,7 +45,6 @@ class Catalog(object):
 
     def __init__(self, context):
         self.context = context
-        self._catalogs = {}
 
     def search(self, query):
         """search the catalog
@@ -62,17 +60,16 @@ class Catalog(object):
     def __call__(self, query):
         return self.search(query)
 
-    def get_catalog(self):
+    def __repr__(self):
+        return "<Catalog %s>" % self.get_catalog().getId()
+
+    @view.memoize
+    def get_catalog(self, default="portal_catalog"):
         name = req.get("catalog")
         if not name:
             catalogs = senaiteapi.get_catalogs_for(self.context)
-            name = catalogs[0].getId() if len(catalogs) > 0 else None
-        if name not in self._catalogs:
-            # Get the catalog directly from senaite api
-            cat = senaiteapi.get_tool(name)
-            if isinstance(cat, CatalogTool):
-                self._catalogs[name] = cat
-        return self._catalogs[name]
+            name = catalogs[0].getId() if len(catalogs) > 0 else default
+        return senaiteapi.get_tool(name)
 
     def get_schema(self):
         catalog = self.get_catalog()
