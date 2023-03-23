@@ -4,7 +4,7 @@ Changelog
 2.5.0 (unreleased)
 ------------------
 
-- no changes yet
+- #54 Lookup mapped catalogs for CatalogBrains
 
 
 2.4.0 (2023-03-10)

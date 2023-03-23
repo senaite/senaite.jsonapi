@@ -45,6 +45,7 @@ class Catalog(object):
     interface.implements(ICatalog)
 
     def __init__(self, context):
+        self.context = context
         self._catalogs = {}
 
     def search(self, query):
@@ -62,7 +63,10 @@ class Catalog(object):
         return self.search(query)
 
     def get_catalog(self):
-        name = req.get("catalog", "portal_catalog")
+        name = req.get("catalog")
+        if not name:
+            catalogs = senaiteapi.get_catalogs_for(self.context)
+            name = catalogs[0].getId() if len(catalogs) > 0 else None
         if name not in self._catalogs:
             # Get the catalog directly from senaite api
             cat = senaiteapi.get_tool(name)
