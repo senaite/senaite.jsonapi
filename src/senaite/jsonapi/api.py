@@ -24,8 +24,6 @@ import json
 
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
-from senaite.jsonapi.interfaces import IUpdate
-
 from bika.lims import api
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 from DateTime import DateTime
@@ -43,14 +41,16 @@ from senaite.jsonapi.exceptions import APIError
 from senaite.jsonapi.interfaces import IBatch
 from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
+from senaite.jsonapi.interfaces import ICreate
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.interfaces import IInfo
-from senaite.jsonapi.interfaces import ICreate
+from senaite.jsonapi.interfaces import IUpdate
 from zope.component import getAdapter
+from zope.component import getMultiAdapter
+from zope.component import queryAdapter
 from zope.schema import getFieldNames
 from zope.schema import getFields
-from zope.component import queryAdapter
 
 _marker = object()
 
@@ -579,14 +579,14 @@ def fail(status, msg):
     raise APIError(status, "{}".format(msg))
 
 
-def search(**kw):
+def search(portal_type=None, **kw):
     """Search the catalog adapter
 
     :returns: Catalog search results
     :rtype: iterable
     """
     portal = get_portal()
-    catalog = ICatalog(portal)
+    catalog = getMultiAdapter((portal, portal_type), interface=ICatalog)
     catalog_query = ICatalogQuery(catalog)
     query = catalog_query.make_query(**kw)
     return catalog(query)
@@ -1161,16 +1161,6 @@ def get_endpoint(brain_or_object, default=DEFAULT_ENDPOINT):
         return endpoint_candidates[0]
 
     return default
-
-
-def get_catalog():
-    """Get catalog adapter
-
-    :returns: ICatalog adapter for the Portal
-    :rtype: CatalogTool
-    """
-    portal = get_portal()
-    return ICatalog(portal)
 
 
 def get_object_by_request():

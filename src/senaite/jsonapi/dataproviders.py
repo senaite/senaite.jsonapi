@@ -18,21 +18,19 @@
 # Copyright 2017-2023 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-from zope import interface
-from zope import component
-
-from plone.dexterity.interfaces import IDexterityContent
-
 from AccessControl import Unauthorized
+from plone.dexterity.interfaces import IDexterityContent
+from Products.ATContentTypes.interfaces import IATContentType
 from Products.CMFCore.interfaces import ISiteRoot
 from Products.ZCatalog.interfaces import ICatalogBrain
-from Products.ATContentTypes.interfaces import IATContentType
-
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
-from senaite.jsonapi.interfaces import IInfo
 from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import IDataManager
+from senaite.jsonapi.interfaces import IInfo
+from zope import component
+from zope import interface
+from zope.component import getMultiAdapter
 
 _marker = object
 
@@ -143,7 +141,8 @@ class ZCDataProvider(Base):
 
     def __init__(self, context):
         super(ZCDataProvider, self).__init__(context)
-        catalog_adapter = ICatalog(context)
+        catalog_adapter = getMultiAdapter(
+            (context, context.portal_type), interface=ICatalog)
         # extract the metadata
         self.keys = catalog_adapter.get_schema()
 

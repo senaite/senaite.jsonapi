@@ -43,8 +43,9 @@ class Catalog(object):
     """
     interface.implements(ICatalog)
 
-    def __init__(self, context):
+    def __init__(self, context, portal_type=None):
         self.context = context
+        self.portal_type = portal_type
 
     def search(self, query):
         """search the catalog
@@ -67,7 +68,8 @@ class Catalog(object):
     def get_catalog(self, default="portal_catalog"):
         name = req.get("catalog")
         if not name:
-            catalogs = senaiteapi.get_catalogs_for(self.context)
+            # get the mapped catalog for the given portal_type
+            catalogs = senaiteapi.get_catalogs_for(self.portal_type)
             name = catalogs[0].getId() if len(catalogs) > 0 else default
         return senaiteapi.get_tool(name)
 
