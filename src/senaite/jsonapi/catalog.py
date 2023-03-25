@@ -20,7 +20,6 @@
 
 from bika.lims import api as senaiteapi
 from DateTime import DateTime
-from plone.memoize import view
 from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
@@ -62,7 +61,6 @@ class Catalog(object):
     def __repr__(self):
         return "<Catalog %s>" % self.get_catalog().getId()
 
-    @view.memoize
     def get_catalog(self, default="portal_catalog"):
         name = req.get("catalog")
         if not name:
