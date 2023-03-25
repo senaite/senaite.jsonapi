@@ -51,12 +51,10 @@ class Catalog(object):
         """search the catalog
         """
         logger.info("Catalog query={}".format(query))
-        # Support to set the catalog as a request parameter
-        catalogs = _.to_list(req.get("catalog", None))
-        if catalogs:
-            return senaiteapi.search(query, catalog=catalogs)
-        # Delegate to the search API of Bika LIMS
-        return senaiteapi.search(query)
+        catalog = self.get_catalog()
+        if not catalog:
+            return senaiteapi.search(query)
+        return senaiteapi.search(query, catalog=catalog.getId())
 
     def __call__(self, query):
         return self.search(query)
