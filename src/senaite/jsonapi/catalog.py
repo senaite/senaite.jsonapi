@@ -20,7 +20,6 @@
 
 from bika.lims import api as senaiteapi
 from DateTime import DateTime
-from Products.CMFPlone.CatalogTool import CatalogTool
 from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
@@ -30,7 +29,6 @@ from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
 from zope import interface
 from ZPublisher import HTTPRequest
-
 
 SEARCHABLE_TEXT_INDEXES = [
     "listing_searchable_text",
@@ -44,35 +42,32 @@ class Catalog(object):
     """
     interface.implements(ICatalog)
 
-    def __init__(self, context):
+    def __init__(self, context, portal_type=None):
         self.context = context
-        self._catalogs = {}
+        self.portal_type = portal_type
 
     def search(self, query):
         """search the catalog
         """
         logger.info("Catalog query={}".format(query))
-        # Support to set the catalog as a request parameter
-        catalogs = _.to_list(req.get("catalog", None))
-        if catalogs:
-            return senaiteapi.search(query, catalog=catalogs)
-        # Delegate to the search API of Bika LIMS
-        return senaiteapi.search(query)
+        catalog = self.get_catalog()
+        if not catalog:
+            return senaiteapi.search(query)
+        return senaiteapi.search(query, catalog=catalog.getId())
 
     def __call__(self, query):
         return self.search(query)
 
-    def get_catalog(self):
+    def __repr__(self):
+        return "<Catalog %s>" % self.get_catalog().getId()
+
+    def get_catalog(self, default="portal_catalog"):
         name = req.get("catalog")
         if not name:
-            catalogs = senaiteapi.get_catalogs_for(self.context)
-            name = catalogs[0].getId() if len(catalogs) > 0 else None
-        if name not in self._catalogs:
-            # Get the catalog directly from senaite api
-            cat = senaiteapi.get_tool(name)
-            if isinstance(cat, CatalogTool):
-                self._catalogs[name] = cat
-        return self._catalogs[name]
+            # get the mapped catalog for the given portal_type
+            catalogs = senaiteapi.get_catalogs_for(self.portal_type)
+            name = catalogs[0].getId() if len(catalogs) > 0 else default
+        return senaiteapi.get_tool(name)
 
     def get_schema(self):
         catalog = self.get_catalog()

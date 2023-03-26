@@ -11,9 +11,9 @@
        Unified interface to one or more Portal Catalog tools.
   -->
 
-  <!-- Default catalog adapter -->
+  <!-- Default catalog adapter (context, portal_type) -->
   <adapter
-      for="*"
+      for="* *"
       factory=".catalog.Catalog"
       />
 
