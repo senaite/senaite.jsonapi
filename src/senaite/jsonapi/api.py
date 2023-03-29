@@ -29,9 +29,14 @@ from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 from DateTime import DateTime
 from plone import api as ploneapi
 from plone.behavior.interfaces import IBehaviorAssignable
+from plone.i18n.interfaces import ILanguageSchema
 from plone.jsonapi.core import router
 from Products.ATContentTypes.utils import DT2dt
-from Products.CMFPlone.controlpanel import browser as cp
+from Products.CMFPlone.interfaces.controlpanel import IDateAndTimeSchema
+from Products.CMFPlone.interfaces.controlpanel import IMailSchema
+from Products.CMFPlone.interfaces.controlpanel import IMaintenanceSchema
+from Products.CMFPlone.interfaces.controlpanel import ISecuritySchema
+from Products.CMFPlone.interfaces.controlpanel import IUserGroupsSettingsSchema
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
 from senaite.jsonapi import logger
@@ -57,12 +62,11 @@ _marker = object()
 DEFAULT_ENDPOINT = "senaite.jsonapi.v1.get"
 
 CONTROLPANEL_INTERFACE_MAPPING = {
-    'mail': [cp.mail.IMailSchema],
-    'language': [cp.language.ILanguageSchema],
-    'dateandtime': [cp.dateandtime.IDateAndTimeSchema],
-    'usergroups': [cp.usergroups.IUserGroupsSettingsSchema,
-                   cp.usergroups.ISecuritySchema],
-    'maintenance': [cp.maintenance.IMaintenanceSchema],
+    "mail": [IMailSchema],
+    "language": [ILanguageSchema],
+    "dateandtime": [IDateAndTimeSchema],
+    "usergroups": [IUserGroupsSettingsSchema, ISecuritySchema],
+    "maintenance": [IMaintenanceSchema],
 }
 
 SKIP_UPDATE_FIELDS = ["id", ]
