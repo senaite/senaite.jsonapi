@@ -4,6 +4,7 @@ Changelog
 2.5.0 (unreleased)
 ------------------
 
+- #57 Fix search catalog for metadata lookup
 - #56 Fix implicit imports for controlpanel mappings
 - #54 Lookup mapped catalogs for CatalogBrains
 
