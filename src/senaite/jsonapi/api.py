@@ -660,12 +660,13 @@ def get_brain(brain_or_object):
 
     # fetch the brain by UID
     uid = get_uid(brain_or_object)
-    uc = get_tool("uid_catalog")
-    results = uc({"UID": uid}) or search(query={'UID': uid})
+    portal_type = api.get_portal_type(brain_or_object)
+    query = {"UID": uid, "portal_type": portal_type}
+    results = api.search(query)
     if len(results) == 0:
         return None
     if len(results) > 1:
-        fail(500, "More than one object with UID={} found in portal_catalog".format(uid))
+        fail(500, "More than one object with UID={}".format(uid))
     return results[0]
 
 
