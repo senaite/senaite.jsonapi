@@ -49,6 +49,9 @@ class Catalog(object):
     def search(self, query):
         """search the catalog
         """
+        # always extend the query with the portal_type
+        if self.portal_type:
+            query["portal_type"] = self.portal_type
         logger.info("Catalog query={}".format(query))
         catalog = self.get_catalog()
         if not catalog:
