@@ -70,8 +70,9 @@ class Catalog(object):
         if not name:
             catalogs = []
             for portal_type in to_list(self.portal_type):
-                # get the mapped catalog for the given portal_type
+                # Get the mapped catalog for the given portal_type
                 mapped_catalogs = senaiteapi.get_catalogs_for(portal_type)
+                # NOTE: We consider the first mapped catalog as the primary!
                 if len(mapped_catalogs) > 0:
                     catalogs.append(mapped_catalogs[0])
 
