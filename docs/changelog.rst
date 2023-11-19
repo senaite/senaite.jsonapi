@@ -4,6 +4,7 @@ Changelog
 2.5.0 (unreleased)
 ------------------
 
+- #59 Fix search route for (multi-) portal type queries
 - #58 Fix missing portal type in query
 - #57 Fix search catalog for metadata lookup
 - #56 Fix implicit imports for controlpanel mappings
