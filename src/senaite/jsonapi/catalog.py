@@ -27,6 +27,7 @@ from senaite.jsonapi import request as req
 from senaite.jsonapi import underscore as _
 from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
+from senaite.jsonapi.underscore import to_list
 from zope import interface
 from ZPublisher import HTTPRequest
 
@@ -64,12 +65,22 @@ class Catalog(object):
     def __repr__(self):
         return "<Catalog %s>" % self.get_catalog().getId()
 
-    def get_catalog(self, default="portal_catalog"):
+    def get_catalog(self, default="uid_catalog"):
         name = req.get("catalog")
         if not name:
-            # get the mapped catalog for the given portal_type
-            catalogs = senaiteapi.get_catalogs_for(self.portal_type)
-            name = catalogs[0].getId() if len(catalogs) > 0 else default
+            catalogs = []
+            for portal_type in to_list(self.portal_type):
+                # get the mapped catalog for the given portal_type
+                mapped_catalogs = senaiteapi.get_catalogs_for(portal_type)
+                if len(mapped_catalogs) > 0:
+                    catalogs.append(mapped_catalogs[0])
+
+            # multi catalog query detected -> fall back to default
+            if len(set(catalogs)) > 1:
+                name = default
+            else:
+                name = catalogs[0].getId() if len(catalogs) > 0 else default
+
         return senaiteapi.get_tool(name)
 
     def get_schema(self):

@@ -590,6 +590,10 @@ def search(portal_type=None, **kw):
     :rtype: iterable
     """
     portal = get_portal()
+    if portal_type is None:
+        if not req.get("portal_type"):
+            return []
+        portal_type = req.get("portal_type")
     catalog = getMultiAdapter((portal, portal_type), interface=ICatalog)
     catalog_query = ICatalogQuery(catalog)
     query = catalog_query.make_query(**kw)
