@@ -18,12 +18,10 @@
 # Copyright 2017-2023 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-import urllib
-
-from zope import interface
-
 from senaite.jsonapi import request as req
 from senaite.jsonapi.interfaces import IBatch
+from six.moves.urllib_parse import urlencode
+from zope import interface
 
 
 class Batch(object):
@@ -55,7 +53,7 @@ class Batch(object):
         request = req.get_request()
         params = request.form
         params["b_start"] = self.batch.pagenumber * self.batch.pagesize
-        return "%s?%s" % (request.URL, urllib.urlencode(params))
+        return "%s?%s" % (request.URL, urlencode(params, doseq=True))
 
     def make_prev_url(self):
         if not self.batch.has_previous:
@@ -65,7 +63,7 @@ class Batch(object):
         pagesize = self.batch.pagesize
         pagenumber = self.batch.pagenumber
         params["b_start"] = max(pagenumber - 2, 0) * pagesize
-        return "%s?%s" % (request.URL, urllib.urlencode(params))
+        return "%s?%s" % (request.URL, urlencode(params, doseq=True))
 
 
 class Batch42(object):
