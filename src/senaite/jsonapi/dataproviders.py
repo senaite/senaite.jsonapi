@@ -19,6 +19,7 @@
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import Unauthorized
+from Acquisition import aq_base
 from plone.dexterity.interfaces import IDexterityContent
 from Products.ATContentTypes.interfaces import IATContentType
 from Products.CMFCore.interfaces import ISiteRoot
@@ -42,13 +43,14 @@ class Base(object):
 
     def __init__(self, context):
         self.context = context
+        self.base_context = aq_base(context)
         self.keys = []
         self.ignore = []
 
         # Mapped attributes to extract from the object besides the schema keys.
         # These keys are always included
         self.attributes = {
-            "id": "getId",
+            "id": "_x_get_id",
             "uid": "UID",
             "title": "Title",
             "description": "Description",
@@ -61,6 +63,13 @@ class Base(object):
             "path": "_x_get_physical_path",
             "parent_path": "_x_get_parent_path",
         }
+
+    def _x_get_id(self):
+        """Get The ID w/o acquisition
+
+        This prevents that we get might get the ID from the catalog
+        """
+        return getattr(self.base_context, "id", "")
 
     def _x_get_physical_path(self):
         """Generate the physical path
