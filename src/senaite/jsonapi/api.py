@@ -591,9 +591,8 @@ def search(portal_type=None, **kw):
     """
     portal = get_portal()
     if portal_type is None:
-        if not req.get("portal_type"):
-            return []
-        portal_type = req.get("portal_type")
+        # try to get it over the request
+        portal_type = req.get("portal_type", None)
     catalog = getMultiAdapter((portal, portal_type), interface=ICatalog)
     catalog_query = ICatalogQuery(catalog)
     query = catalog_query.make_query(**kw)

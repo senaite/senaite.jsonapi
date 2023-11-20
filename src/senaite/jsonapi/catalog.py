@@ -50,9 +50,13 @@ class Catalog(object):
     def search(self, query):
         """search the catalog
         """
-        # always extend the query with the portal_type
+        # always extend the query with the current portal_type
         if self.portal_type:
             query["portal_type"] = self.portal_type
+        else:
+            # remove the portal_type from the query
+            query.pop("portal_type", None)
+
         logger.info("Catalog query={}".format(query))
         catalog = self.get_catalog()
         if not catalog:
@@ -71,7 +75,8 @@ class Catalog(object):
             catalogs = []
             for portal_type in to_list(self.portal_type):
                 # Get the mapped catalog for the given portal_type
-                mapped_catalogs = senaiteapi.get_catalogs_for(portal_type)
+                mapped_catalogs = senaiteapi.get_catalogs_for(
+                    portal_type, default=default)
                 # NOTE: We consider the first mapped catalog as the primary!
                 if len(mapped_catalogs) > 0:
                     catalogs.append(mapped_catalogs[0])
@@ -82,7 +87,7 @@ class Catalog(object):
             else:
                 name = catalogs[0].getId() if len(catalogs) > 0 else default
 
-        return senaiteapi.get_tool(name)
+        return senaiteapi.get_tool(name, default=default)
 
     def get_schema(self):
         catalog = self.get_catalog()
