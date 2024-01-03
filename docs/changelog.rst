@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.5.0 (unreleased)
+2.5.0 (2024-01-03)
 ------------------
 
 - #59 Fix search route for (multi-) portal type queries
