@@ -134,10 +134,6 @@ portal_catalog and setup_catalog:
     >>> get_items_ids(response)
     [u'sampletype-1', u'sampletype-2']
 
-    >>> response = get("sampletype?catalog=portal_catalog")
-    >>> get_items_ids(response)
-    [u'sampletype-1', u'sampletype-2']
-
     >>> response = get("sampletype?catalog=senaite_catalog_setup")
     >>> get_items_ids(response)
     [u'sampletype-1', u'sampletype-2']

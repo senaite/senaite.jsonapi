@@ -69,7 +69,10 @@ class Base(object):
 
         This prevents that we get might get the ID from the catalog
         """
-        return getattr(self.base_context, "id", "")
+        id = getattr(self.base_context, "id", "")
+        if not id:
+            id = getattr(self.base_context, "getId", "")
+        return id
 
     def _x_get_physical_path(self):
         """Generate the physical path
