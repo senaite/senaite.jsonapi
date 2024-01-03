@@ -51,6 +51,7 @@ class SimpleTestLayer(PloneSandboxLayer):
         import senaite.app.listing
         import senaite.impress
         import senaite.app.spotlight
+        import plone.jsonapi.core
         import senaite.jsonapi
 
         # Load ZCML
@@ -59,6 +60,7 @@ class SimpleTestLayer(PloneSandboxLayer):
         self.loadZCML(package=senaite.app.listing)
         self.loadZCML(package=senaite.impress)
         self.loadZCML(package=senaite.app.spotlight)
+        self.loadZCML(package=plone.jsonapi.core)
         self.loadZCML(package=senaite.jsonapi)
 
         # Install product and call its initialize() function
@@ -67,6 +69,8 @@ class SimpleTestLayer(PloneSandboxLayer):
         zope.installProduct(app, "senaite.app.listing")
         zope.installProduct(app, "senaite.impress")
         zope.installProduct(app, "senaite.app.spotlight")
+        zope.installProduct(app, "plone.jsonapi.core")
+        zope.installProduct(app, "senaite.jsonapi")
 
     def setUpPloneSite(self, portal):
         super(SimpleTestLayer, self).setUpPloneSite(portal)
