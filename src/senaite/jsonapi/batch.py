@@ -95,7 +95,7 @@ class Batch42(object):
         request = req.get_request()
         params = request.form
         params["b_start"] = self.batch.numpages * self.batch.size
-        return "%s?%s" % (request.URL, urllib.urlencode(params))
+        return "%s?%s" % (request.URL, urlencode(params))
 
     def make_prev_url(self):
         if self.batch.previous is not None:
@@ -103,4 +103,4 @@ class Batch42(object):
         request = req.get_request()
         params = request.form
         params["b_start"] = max(self.batch.numpages - 2, 0) * self.batch.size
-        return "%s?%s" % (request.URL, urllib.urlencode(params))
+        return "%s?%s" % (request.URL, urlencode(params))
