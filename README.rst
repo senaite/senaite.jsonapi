@@ -9,8 +9,8 @@ RESTful JSON API for SENAITE LIMS
 .. image:: https://img.shields.io/pypi/v/senaite.jsonapi.svg?style=flat-square
     :target: https://pypi.python.org/pypi/senaite.jsonapi
 
-.. image:: https://img.shields.io/travis/senaite/senaite.jsonapi/master.svg?style=flat-square
-    :target: https://travis-ci.org/senaite/senaite.jsonapi
+.. image:: https://img.shields.io/github/actions/workflow/status/senaite/senaite.jsonapi/build-and-test.yml?branch=2.x
+    :target: https://github.com/senaite/senaite.core/actions/workflows/build-and-test.yml?query=branch:2.x
 
 .. image:: https://readthedocs.org/projects/pip/badge/
   :target: https://senaitejsonapi.readthedocs.org
