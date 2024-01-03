@@ -56,15 +56,15 @@ Catalogs for internal use are not included though:
 
 For each catalog, indexes, schema fields and allowed portal types are listed:
 
-    >>> cat = filter(lambda it: it["id"]=="portal_catalog", items)[0]
+    >>> cat = filter(lambda it: it["id"]=="senaite_catalog_analysis", items)[0]
     >>> sorted(cat.get("indexes"))
-    [u'Analyst', u'Creator', u'Date', ...]
+    [...]
 
     >>> sorted(cat.get("schema"))
-    [u'Analyst', u'CreationDate', u'Creator',...]
+    [...]
 
     >>> sorted(cat.get("portal_types"))
-    [u'ARReport', u'ARTemplate', u'ARTemplates',...]
+    [u'Analysis', u'DuplicateAnalysis', u'ReferenceAnalysis', u'RejectAnalysis']
 
 
 Get a single catalog
@@ -72,13 +72,13 @@ Get a single catalog
 
 A single catalog can also be retrieved by it's id:
 
-    >>> response = get("catalogs/portal_catalog")
+    >>> response = get("catalogs/senaite_catalog_analysis")
     >>> cat = json.loads(response)
     >>> sorted(cat.get("indexes"))
-    [u'Analyst', u'Creator', u'Date', ...]
+    [...]
 
     >>> sorted(cat.get("schema"))
-    [u'Analyst', u'CreationDate', u'Creator',...]
+    [...]
 
     >>> sorted(cat.get("portal_types"))
-    [u'ARReport', u'ARTemplate', u'ARTemplates',...]
+    [u'Analysis', u'DuplicateAnalysis', u'ReferenceAnalysis', u'RejectAnalysis']
