@@ -56,7 +56,7 @@ And for each user, the roles and groups are displayed:
 As well as other properties:
 
     >>> sorted(analyst.keys())
-    [u'api_url', u'authenticated', u'description', u'email', ...]
+    [u'api_url', u'authenticated', u'email', ...]
 
 Get current user
 ~~~~~~~~~~~~~~~~
@@ -74,7 +74,7 @@ Current user can also be retrieved easily:
 and includes all properties too:
 
     >>> sorted(current.keys())
-    [u'api_url', u'authenticated', u'description', u'email',...u'groups',...u'roles'...]
+    [u'api_url', u'authenticated', u'email',...u'groups',...u'roles'...]
 
 Get a single user
 ~~~~~~~~~~~~~~~~~
