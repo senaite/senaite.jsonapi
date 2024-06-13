@@ -225,6 +225,12 @@ class DexterityDataManager(BaseDataManager):
         if not self.can_write():
             raise Unauthorized("You are not allowed to modify this content")
 
+        # prioritize setters over fields
+        setter = "set{}".format(name.capitalize(), None)
+        setter = getattr(self.context, setter, None)
+        if setter:
+            return setter(value)
+
         # fetch the field by name
         field = api.get_field(self.context, name)
 
