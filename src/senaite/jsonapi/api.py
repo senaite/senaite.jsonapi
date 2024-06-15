@@ -209,7 +209,6 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
     # no uid -> go through the record items
     results = []
     for record in records:
-        title = record.get("title") or ""
         obj = get_object_by_record(record)
 
         # no object found for this record
