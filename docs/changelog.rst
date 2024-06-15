@@ -4,7 +4,8 @@ Changelog
 2.6.0 (unreleased)
 ------------------
 
-- #61 Compatibility with senaite.core#2471
+- #61 Compatibility with senaite.core#2567 (AnalysisCategory to DX)
+- #61 Compatibility with senaite.core#2471 (Department to DX)
 
 
 2.5.0 (2024-01-03)

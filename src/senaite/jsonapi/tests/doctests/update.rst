@@ -175,7 +175,7 @@ We get a 401 error if we try to update an object from inside portal root:
 
 We get a 401 error if we try to update an object from inside setup folder:
 
-    >>> cats_uid = api.get_uid(api.get_setup().bika_analysiscategories)
+    >>> cats_uid = api.get_uid(portal.setup.analysiscategories)
     >>> data = {"title": "My Analysis Categories folder",
     ...         "uid": cats_uid,}
     >>> post("update", data)

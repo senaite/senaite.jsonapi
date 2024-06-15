@@ -224,14 +224,14 @@ Create an Analysis Category
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     >>> data = {"portal_type": "AnalysisCategory",
-    ...         "parent_path": api.get_path(setup.bika_analysiscategories),
+    ...         "parent_path": api.get_path(portal.setup.analysiscategories),
     ...         "title": "Microbiology identification",
     ...         "Department": api.get_uid(department)}
     >>> category = create(data)
     >>> category.Title()
     'Microbiology identification'
     >>> api.get_parent(category)
-    <AnalysisCategories at /plone/bika_setup/bika_analysiscategories>
+    <AnalysisCategories at /plone/setup/analysiscategories>
     >>> category.getDepartment()
     <Department at /plone/setup/departments/department-1>
 
@@ -257,7 +257,7 @@ Create an Analysis Service
     >>> sal.getAccredited()
     True
     >>> sal.getCategory()
-    <AnalysisCategory at /plone/bika_setup/bika_analysiscategories/analysiscategory-1>
+    <AnalysisCategory at /plone/setup/analysiscategories/analysiscategory-1>
 
     >>> data = {"portal_type": "AnalysisService",
     ...         "parent_path": api.get_path(setup.bika_analysisservices),
@@ -276,7 +276,7 @@ Create an Analysis Service
     >>> ecoli.getPrice()
     '15.00'
     >>> ecoli.getCategory()
-    <AnalysisCategory at /plone/bika_setup/bika_analysiscategories/analysiscategory-1>
+    <AnalysisCategory at /plone/setup/analysiscategories/analysiscategory-1>
 
 Creating a Sample
 ~~~~~~~~~~~~~~~~~
