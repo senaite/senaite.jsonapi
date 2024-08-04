@@ -42,8 +42,8 @@ Functional Helpers:
     ...     api.create(portal.clients, "Client", title="Happy Hills", ClientID="HH")
     ...     api.create(portal.clients, "Client", title="ACME", ClientID="AC")
     ...     api.create(portal.clients, "Client", title="Fill the gap", ClientID="FG")
-    ...     api.create(setup.bika_sampletypes, "SampleType", title="Water", Prefix="W")
-    ...     api.create(setup.bika_sampletypes, "SampleType", title="Dust", Prefix="D")
+    ...     api.create(portal.setup.sampletypes, "SampleType", title="Water", Prefix="W")
+    ...     api.create(portal.setup.sampletypes, "SampleType", title="Dust", Prefix="D")
     ...     transaction.commit()
 
 Variables:

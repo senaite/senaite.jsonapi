@@ -135,7 +135,7 @@ System will fail with a 400 error when trying to create an object without a
 required attribute:
 
     >>> data = {"portal_type": "SampleType",
-    ...         "parent_path": api.get_path(setup.bika_sampletypes),
+    ...         "parent_path": api.get_path(portal.setup.sampletypes),
     ...         "MinimumVolume": "20 ml",
     ...         "title": "Fresh Egg",
     ...         "Prefix": "FE"}
@@ -188,7 +188,7 @@ Create a Sample Type
     >>> sample_type.getPrefix()
     'FE'
     >>> api.get_parent(sample_type)
-    <SampleTypes at /plone/bika_setup/bika_sampletypes>
+    <SampleTypes at /plone/setup/sampletypes>
 
 
 Create a Laboratory Contact
@@ -300,7 +300,7 @@ instead of the plone's default creation.
     ['Ecoli', 'Sal']
 
     >>> sample.getSampleType()
-    <SampleType at /plone/bika_setup/bika_sampletypes/sampletype-2>
+    <SampleType at /plone/setup/sampletypes/sampletype-2>
 
     >>> sample.getClient()
     <Client at /plone/clients/client-7>
