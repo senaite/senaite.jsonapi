@@ -177,7 +177,7 @@ Create a Sample Type
 ~~~~~~~~~~~~~~~~~~~~
 
     >>> data = {"portal_type": "SampleType",
-    ...         "parent_path": api.get_path(setup.bika_sampletypes),
+    ...         "parent_path": api.get_path(poral.setup.sampletypes),
     ...         "title": "Fresh Egg",
     ...         "MinimumVolume": "10 gr",
     ...         "AdmittedStickerTemplates": [{"admitted": ["QR_1x14mmx39mm.pt"], "small_default": ["QR_1x14mmx39mm.pt"], "large_default": ["QR_1x14mmx39mm.pt"]}],

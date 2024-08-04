@@ -108,7 +108,7 @@ Body Content type (application/json):
           "hours": 0,
           "minutes": 0
         },
-        "parent_path": "/senaite/bika_setup/bika_sampletypes"
+        "parent_path": "/senaite/setup/sampletypes"
     }
 
 
