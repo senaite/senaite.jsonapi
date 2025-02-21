@@ -128,17 +128,42 @@ If we do a search now for clients, we will get all them:
     [u'TC1', u'TC2', u'TC3', u'TC4', u'TC5', u'TC6']
 
 
-Required fields
-~~~~~~~~~~~~~~~
+Fields validation
+~~~~~~~~~~~~~~~~~
 
 System will fail with a 400 error when trying to create an object without a
-required attribute:
+required attribute (e.g. `Prefix`):
+
+    >>> data = {"portal_type": "SampleType",
+    ...         "parent_path": api.get_path(portal.setup.sampletypes),
+    ...         "MinimumVolume": "20 ml",
+    ...         "title": "Fresh Egg"}
+    >>> post("create", data)
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+However, system does not complain if although required, the field has a
+default value defined (e.g. `AdmittedStickerTemplates`):
 
     >>> data = {"portal_type": "SampleType",
     ...         "parent_path": api.get_path(portal.setup.sampletypes),
     ...         "MinimumVolume": "20 ml",
     ...         "title": "Fresh Egg",
     ...         "Prefix": "FE"}
+    >>> post("create", data)
+    '...sampletypes/sampletype-2"...'
+
+Likewise, system will fail when trying to create an object with non-valid data.
+For instance, an error arises if the type of the value is wrong:
+
+
+    >>> data = {"portal_type": "SampleType",
+    ...         "parent_path": api.get_path(portal.setup.sampletypes),
+    ...         "MinimumVolume": "20 ml",
+    ...         "title": "Fresh Egg",
+    ...         "Prefix": "FE",
+    ...         "AdmittedStickerTemplates": "dummy"}
     >>> post("create", data)
     Traceback (most recent call last):
     [...]
@@ -180,7 +205,6 @@ Create a Sample Type
     ...         "parent_path": api.get_path(portal.setup.sampletypes),
     ...         "title": "Fresh Egg",
     ...         "MinimumVolume": "10 gr",
-    ...         "AdmittedStickerTemplates": [{"admitted": ["QR_1x14mmx39mm.pt"], "small_default": ["QR_1x14mmx39mm.pt"], "large_default": ["QR_1x14mmx39mm.pt"]}],
     ...         "Prefix": "FE"}
     >>> sample_type = create(data)
     >>> sample_type.Title()
@@ -300,7 +324,7 @@ instead of the plone's default creation.
     ['Ecoli', 'Sal']
 
     >>> sample.getSampleType()
-    <SampleType at /plone/setup/sampletypes/sampletype-2>
+    <SampleType at /plone/setup/sampletypes/sampletype-4>
 
     >>> sample.getClient()
     <Client at /plone/clients/client-7>
