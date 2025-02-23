@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 #
 # Scans a source tree for python files and writes the header template on top of
 # each file
@@ -15,9 +16,9 @@ TEMPLATE = """# -*- coding: utf-8 -*-
 #
 # This file is part of SENAITE.JSONAPI.
 #
-# SENAITE.JSONAPI is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, version 2.
+# SENAITE.JSONAPI is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, version 2.
 #
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     # walk the directory
     os.path.walk(directory, callback, None)
 
-    for path, lines in data.iteritems():
+    for path, lines in data.items():
         # the new lines start with our header
         new_lines = [get_template()]
 
@@ -97,8 +98,8 @@ if __name__ == "__main__":
 
             # if we reach this point, we found the first code line
             if skip:
-                print "Found first code line for file {} at {}".format(
-                    path, num)
+                print("Found first code line for file {} at {}".format(
+                    path, num))
                 skip = False
 
             # append all code lines below the new_lines
@@ -110,4 +111,4 @@ if __name__ == "__main__":
             # remove all trailing empty lines and add a single one
             new_lines[-1] = last_line.rstrip("\n") + "\n"
             f.writelines(new_lines)
-            print "Wrote header to {}".format(path)
+            print("Wrote header to {}".format(path))
