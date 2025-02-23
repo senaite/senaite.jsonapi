@@ -54,6 +54,7 @@ from senaite.jsonapi.interfaces import IUpdate
 from zope.component import getAdapter
 from zope.component import getMultiAdapter
 from zope.component import queryAdapter
+from zope.deprecation import deprecate
 from zope.schema import getFieldNames
 from zope.schema import getFields
 
@@ -1490,7 +1491,7 @@ def update_object_with_data(content, record):
             logger.debug("update_object_with_data::field %r updated", k)
 
     # Validate the entire content object
-    invalid = validate_object(content, record)
+    invalid = api.validate(content)
     if invalid:
         fail(400, u.to_json(invalid))
 
@@ -1505,6 +1506,7 @@ def update_object_with_data(content, record):
     return content
 
 
+@deprecate("Use senaite.core.api.validate instead")
 def validate_object(brain_or_object, data):
     """Validate the entire object
 
@@ -1516,12 +1518,7 @@ def validate_object(brain_or_object, data):
     :rtype: dict
     """
     obj = get_object(brain_or_object)
-
-    # Call the validator of AT Content Types
-    if is_at_content(obj):
-        return obj.validate(data=data)
-
-    return {}
+    return api.validate(obj)
 
 
 def deactivate_object(brain_or_object):
