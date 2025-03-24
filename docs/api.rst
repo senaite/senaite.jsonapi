@@ -448,6 +448,14 @@ All content resources accept to be filtered by request parameters.
 |                 | this-week, this-month | this date range until today.                                            |
 |                 | this-year             | This uses internally `'range': 'min'` query.                            |
 +-----------------+-----------------------+-------------------------------------------------------------------------+
+| created_since   | %Y-%m-%d %Y%m%d%H%M%S | Specify a since period in `ymd` format or a datetime in a valid ISO     |
+|                 | `2d` (2 days ago)     | format to find all items that were created since that date.             |
+|                 | `2h` (2 hours ago)    | This uses internally `'range': 'min'` query.                            |
++-----------------+-----------------------+-------------------------------------------------------------------------+
+| modified_since  | %Y-%m-%d %Y%m%d%H%M%S | Specify a since period in `ymd` format or a datetime in a valid ISO     |
+|                 | `2d` (2 days ago)     | format to find all items that were modified since that date.            |
+|                 | `2h` (2 hours ago)    | This uses internally `'range': 'min'` query.                            |
++-----------------+-----------------------+-------------------------------------------------------------------------+
 
 .. _Response_Format:
 

@@ -39,6 +39,7 @@ from Products.CMFPlone.interfaces.controlpanel import ISecuritySchema
 from Products.CMFPlone.interfaces.controlpanel import IUserGroupsSettingsSchema
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
+from senaite.core.api import dtime
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi import underscore as u
@@ -824,6 +825,26 @@ def calculate_delta_date(literal):
     }
     today = DateTime(DateTime().Date())  # current date without the time
     return today - mapping.get(literal, 0)
+
+
+def calculate_since_date(since):
+    """Calculates the "since" date
+
+    Returns the DateTime representing the value passed in. If the value is a
+    duration of time (either an str in `ymd` format or a relativedelta), it
+    calculates the since date using current date time as the end date.
+
+    :param since: A date/datetime-like format or a time interval as ymd format
+    :type since: date/datetime/str/relativedelta
+    :returns: Date when the event started back the period in ymd format
+    :rtype: DateTime
+    """
+    since_dt = dtime.to_DT(since)
+    if since_dt:
+        return since_dt
+
+    since_dt = dtime.get_since_date(since)
+    return dtime.to_DT(since_dt)
 
 
 def is_json_serializable(thing):

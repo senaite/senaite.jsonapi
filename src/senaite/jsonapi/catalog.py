@@ -262,6 +262,16 @@ class CatalogQuery(object):
             date = api.calculate_delta_date(recent_modified)
             query["modified"] = {'query': date, 'range': 'min'}
 
+        created_since = req.get_created_since()
+        if created_since:
+            date = api.calculate_since_date(created_since)
+            query["created"] = {"query": date, "range": "min"}
+
+        modified_since = req.get_modified_since()
+        if modified_since:
+            date = api.calculate_since_date(modified_since)
+            query["modified"] = {"query": date, "range": "min"}
+
         return query
 
     def get_keyword_query(self, **kw):
