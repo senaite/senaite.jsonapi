@@ -204,6 +204,18 @@ def get_recent_modified():
     return get("recent_modified", None)
 
 
+def get_created_since():
+    """Returns the 'created_since' from the request
+    """
+    return get("created_since", None)
+
+
+def get_modified_since():
+    """Returns the `modified_since` from the request
+    """
+    return get("modified_since", None)
+
+
 def get_request_data():
     """ extract and convert the json data from the request
 
