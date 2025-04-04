@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.6.0 (unreleased)
+2.6.0 (2025-04-04)
 ------------------
 
 - #66 Fix dexterity objects are not validated on creation
