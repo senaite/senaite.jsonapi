@@ -275,6 +275,12 @@ class ATFieldManager(object):
             raise Unauthorized("Field {} is read only."
                                .format(self.name))
 
+        # validate the value
+        error = self.field.validate(value, instance)
+        if error:
+            raise ValueError("Invalid value for field {}: {}"
+                             .format(self.name, error))
+
         # id fields take only strings
         if self.name == "id":
             value = str(value)
