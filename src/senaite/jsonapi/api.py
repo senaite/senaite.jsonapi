@@ -1429,9 +1429,6 @@ def create_object(container, portal_type, **data):
         logger.warn("Passed in ID '{}' omitted! Senaite LIMS "
                     "generates a proper ID for you" .format(id))
 
-    # convert physical paths to objects
-    data = convert_physical_paths_to_objects(data)
-
     try:
         # Is there any adapter registered to handle the creation of this type?
         adapter = queryAdapter(container, ICreate, name=portal_type)
@@ -1444,6 +1441,10 @@ def create_object(container, portal_type, **data):
         # Special case for ARs
         # => return immediately w/o update
         if portal_type == "AnalysisRequest":
+            # convert physical paths to objects
+            # NOTE: for all other objects we handle this already in the
+            # fieldmanager
+            data = convert_physical_paths_to_objects(data)
             obj = create_analysisrequest(container, **data)
             # Omit values which are already set through the helper
             data = u.omit(data, "SampleType", "Analyses")
@@ -1491,9 +1492,6 @@ def update_object_with_data(content, record):
 
     # ensure we have a full content object
     content = get_object(content)
-
-    # convert physical paths to objects
-    record = convert_physical_paths_to_objects(record)
 
     # Look for an update-specific adapter for this object
     adapter = queryAdapter(content, IUpdate)

@@ -18,20 +18,20 @@
 # Copyright 2017-2025 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-import dateutil
 import mimetypes
 
-from zope import interface
-from zope.schema._bootstrapinterfaces import WrongType
-
-from DateTime import DateTime
+import dateutil
 from AccessControl import Unauthorized
+from DateTime import DateTime
 from Products.Archetypes.utils import mapply
-
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import underscore as u
 from senaite.jsonapi.interfaces import IFieldManager
+from zope import interface
+from zope.interface import implementer
+from zope.schema._bootstrapinterfaces import WrongContainedType
+from zope.schema._bootstrapinterfaces import WrongType
 
 
 class ZopeSchemaFieldManager(object):
@@ -78,13 +78,11 @@ class ZopeSchemaFieldManager(object):
         try:
             # Validate
             self.field.validate(value)
-
             # TODO: Check security on the field level
             return self.field.set(instance, value)
-        except WrongType:
-            logger.warn("WrongType: Field={} Value={}".format(self.field, value))
-        except:  # noqa
-            logger.warn("Unknown Exception: Field={} Value={}".format(self.field, value))
+        except (WrongType, WrongContainedType):
+            raise TypeError("WrongType: Field={} Value={}".format(
+                self.field, value))
 
     def _get(self, instance, **kw):
         """Get the value of the field
@@ -598,14 +596,9 @@ class ARAnalysesFieldManager(ATFieldManager):
         self._set(instance, analyses, **kw)
 
 
-class UIDReferenceFieldManager(ATFieldManager):
-    """Adapter to get/set the value of UIDReferenceFields
+class UIDReferenceFieldMixin(object):
+    """Mixin class for UID Reference Field Managers
     """
-    interface.implements(IFieldManager)
-
-    def __init__(self, field):
-        super(UIDReferenceFieldManager, self).__init__(field)
-        self.multi_valued = field.multiValued
 
     def json_data(self, instance, default={}):
         """Get a JSON compatible value
@@ -620,40 +613,51 @@ class UIDReferenceFieldManager(ATFieldManager):
         return out or default
 
     def set(self, instance, value, **kw):  # noqa
-        """Set the value of the uid reference field
+        """Set the value of the refernce field
         """
-        ref = []
-        # The value is an UID
-        if api.is_uid(value):
-            ref.append(value)
+        refs = []
 
-        # The value is a dictionary, get the UIDs.
-        if u.is_dict(value):
-            ref = ref.append(value.get("uid"))
+        # Always handle the value as a list
+        values = u.to_list(value)
 
-        # The value is already an object
-        if api.is_at_content(value):
-            ref.append(value)
-
-        # The value is a list
-        if u.is_list(value):
-            for item in value:
-                # uid
-                if api.is_uid(item):
-                    ref.append(item)
-                # dict (catalog query)
-                elif u.is_dict(item):
-                    # If there is UID of objects, just use it.
-                    uid = item.get('uid', None)
-                    if uid:
-                        ref.append(uid)
+        for v in values:
+            if api.is_uid(v):
+                refs.append(v)
+            elif api.is_at_content(v) or api.is_dexterity_content(v):
+                refs.append(v)
+            elif u.is_dict(v):
+                # try to extract the UID from the dict
+                uid = v.get("uid", None)
+                if uid:
+                    refs.append(uid)
+            elif api.is_path(v):
+                refs.append(api.get_object_by_path(v))
 
         # Handle non multi valued fields
         if not self.multi_valued:
-            if len(ref) > 1:
+            if len(refs) > 1:
                 raise ValueError("Multiple values given for single valued "
                                  "field {}".format(repr(self.field)))
-            else:
-                ref = ref[0]
 
-        return self._set(instance, ref, **kw)
+        # convert all references to UIDs
+        refs = list(map(api.get_uid, refs))
+
+        return self._set(instance, refs, **kw)
+
+
+@implementer(IFieldManager)
+class ATUIDReferenceFieldManager(UIDReferenceFieldMixin, ATFieldManager):
+    """Adapter to get/set the value of AT based UIDReferenceFields
+    """
+    def __init__(self, field):
+        super(ATUIDReferenceFieldManager, self).__init__(field)
+        self.multi_valued = field.multiValued
+
+
+@implementer(IFieldManager)
+class DXUIDReferenceFieldManager(UIDReferenceFieldMixin, ZopeSchemaFieldManager):
+    """Adapter to get/set the value of DX based UIDReferenceFields
+    """
+    def __init__(self, field):
+        super(DXUIDReferenceFieldManager, self).__init__(field)
+        self.multi_valued = field.multi_valued
