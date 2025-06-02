@@ -4,11 +4,8 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
-<<<<<<< HEAD
-- Allow to pass in physical paths for create/update endpoints #69
-=======
+- #69 Allow to pass in physical paths for create/update endpoints
 - #68 Fix AT field validation
->>>>>>> fix-at-field-validation
 
 
 2.6.0 (2025-04-04)
