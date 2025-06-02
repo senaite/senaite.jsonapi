@@ -22,6 +22,7 @@ import copy
 import datetime
 import json
 
+import transaction
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
 from bika.lims import api
@@ -161,8 +162,15 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
                 portal_type, api.get_path(container)))
 
         # create the object and pass in the record data
-        obj = create_object(container, portal_type, **record)
-        results.append(obj)
+        sp = transaction.savepoint()
+        try:
+            obj = create_object(container, portal_type, **record)
+            results.append(obj)
+        except Exception as e:
+            # rollback the subtransaction if an error occurred
+            # => this ensures that the new generated ID is also rolled back
+            sp.rollback()
+            logger.exception("Error while creating object: %s", e)
 
     if not results:
         fail(400, "No Objects could be created")
@@ -1435,14 +1443,7 @@ def create_object(container, portal_type, **data):
         fail(401, "You are not allowed to create this content")
 
     # Update the object with the given data, but omit the id
-    try:
-        update_object_with_data(obj, data)
-    except APIError:
-        # Failure in creation process, delete the invalid object
-        # NOTE: We bypass the permission checks
-        container._delObject(obj.id)
-        # reraise the error
-        raise
+    update_object_with_data(obj, data)
 
     return obj
 

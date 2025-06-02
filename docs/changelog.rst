@@ -4,7 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
-- no changes yet
+- #68 Fix AT field validation
 
 
 2.6.0 (2025-04-04)

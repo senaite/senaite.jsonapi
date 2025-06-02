@@ -152,7 +152,7 @@ default value defined (e.g. `AdmittedStickerTemplates`):
     ...         "title": "Fresh Egg",
     ...         "Prefix": "FE"}
     >>> post("create", data)
-    '...sampletypes/sampletype-2"...'
+    '...sampletypes/sampletype-1"...'
 
 Likewise, system will fail when trying to create an object with non-valid data.
 For instance, an error arises if the type of the value is wrong:
@@ -164,6 +164,15 @@ For instance, an error arises if the type of the value is wrong:
     ...         "title": "Fresh Egg",
     ...         "Prefix": "FE",
     ...         "AdmittedStickerTemplates": "dummy"}
+    >>> post("create", data)
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> data = {"portal_type": "Client",
+    ...         "parent_path": api.get_path(portal.clients),
+    ...         "Name": "Duplicate Client",
+    ...         "ClientID": "TC1"}
     >>> post("create", data)
     Traceback (most recent call last):
     [...]
@@ -324,7 +333,7 @@ instead of the plone's default creation.
     ['Ecoli', 'Sal']
 
     >>> sample.getSampleType()
-    <SampleType at /plone/setup/sampletypes/sampletype-4>
+    <SampleType at /plone/setup/sampletypes/sampletype-2>
 
     >>> sample.getClient()
     <Client at /plone/clients/client-7>
