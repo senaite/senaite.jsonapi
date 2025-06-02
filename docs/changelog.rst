@@ -4,7 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
-- no changes yet
+- Allow to pass in physical paths for create/update endpoints #69
 
 
 2.6.0 (2025-04-04)
