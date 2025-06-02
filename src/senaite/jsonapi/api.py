@@ -1280,6 +1280,19 @@ def get_object_by_path(path):
         fail(404, "No object could be found at {}".format(str(path)))
 
 
+def convert_physical_paths_to_objects(record):
+    """Convert all physical paths in the record to objects
+
+    :param record: The record dictionary to convert
+    :returns: The record with all physical paths converted to objects
+    """
+    # Convert all physical paths to objects
+    for key, value in record.items():
+        if is_path(value):
+            record[key] = get_object_by_path(value)
+    return record
+
+
 def is_anonymous():
     """Check if the current user is authenticated or not
 
@@ -1416,6 +1429,9 @@ def create_object(container, portal_type, **data):
         logger.warn("Passed in ID '{}' omitted! Senaite LIMS "
                     "generates a proper ID for you" .format(id))
 
+    # convert physical paths to objects
+    data = convert_physical_paths_to_objects(data)
+
     try:
         # Is there any adapter registered to handle the creation of this type?
         adapter = queryAdapter(container, ICreate, name=portal_type)
@@ -1475,6 +1491,9 @@ def update_object_with_data(content, record):
 
     # ensure we have a full content object
     content = get_object(content)
+
+    # convert physical paths to objects
+    record = convert_physical_paths_to_objects(record)
 
     # Look for an update-specific adapter for this object
     adapter = queryAdapter(content, IUpdate)
