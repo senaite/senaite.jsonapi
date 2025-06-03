@@ -143,10 +143,16 @@
       factory=".fieldmanagers.ReferenceFieldManager"
       />
 
-  <!-- Adapter for UIDReference Field -->
+  <!-- Adapter for AT UIDReference Field -->
   <adapter
       for="bika.lims.interfaces.field.IUIDReferenceField"
-      factory=".fieldmanagers.UIDReferenceFieldManager"
+      factory=".fieldmanagers.ATUIDReferenceFieldManager"
+      />
+
+  <!-- Adapter for DX UIDReference Field -->
+  <adapter
+      for="senaite.core.schema.interfaces.IUIDReferenceField"
+      factory=".fieldmanagers.DXUIDReferenceFieldManager"
       />
 
 

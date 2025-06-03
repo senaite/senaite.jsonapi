@@ -1280,6 +1280,19 @@ def get_object_by_path(path):
         fail(404, "No object could be found at {}".format(str(path)))
 
 
+def convert_physical_paths_to_objects(record):
+    """Convert all physical paths in the record to objects
+
+    :param record: The record dictionary to convert
+    :returns: The record with all physical paths converted to objects
+    """
+    # Convert all physical paths to objects
+    for key, value in record.items():
+        if is_path(value):
+            record[key] = get_object_by_path(value)
+    return record
+
+
 def is_anonymous():
     """Check if the current user is authenticated or not
 
@@ -1428,6 +1441,10 @@ def create_object(container, portal_type, **data):
         # Special case for ARs
         # => return immediately w/o update
         if portal_type == "AnalysisRequest":
+            # convert physical paths to objects
+            # NOTE: for all other objects we handle this already in the
+            # fieldmanager
+            data = convert_physical_paths_to_objects(data)
             obj = create_analysisrequest(container, **data)
             # Omit values which are already set through the helper
             data = u.omit(data, "SampleType", "Analyses")
