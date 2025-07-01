@@ -216,6 +216,12 @@ def get_modified_since():
     return get("modified_since", None)
 
 
+def get_country():
+    """Returns the 'country' from the request
+    """
+    return get("country", None)
+
+
 def get_request_data():
     """ extract and convert the json data from the request
 
