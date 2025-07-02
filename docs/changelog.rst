@@ -4,6 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
+- #70 Implement API for getting geographic subdivisions
 - #69 Allow to pass in physical paths for create/update endpoints
 - #68 Fix AT field validation
 
