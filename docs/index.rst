@@ -29,6 +29,7 @@ Table of Contents:
    quickstart
    auth
    api
+   geographic
    crud
    extend
    doctests

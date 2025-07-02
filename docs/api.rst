@@ -188,6 +188,22 @@ Overview
 +----------+--------------------+----------------------------------------+
 | logout   |                    | De-authenticate                        |
 +----------+--------------------+----------------------------------------+
+| geographic| subdivisions_schema| Geographic subdivisions for countries  |
++----------+--------------------+----------------------------------------+
+
+
+.. _Geographic_Resource:
+
+Geographic Resource
+------------------
+
+The geographic resource provides access to administrative subdivisions (states, provinces, counties, districts) for countries worldwide. This API leverages the `pycountry` library to provide standardized geographic data.
+
+    - http://localhost:8080/senaite/@@API/senaite/v1/geographic/subdivisions_schema
+
+The geographic API supports filtering by country code and administrative depth level. For detailed documentation, see :doc:`geographic`.
+
+.. note:: The geographic API endpoints are publicly accessible and do not require authentication.
 
 
 .. _Catalogs_Resource:
