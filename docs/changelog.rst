@@ -4,7 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
-- #71 Fix logging issue for skipped fields with None-returning setters
+- #72 Fix logging issue for skipped fields with None-returning setters
 - #69 Allow to pass in physical paths for create/update endpoints
 - #68 Fix AT field validation
 
