@@ -226,11 +226,8 @@ class DexterityDataManager(BaseDataManager):
             raise Unauthorized("You are not allowed to modify this content")
 
         # prioritize setters over fields
-        parts = name.split("_")
-        setter = "set%s" % "".join(
-            p[:1].upper() + p[1:] for p in parts if p
-        )
-        setter = getattr(self.context, setter, None)
+        setter = "".join([part.capitalize() for part in name.split("_")])
+        setter = getattr(self.context, "set%s" % setter, None)
         if setter:
             return setter(value)
 
