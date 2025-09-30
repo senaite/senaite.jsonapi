@@ -4,6 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
+- #75 Fix to encode UTF-8 to pass UIDReferenceField validation
 - #73 Update setter method name generation in DexterityDataManager
 - #69 Allow to pass in physical paths for create/update endpoints
 - #68 Fix AT field validation
