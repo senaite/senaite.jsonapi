@@ -28,6 +28,7 @@ from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import underscore as u
 from senaite.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi.utils import to_utf8
 from zope import interface
 from zope.interface import implementer
 from zope.schema._bootstrapinterfaces import WrongContainedType
@@ -619,6 +620,7 @@ class UIDReferenceFieldMixin(object):
 
         # Always handle the value as a list
         values = u.to_list(value)
+        values = to_utf8(values)
 
         for v in values:
             if api.is_uid(v):
