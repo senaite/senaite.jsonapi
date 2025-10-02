@@ -1664,7 +1664,7 @@ def get_info_interfaces(brain_or_object):
     """Get the appropriate info interfaces for the given object
     """
     interfaces = [IInfo]  # Always include the base interface for backward compatibility
-    
+
     if is_brain(brain_or_object):
         interfaces.append(ICatalogBrainInfo)
     elif is_root(brain_or_object):
@@ -1673,7 +1673,7 @@ def get_info_interfaces(brain_or_object):
         interfaces.append(IDexterityContentInfo)
     elif is_at_content(brain_or_object):
         interfaces.append(IATContentInfo)
-    
+
     return interfaces
 
 # -----------------------------------------------------------------------------
