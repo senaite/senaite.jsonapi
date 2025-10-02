@@ -32,24 +32,28 @@
   <!-- Default data provider (AT based content types) -->
   <adapter
       for="*"
+      provides=".interfaces.IATContentInfo"
       factory=".dataproviders.ATDataProvider"
       />
 
   <!-- Adapter for Catalog Brains -->
   <adapter
       for="Products.ZCatalog.interfaces.ICatalogBrain"
+      provides=".interfaces.ICatalogBrainInfo"
       factory=".dataproviders.ZCDataProvider"
       />
 
   <!-- Adapter for the Plone Site -->
   <adapter
       for="Products.CMFCore.interfaces.ISiteRoot"
+      provides=".interfaces.ISiteRootInfo"
       factory=".dataproviders.SiteRootDataProvider"
       />
 
   <!-- Data provider for Dexterity content types -->
   <adapter
       for="plone.dexterity.interfaces.IDexterityContent"
+      provides=".interfaces.IDexterityContentInfo"
       factory=".dataproviders.DexterityDataProvider"
       />
 

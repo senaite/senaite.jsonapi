@@ -52,8 +52,13 @@ from senaite.jsonapi.interfaces import ICreate
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.interfaces import IInfo
+from senaite.jsonapi.interfaces import ICatalogBrainInfo
+from senaite.jsonapi.interfaces import IDexterityContentInfo
+from senaite.jsonapi.interfaces import IATContentInfo
+from senaite.jsonapi.interfaces import ISiteRootInfo
 from senaite.jsonapi.interfaces import IUpdate
 from zope.component import getAdapter
+from zope.component import getAdapters
 from zope.component import getMultiAdapter
 from zope.component import queryAdapter
 from zope.deprecation import deprecate
@@ -348,10 +353,11 @@ def get_info(brain_or_object, endpoint=None, complete=False):
     if complete:
         # ensure we have a full content object
         obj = api.get_object(brain_or_object)
-        # get the compatible adapter
-        adapter = IInfo(obj)
-        # update the data set with the complete information
-        info.update(adapter.to_dict())
+
+        obj_interfaces = get_info_interfaces(obj)
+        for interface in obj_interfaces:
+            for name, adapter in getAdapters((obj, ), interface):
+                info.update(adapter.to_dict())
 
         # update the data set with the workflow information
         # -> only possible if `?complete=yes&workflow=yes`
@@ -1652,6 +1658,23 @@ def get_settings_from_interface(iface):
         if is_json_serializable(value):
             settings[schema_id][setting] = value
     return settings
+
+
+def get_info_interfaces(brain_or_object):
+    """Get the appropriate info interfaces for the given object
+    """
+    interfaces = [IInfo]  # Always include the base interface for backward compatibility
+    
+    if is_brain(brain_or_object):
+        interfaces.append(ICatalogBrainInfo)
+    elif is_root(brain_or_object):
+        interfaces.append(ISiteRootInfo)
+    elif is_dexterity_content(brain_or_object):
+        interfaces.append(IDexterityContentInfo)
+    elif is_at_content(brain_or_object):
+        interfaces.append(IATContentInfo)
+    
+    return interfaces
 
 # -----------------------------------------------------------------------------
 #   Batching Helpers
