@@ -1530,8 +1530,8 @@ def update_object_with_data(content, record):
             except ValueError, exc:
                 fail(400, str(exc))
 
-            if not success:
-                logger.warn("update_object_with_data::skipping key=%r", k)
+            if success is False:
+                logger.warning("update_object_with_data::skipping key=%r", k)
                 continue
 
             logger.debug("update_object_with_data::field %r updated", k)
