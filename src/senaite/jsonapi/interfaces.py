@@ -33,27 +33,6 @@ class IInfo(interface.Interface):
         """ return the dictionary representation of the object
         """
 
-
-class ICatalogBrainInfo(IInfo):
-    """ JSON Info Interface for Catalog Brains
-    """
-
-
-class IDexterityContentInfo(IInfo):
-    """ JSON Info Interface for Dexterity Content
-    """
-
-
-class IATContentInfo(IInfo):
-    """ JSON Info Interface for Archetypes Content
-    """
-
-
-class ISiteRootInfo(IInfo):
-    """ JSON Info Interface for Site Root
-    """
-
-
 class IDataManager(interface.Interface):
     """ Field Interface
     """

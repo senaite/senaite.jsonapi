@@ -29,10 +29,6 @@ from senaite.jsonapi import logger
 from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IInfo
-from senaite.jsonapi.interfaces import ICatalogBrainInfo
-from senaite.jsonapi.interfaces import IDexterityContentInfo
-from senaite.jsonapi.interfaces import IATContentInfo
-from senaite.jsonapi.interfaces import ISiteRootInfo
 from zope import component
 from zope import interface
 from zope.component import getMultiAdapter
@@ -152,7 +148,6 @@ class Base(object):
 class ZCDataProvider(Base):
     """ Catalog Brain Adapter
     """
-    interface.implements(ICatalogBrainInfo)
     component.adapts(ICatalogBrain)
 
     def __init__(self, context):
@@ -203,7 +198,6 @@ class ZCDataProvider(Base):
 class DexterityDataProvider(Base):
     """ Data Provider for Dexterity based content types
     """
-    interface.implements(IDexterityContentInfo)
     component.adapts(IDexterityContent)
 
     def __init__(self, context):
@@ -218,7 +212,6 @@ class DexterityDataProvider(Base):
 class ATDataProvider(Base):
     """ Archetypes Adapter
     """
-    interface.implements(IATContentInfo)
     component.adapts(IATContentType)
 
     def __init__(self, context):
@@ -232,7 +225,6 @@ class ATDataProvider(Base):
 class SiteRootDataProvider(Base):
     """ Site Root Adapter
     """
-    interface.implements(ISiteRootInfo)
     component.adapts(ISiteRoot)
 
     def __init__(self, context):
