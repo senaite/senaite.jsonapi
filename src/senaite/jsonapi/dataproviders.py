@@ -21,7 +21,7 @@
 from AccessControl import Unauthorized
 from Acquisition import aq_base
 from plone.dexterity.interfaces import IDexterityContent
-from Products.ATContentTypes.interfaces import IATContentType
+from Products.Archetypes.interfaces import IBaseObject
 from Products.CMFCore.interfaces import ISiteRoot
 from Products.ZCatalog.interfaces import ICatalogBrain
 from senaite.jsonapi import api
@@ -215,7 +215,7 @@ class ATDataProvider(Base):
     """ Archetypes Adapter
     """
     interface.implements(IInfo)
-    component.adapts(IATContentType)
+    component.adapts(IBaseObject)
 
     def __init__(self, context):
         super(ATDataProvider, self).__init__(context)

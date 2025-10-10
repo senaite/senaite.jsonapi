@@ -54,6 +54,7 @@ from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.interfaces import IInfo
 from senaite.jsonapi.interfaces import IUpdate
 from zope.component import getAdapter
+from zope.component import getAdapters
 from zope.component import getMultiAdapter
 from zope.component import queryAdapter
 from zope.deprecation import deprecate
@@ -267,7 +268,11 @@ def delete_items(portal_type=None, uid=None, endpoint=None, **kw):
     for obj in objects:
         # We deactivate only!
         deactivate_object(obj)
-        info = IInfo(obj)()
+
+        # Extract the data with proper adapters
+        info = {}
+        for name, adapter in getAdapters((obj,), IInfo):
+            info.update(adapter.to_dict())
         results.append(info)
 
     if not results:
@@ -332,8 +337,10 @@ def get_info(brain_or_object, endpoint=None, complete=False):
         logger.warn("Skipping relationship object {}".format(repr(brain_or_object)))
         return {}
 
-    # extract the data from the initial object with the proper adapter
-    info = IInfo(brain_or_object).to_dict()
+    # extract the data from the initial object with proper adapters
+    info = {}
+    for name, adapter in getAdapters((brain_or_object, ), IInfo):
+        info.update(adapter.to_dict())
 
     # update with url info (always included)
     url_info = get_url_info(brain_or_object, endpoint)
@@ -348,10 +355,10 @@ def get_info(brain_or_object, endpoint=None, complete=False):
     if complete:
         # ensure we have a full content object
         obj = api.get_object(brain_or_object)
-        # get the compatible adapter
-        adapter = IInfo(obj)
-        # update the data set with the complete information
-        info.update(adapter.to_dict())
+
+        # updates the dict representation with info from custom adapters
+        for name, adapter in getAdapters((obj, ), IInfo):
+            info.update(adapter.to_dict())
 
         # update the data set with the workflow information
         # -> only possible if `?complete=yes&workflow=yes`
@@ -1652,6 +1659,7 @@ def get_settings_from_interface(iface):
         if is_json_serializable(value):
             settings[schema_id][setting] = value
     return settings
+
 
 # -----------------------------------------------------------------------------
 #   Batching Helpers

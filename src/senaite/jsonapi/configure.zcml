@@ -31,25 +31,25 @@
 
   <!-- Default data provider (AT based content types) -->
   <adapter
-      for="*"
+      name="senaite.jsonapi.dataproviders.ATDataProvider"
       factory=".dataproviders.ATDataProvider"
       />
 
   <!-- Adapter for Catalog Brains -->
   <adapter
-      for="Products.ZCatalog.interfaces.ICatalogBrain"
+      name="senaite.jsonapi.dataproviders.ZCDataProvider"
       factory=".dataproviders.ZCDataProvider"
       />
 
   <!-- Adapter for the Plone Site -->
   <adapter
-      for="Products.CMFCore.interfaces.ISiteRoot"
+      name="senaite.jsonapi.dataproviders.SiteRootDataProvider"
       factory=".dataproviders.SiteRootDataProvider"
       />
 
   <!-- Data provider for Dexterity content types -->
   <adapter
-      for="plone.dexterity.interfaces.IDexterityContent"
+      name="senaite.jsonapi.dataproviders.DexterityDataProvider"
       factory=".dataproviders.DexterityDataProvider"
       />
 
