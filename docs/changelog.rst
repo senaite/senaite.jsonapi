@@ -5,6 +5,7 @@ Changelog
 ------------------
 
 - #72 Fix logging issue for skipped fields with None-returning setters
+- #73 Update setter method name generation in DexterityDataManager
 - #69 Allow to pass in physical paths for create/update endpoints
 - #68 Fix AT field validation
 
