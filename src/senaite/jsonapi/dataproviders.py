@@ -148,6 +148,7 @@ class Base(object):
 class ZCDataProvider(Base):
     """ Catalog Brain Adapter
     """
+    interface.implements(IInfo)
     component.adapts(ICatalogBrain)
 
     def __init__(self, context):
@@ -198,6 +199,7 @@ class ZCDataProvider(Base):
 class DexterityDataProvider(Base):
     """ Data Provider for Dexterity based content types
     """
+    interface.implements(IInfo)
     component.adapts(IDexterityContent)
 
     def __init__(self, context):
@@ -212,6 +214,7 @@ class DexterityDataProvider(Base):
 class ATDataProvider(Base):
     """ Archetypes Adapter
     """
+    interface.implements(IInfo)
     component.adapts(IBaseObject)
 
     def __init__(self, context):
@@ -225,6 +228,7 @@ class ATDataProvider(Base):
 class SiteRootDataProvider(Base):
     """ Site Root Adapter
     """
+    interface.implements(IInfo)
     component.adapts(ISiteRoot)
 
     def __init__(self, context):
