@@ -31,8 +31,9 @@
 
   <!-- Default data provider (AT based content types) -->
   <adapter
-      for="*"
+      for="Products.ATContentTypes.interfaces.IATContentType"
       provides=".interfaces.IATContentInfo"
+      name="senaite.jsonapi.dataproviders.ATDataProvider"
       factory=".dataproviders.ATDataProvider"
       />
 
@@ -40,6 +41,7 @@
   <adapter
       for="Products.ZCatalog.interfaces.ICatalogBrain"
       provides=".interfaces.ICatalogBrainInfo"
+      name="senaite.jsonapi.dataproviders.ZCDataProvider"
       factory=".dataproviders.ZCDataProvider"
       />
 
@@ -47,6 +49,7 @@
   <adapter
       for="Products.CMFCore.interfaces.ISiteRoot"
       provides=".interfaces.ISiteRootInfo"
+      name="senaite.jsonapi.dataproviders.SiteRootDataProvider"
       factory=".dataproviders.SiteRootDataProvider"
       />
 
@@ -54,6 +57,7 @@
   <adapter
       for="plone.dexterity.interfaces.IDexterityContent"
       provides=".interfaces.IDexterityContentInfo"
+      name="senaite.jsonapi.dataproviders.DexterityDataProvider"
       factory=".dataproviders.DexterityDataProvider"
       />
 
