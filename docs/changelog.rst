@@ -4,6 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
+- #77 Include object version in JSON response
 - #76 Support multiple IInfo adapters per content type
 - #72 Fix logging issue for skipped fields with None-returning setters
 - #73 Update setter method name generation in DexterityDataManager

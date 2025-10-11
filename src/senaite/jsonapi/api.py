@@ -26,6 +26,7 @@ import transaction
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
 from bika.lims import api
+from bika.lims.api import snapshot
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 from DateTime import DateTime
 from plone import api as ploneapi
@@ -359,6 +360,9 @@ def get_info(brain_or_object, endpoint=None, complete=False):
         # updates the dict representation with info from custom adapters
         for name, adapter in getAdapters((obj, ), IInfo):
             info.update(adapter.to_dict())
+
+        # add the snapshot version of this content
+        info["version"] = snapshot.get_version(obj)
 
         # update the data set with the workflow information
         # -> only possible if `?complete=yes&workflow=yes`
