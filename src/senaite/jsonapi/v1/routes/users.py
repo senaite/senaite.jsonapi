@@ -24,6 +24,8 @@ from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi.v1 import add_route
+from senaite.jsonapi.interfaces import IInfo
+from zope.component import getAdapters
 
 
 def get_user_info(user):
@@ -63,6 +65,9 @@ def get_user_info(user):
             logger.warn("User property '{}' is not JSON serializable".format(k))
             continue
         info[k] = v
+
+    for _, adapter in getAdapters((pu,), IInfo):
+        info.update(adapter.to_dict())
 
     return info
 
