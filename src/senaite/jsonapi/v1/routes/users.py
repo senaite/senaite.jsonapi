@@ -67,7 +67,7 @@ def get_user_info(user):
             continue
         info[k] = v
 
-    for _, adapter in getAdapters((pu,), IInfo):
+    for name, adapter in getAdapters((pu,), IInfo):
         info.update(adapter.to_dict())
 
     return info
@@ -98,8 +98,9 @@ def get(context, request, username=None):
         user_ids = [username]
 
     # Allow addons to filter the user list via adapters
-    for _, adapter in getAdapters((request,), IUsersFilter):
-        user_ids = adapter.filter(user_ids) or user_ids
+    for name, adapter in getAdapters((request,), IUsersFilter):
+        if username is None:
+            user_ids = adapter.filter(user_ids)
 
     # Prepare batch
     size = req.get_batch_size()
