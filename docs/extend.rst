@@ -793,6 +793,84 @@ update, but delegate the operation to the function `update_object` of this
 adapter.
 
 
+.. _USERS_FILTER:
+
+Filtering the users list
+------------------------
+
+The route `/users` can be extended to filter the returned users by providing
+one or more adapters for the `IUsersFilter` interface. These adapters are
+looked up against the current request and are only applied when listing users
+(`GET /users` without a specific username).
+
+Each adapter receives the current list of user ids and must return a (possibly)
+filtered list.
+
+Interface definition:
+
+.. code-block:: python
+
+    class IUsersFilter(interface.Interface):
+        """Interface to filter user listings for the users route"""
+
+        def filter(user_ids):
+            """Return a possibly filtered list of user ids"""
+
+Example: filter by role provided via querystring (e.g. `?role=LabManager`):
+
+.. code-block:: python
+
+    from senaite.jsonapi.interfaces import IUsersFilter
+    from senaite.jsonapi import api
+    from senaite.jsonapi import request as req
+    from zope import interface
+
+
+    class RoleFilterAdapter(object):
+        """Filters the users list by a given role.
+
+        Usage: GET /@@API/senaite/v1/users?role=LabManager
+        """
+        interface.implements(IUsersFilter)
+
+        def __init__(self, request):
+            self.request = request
+
+        def filter(self, user_ids):
+            # Only filter when a role was provided
+            role = req.get("role", None)
+            if not role:
+                return user_ids
+
+            filtered = []
+            for uid in user_ids:
+                user = api.get_user(uid)
+                if user and role in user.getRoles():
+                    filtered.append(uid)
+            return filtered
+
+Register the adapter for the request with ZCML:
+
+.. code-block:: xml
+
+    <configure xmlns="http://namespaces.zope.org/zope">
+
+      <!-- Adapter to filter users list via querystring -->
+      <adapter
+        for="zope.publisher.interfaces.browser.IBrowserRequest"
+        provides="senaite.jsonapi.interfaces.IUsersFilter"
+        factory=".adapters.RoleFilterAdapter" />
+
+    </configure>
+
+Notes:
+
+- Adapters should return the input list unchanged when their filter does not
+  apply, to keep composition predictable.
+- Filters are only applied on listings (`/users`), not when a specific
+  `username` is requested (e.g. `/users/<string:username>`).
+
+
 .. __PUSH:
 
 PUSH endpoint. Custom jobs

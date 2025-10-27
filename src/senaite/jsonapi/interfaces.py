@@ -178,3 +178,12 @@ class IPushConsumer(interface.Interface):
     def process(self):
         """Processes the job or raises an Exception if unable to succeed
         """
+
+
+class IUsersFilter(interface.Interface):
+    """Interface to filter user listings for the users route
+    """
+
+    def filter(user_ids):
+        """Return a possibly filtered list of user ids
+        """

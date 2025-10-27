@@ -24,6 +24,9 @@ from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi.v1 import add_route
+from senaite.jsonapi.interfaces import IInfo
+from senaite.jsonapi.interfaces import IUsersFilter
+from zope.component import getAdapters
 
 
 def get_user_info(user):
@@ -64,6 +67,9 @@ def get_user_info(user):
             continue
         info[k] = v
 
+    for name, adapter in getAdapters((pu,), IInfo):
+        info.update(adapter.to_dict())
+
     return info
 
 
@@ -90,6 +96,11 @@ def get(context, request, username=None):
         user_ids = [current_user.getId()]
     else:
         user_ids = [username]
+
+    # Allow addons to filter the user list via adapters
+    for name, adapter in getAdapters((request,), IUsersFilter):
+        if username is None:
+            user_ids = adapter.filter(user_ids)
 
     # Prepare batch
     size = req.get_batch_size()
