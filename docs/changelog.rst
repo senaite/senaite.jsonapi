@@ -4,6 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
+- #79 Fix WrongType for UIDReferenceField
 - #78 Enhance Users Resource with adapter-based info retrieval and filtering support
 - #77 Include object version in JSON response
 - #76 Support multiple IInfo adapters per content type
