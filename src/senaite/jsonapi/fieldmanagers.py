@@ -640,7 +640,7 @@ class UIDReferenceFieldMixin(object):
                                  "field {}".format(repr(self.field)))
 
         # convert all references to UIDs
-        refs = list(map(api.get_uid, refs))
+        refs = [str(api.get_uid(ref)) for ref in refs if ref]
 
         return self._set(instance, refs, **kw)
 
