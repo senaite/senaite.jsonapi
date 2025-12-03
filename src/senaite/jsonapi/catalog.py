@@ -60,8 +60,58 @@ class Catalog(object):
         logger.info("Catalog query={}".format(query))
         catalog = self.get_catalog()
         if not catalog:
-            return senaiteapi.search(query)
-        return senaiteapi.search(query, catalog=catalog.getId())
+            results = senaiteapi.search(query)
+        else:
+            results = senaiteapi.search(query, catalog=catalog.getId())
+
+        # Extract sorting parameters
+        sort_on = query.get("sort_on")
+        sort_order = query.get("sort_order", "ascending")
+
+        # Extract filters (Python 2 safe)
+        created_filter = query.get("created")
+        modified_filter = query.get("modified")
+
+        created_range = created_filter["query"] if created_filter else None
+        modified_range = modified_filter["query"] if modified_filter else None
+
+        if (
+            not created_range
+            and not modified_range
+            and sort_on not in ["created", "modified"]
+        ):
+            return results
+
+        # Load objects and filter/sort as needed
+        filtered = []
+        append = filtered.append
+        for brain in results:
+            # Get the actual object to access created/modified
+            obj = brain.getObject()
+
+            # Filter by timestamp
+            if created_range and obj.created() < created_range:
+                continue
+
+            if modified_range and obj.modified() < modified_range:
+                continue
+
+            # Include this brain
+            append((brain, obj.created(), obj.modified()))
+
+        # Apply sorting if needed
+        if sort_on in ["created", "modified"]:
+            reverse = (sort_order == "descending")
+            key_index = 1 if sort_on == "created" else 2
+            filtered.sort(key=lambda x: x[key_index], reverse=reverse)
+            logger.info(
+                "Applied sorting: sort_on={}, sort_order={}".format(
+                    sort_on, sort_order
+                )
+            )
+
+        # Return just the brains
+        return [item[0] for item in filtered]
 
     def __call__(self, query):
         return self.search(query)
