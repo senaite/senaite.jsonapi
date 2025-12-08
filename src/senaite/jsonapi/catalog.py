@@ -66,7 +66,7 @@ class Catalog(object):
 
         # Extract sorting parameters
         sort_on = query.get("sort_on")
-        sort_order = query.get("sort_order", "ascending")
+        reverse = query.get("sort_order") == "descending"
 
         # Extract filters (Python 2 safe)
         created_filter = query.get("created")
@@ -82,9 +82,8 @@ class Catalog(object):
         ):
             return results
 
-        # Load objects and filter/sort as needed
-        filtered = []
-        append = filtered.append
+        # Filter by timestamp if needed
+        brains = []
         for brain in results:
             # Get the actual object to access created/modified
             obj = brain.getObject()
@@ -97,21 +96,22 @@ class Catalog(object):
                 continue
 
             # Include this brain
-            append((brain, obj.created(), obj.modified()))
+            brains.append(brain)
 
         # Apply sorting if needed
         if sort_on in ["created", "modified"]:
-            reverse = (sort_order == "descending")
-            key_index = 1 if sort_on == "created" else 2
-            filtered.sort(key=lambda x: x[key_index], reverse=reverse)
+            brains = sorted(
+                brains,
+                key=lambda brain: getattr(brain.getObject(), sort_on)(),
+                reverse=reverse
+            )
             logger.info(
                 "Applied sorting: sort_on={}, sort_order={}".format(
-                    sort_on, sort_order
+                    sort_on, "descending" if reverse else "ascending"
                 )
             )
 
-        # Return just the brains
-        return [item[0] for item in filtered]
+        return brains
 
     def __call__(self, query):
         return self.search(query)
