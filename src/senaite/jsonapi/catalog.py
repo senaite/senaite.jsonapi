@@ -85,30 +85,35 @@ class Catalog(object):
         # Filter by timestamp if needed
         brains = []
         for brain in results:
-            # Get the actual object to access created/modified
-            obj = brain.getObject()
-
             # Filter by timestamp
-            if created_range and obj.created() < created_range:
+            if (
+                created_range and
+                senaiteapi.get_creation_date(brain) < created_range
+            ):
                 continue
 
-            if modified_range and obj.modified() < modified_range:
+            if (
+                modified_range and
+                senaiteapi.get_modification_date(brain) < modified_range
+            ):
                 continue
 
             # Include this brain
             brains.append(brain)
 
         # Apply sorting if needed
-        if sort_on in ["created", "modified"]:
+        if sort_on == "created":
             brains = sorted(
                 brains,
-                key=lambda brain: getattr(brain.getObject(), sort_on)(),
+                key=lambda b: senaiteapi.get_creation_date(b),
                 reverse=reverse
             )
-            logger.info(
-                "Applied sorting: sort_on={}, sort_order={}".format(
-                    sort_on, "descending" if reverse else "ascending"
-                )
+
+        if sort_on == "modified":
+            brains = sorted(
+                brains,
+                key=lambda b: senaiteapi.get_modification_date(b),
+                reverse=reverse
             )
 
         return brains
