@@ -60,63 +60,34 @@ class Catalog(object):
         logger.info("Catalog query={}".format(query))
         catalog = self.get_catalog()
         if not catalog:
-            results = senaiteapi.search(query)
+            brains = senaiteapi.search(query)
         else:
-            results = senaiteapi.search(query, catalog=catalog.getId())
+            brains = senaiteapi.search(query, catalog=catalog.getId())
 
-        # Extract sorting parameters
+        if len(brains) < 2:
+            return brains
+
+        # DateIndex only supports minute-level precision, so if the data is
+        # sorted by a DateIndex index, we must manually sort the results to
+        # achieve second-level accuracy
         sort_on = query.get("sort_on")
+        if not sort_on:
+            return brains
+
+        # check if the sort_on is a DateIndex
+        catalog = brains[0].aq_parent
+        index = catalog.Indexes.get(sort_on, None)
+        if index is None or index.meta_type != "DateIndex":
+            return brains
+
+        # check if a metadata column exists with same name
+        if sort_on not in catalog.schema():
+            return brains
+
+        # sort brains by sort_on
         reverse = query.get("sort_order") == "descending"
-
-        # Extract filters (Python 2 safe)
-        created_filter = query.get("created")
-        modified_filter = query.get("modified")
-
-        created_range = created_filter["query"] if created_filter else None
-        modified_range = modified_filter["query"] if modified_filter else None
-
-        if (
-            not created_range
-            and not modified_range
-            and sort_on not in ["created", "modified"]
-        ):
-            return results
-
-        # Filter by timestamp if needed
-        brains = []
-        for brain in results:
-            # Filter by timestamp
-            if (
-                created_range and
-                senaiteapi.get_creation_date(brain) < created_range
-            ):
-                continue
-
-            if (
-                modified_range and
-                senaiteapi.get_modification_date(brain) < modified_range
-            ):
-                continue
-
-            # Include this brain
-            brains.append(brain)
-
-        # Apply sorting if needed
-        if sort_on == "created":
-            brains = sorted(
-                brains,
-                key=lambda b: senaiteapi.get_creation_date(b),
-                reverse=reverse
-            )
-
-        if sort_on == "modified":
-            brains = sorted(
-                brains,
-                key=lambda b: senaiteapi.get_modification_date(b),
-                reverse=reverse
-            )
-
-        return brains
+        return sorted(brains, key=lambda brain: getattr(brain, sort_on, None),
+                      reverse=reverse)
 
     def __call__(self, query):
         return self.search(query)
