@@ -60,8 +60,34 @@ class Catalog(object):
         logger.info("Catalog query={}".format(query))
         catalog = self.get_catalog()
         if not catalog:
-            return senaiteapi.search(query)
-        return senaiteapi.search(query, catalog=catalog.getId())
+            brains = senaiteapi.search(query)
+        else:
+            brains = senaiteapi.search(query, catalog=catalog.getId())
+
+        if len(brains) < 2:
+            return brains
+
+        # DateIndex only supports minute-level precision, so if the data is
+        # sorted by a DateIndex index, we must manually sort the results to
+        # achieve second-level accuracy
+        sort_on = query.get("sort_on")
+        if not sort_on:
+            return brains
+
+        # check if the sort_on is a DateIndex
+        catalog = brains[0].aq_parent
+        index = catalog.Indexes.get(sort_on, None)
+        if index is None or index.meta_type != "DateIndex":
+            return brains
+
+        # check if a metadata column exists with same name
+        if sort_on not in catalog.schema():
+            return brains
+
+        # sort brains by sort_on
+        reverse = query.get("sort_order") == "descending"
+        return sorted(brains, key=lambda brain: getattr(brain, sort_on, None),
+                      reverse=reverse)
 
     def __call__(self, query):
         return self.search(query)
