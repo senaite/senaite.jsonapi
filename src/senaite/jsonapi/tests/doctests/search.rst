@@ -205,6 +205,16 @@ Now test descending order:
     >>> [it["title"] for it in recent_items]
     [u'Gamma', u'Beta', u'Alpha']
 
+Filter by created_since with second-level precision:
+
+    >>> from urllib import quote
+    >>> cutoff = quote(created2.ISO8601())
+    >>> response = get("sampletype?created_since={}".format(cutoff))
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> sorted([it["title"] for it in items if it["title"] in titles])
+    [u'Beta', u'Gamma']
+
 Now let's test sorting by 'modified'. The catalog implementation sorts DateIndex
 results manually to achieve better precision than the default minute-level precision.
 
