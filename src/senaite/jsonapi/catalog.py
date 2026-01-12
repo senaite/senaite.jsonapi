@@ -64,14 +64,27 @@ class Catalog(object):
         else:
             brains = senaiteapi.search(query, catalog=catalog.getId())
 
-        if len(brains) < 2:
+        # DateIndex only supports minute-level precision, so if the data is
+        # sorted by a DateIndex index, we must manually filter and sort the
+        # results to achieve second-level accuracy
+        created = query.get("created")
+        modified = query.get("modified")
+        sort_on = query.get("sort_on")
+        if not sort_on and not created and not modified:
             return brains
 
-        # DateIndex only supports minute-level precision, so if the data is
-        # sorted by a DateIndex index, we must manually sort the results to
-        # achieve second-level accuracy
-        sort_on = query.get("sort_on")
-        if not sort_on:
+        brains = self.apply_date_filter(
+            brains,
+            lambda b: getattr(b, "created", None),
+            created["query"] if created else None,
+        )
+        brains = self.apply_date_filter(
+            brains,
+            lambda b: getattr(b, "modified", None),
+            modified["query"] if modified else None,
+        )
+
+        if len(brains) < 2:
             return brains
 
         # check if the sort_on is a DateIndex
@@ -172,6 +185,15 @@ class Catalog(object):
             return value.split(",")
 
         return value
+
+    def apply_date_filter(self, brains, date_getter, since_date):
+        """Apply a date filter to the brains
+        """
+        if not since_date:
+            return brains
+
+        brains = [b for b in brains if date_getter(b) >= since_date]
+        return brains
 
 
 class CatalogQuery(object):
