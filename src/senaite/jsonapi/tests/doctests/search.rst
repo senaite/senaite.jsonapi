@@ -205,9 +205,17 @@ Now test descending order:
     >>> [it["title"] for it in recent_items]
     [u'Gamma', u'Beta', u'Alpha']
 
-Filter by created_since with second-level precision:
+Filtering by created_since with second-level precision
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+DateIndex only stores minute-level precision, so two objects created seconds
+apart may share the same index value. The ``created_since`` parameter must
+post-filter by the actual metadata to achieve second-level accuracy.
 
     >>> from urllib import quote
+
+Using Beta's creation time as cutoff returns Beta and Gamma (inclusive):
+
     >>> cutoff = quote(created2.ISO8601())
     >>> response = get("sampletype?created_since={}".format(cutoff))
     >>> data = json.loads(response)
@@ -215,10 +223,40 @@ Filter by created_since with second-level precision:
     >>> sorted([it["title"] for it in items if it["title"] in titles])
     [u'Beta', u'Gamma']
 
-Now let's test sorting by 'modified'. The catalog implementation sorts DateIndex
-results manually to achieve better precision than the default minute-level precision.
+Using Gamma's creation time as cutoff returns only Gamma:
 
-First, let's create new samples to modify with clear time separation:
+    >>> cutoff = quote(created3.ISO8601())
+    >>> response = get("sampletype?created_since={}".format(cutoff))
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> sorted([it["title"] for it in items if it["title"] in titles])
+    [u'Gamma']
+
+Using Alpha's creation time as cutoff returns all three:
+
+    >>> cutoff = quote(created1.ISO8601())
+    >>> response = get("sampletype?created_since={}".format(cutoff))
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> sorted([it["title"] for it in items if it["title"] in titles])
+    [u'Alpha', u'Beta', u'Gamma']
+
+A future cutoff returns none of our items:
+
+    >>> future = quote(DateTime(created3 + 1.0 / 86400).ISO8601())
+    >>> response = get("sampletype?created_since={}".format(future))
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> [it["title"] for it in items if it["title"] in titles]
+    []
+
+
+Sorting by modified with second-level precision
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The catalog sorts DateIndex results manually to achieve second-level precision.
+
+Create sample types and modify them with clear time separation:
 
     >>> stm1 = api.create(portal.setup.sampletypes, "SampleType", title="ModAlpha", Prefix="MA")
     >>> time.sleep(2)
@@ -270,3 +308,7 @@ Verify timestamps are in descending order:
     >>> mod_times_desc = [DateTime(it["modified"]) for it in mod_items_desc]
     >>> mod_times_desc[0] >= mod_times_desc[1] >= mod_times_desc[2]
     True
+
+Note: ``modified_since`` filtering cannot be tested with SampleType objects
+because ``senaite_catalog_setup`` does not include ``modified`` as a metadata
+column. The post-filter gracefully skips fields not in the catalog schema.
