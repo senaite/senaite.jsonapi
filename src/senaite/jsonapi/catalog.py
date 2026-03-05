@@ -21,6 +21,7 @@
 from bika.lims import api as senaiteapi
 from DateTime import DateTime
 from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
+from senaite.core.api import dtime
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
@@ -29,7 +30,6 @@ from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
 from senaite.jsonapi.underscore import to_list
 from zope import interface
-from senaite.core.api import dtime
 from ZPublisher import HTTPRequest
 
 SEARCHABLE_TEXT_INDEXES = [
@@ -65,17 +65,27 @@ class Catalog(object):
         else:
             brains = senaiteapi.search(query, catalog=catalog.getId())
 
+        if not brains:
+            return []
+
         # DateIndex only supports minute-level precision, so we must
         # post-filter results for second-level accuracy
-        brains = self.apply_date_filter(brains, "created", query)
-        brains = self.apply_date_filter(brains, "modified", query)
+        catalog = brains[0].aq_parent
+        indexes = [catalog.Indexes.get(key, None) for key in query.keys()]
+        indexes = filter(None, indexes)
+        date_indexes = [idx for idx in indexes if idx.meta_type == "DateIndex"]
+        for date_index in date_indexes:
+            brains = self.apply_date_filter(brains, date_index.id, query)
 
+        # no need to do manual sort if only one brain
         if len(brains) < 2:
             return brains
 
         # check if the sort_on is a DateIndex
         sort_on = query.get("sort_on")
-        catalog = brains[0].aq_parent
+        if not sort_on:
+            return brains
+
         index = catalog.Indexes.get(sort_on, None)
         if index is None or index.meta_type != "DateIndex":
             return brains
@@ -84,7 +94,7 @@ class Catalog(object):
         if sort_on not in catalog.schema():
             return brains
 
-        # sort brains by sort_on
+        # sort brains by sort_on to ensure second-level accuracy
         reverse = query.get("sort_order") == "descending"
         return sorted(brains, key=lambda brain: getattr(brain, sort_on, None),
                       reverse=reverse)
