@@ -368,3 +368,84 @@ Descending order:
     >>> received = [it for it in items if it["id"] in sample_ids]
     >>> [it["id"] for it in received] == list(reversed(sample_ids))
     True
+
+
+Custom DateIndex filtering (getDateReceived)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The second-level precision post-filtering also works for date range queries
+on custom DateIndex fields. We reuse the samples created above (s1, s2, s3)
+with their distinct ``getDateReceived`` timestamps.
+
+Using s2's receive date as the ``min`` cutoff returns s2 and s3 (inclusive
+lower bound):
+
+    >>> cutoff = quote(dr2.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=min".format(cutoff)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> sorted([it["id"] for it in filtered]) == sorted([s2.getId(), s3.getId()])
+    True
+
+Using s3's receive date as the cutoff returns only s3:
+
+    >>> cutoff = quote(dr3.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=min".format(cutoff)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> [it["id"] for it in filtered]
+    [u'...']
+    >>> filtered[0]["id"] == s3.getId()
+    True
+
+Using s1's receive date returns all three:
+
+    >>> cutoff = quote(dr1.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=min".format(cutoff)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> sorted([it["id"] for it in filtered]) == sorted(sample_ids)
+    True
+
+Using ``max`` range with s2's receive date returns only s1 (exclusive upper
+bound):
+
+    >>> cutoff = quote(dr2.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=max".format(cutoff)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> [it["id"] for it in filtered]
+    [u'...']
+    >>> filtered[0]["id"] == s1.getId()
+    True
+
+Using ``min:max`` range with s1 and s3's receive dates returns s1 and s2
+(inclusive lower, exclusive upper):
+
+    >>> date_from = quote(dr1.ISO8601())
+    >>> date_to = quote(dr3.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.query:record:list={}&getDateReceived.range:record=min:max".format(date_from, date_to)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> sorted([it["id"] for it in filtered]) == sorted([s1.getId(), s2.getId()])
+    True
+
+A future cutoff returns none of our samples:
+
+    >>> future = quote(DateTime(dr3 + 1.0 / 86400).ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=min".format(future)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> [it["id"] for it in items if it["id"] in sample_ids]
+    []
