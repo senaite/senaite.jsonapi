@@ -106,7 +106,7 @@ push doctest:
     ...     def __init__(self, context):
     ...         self.context = context
     ...     def to_dict(self):
-    ...         return {"dummy_info": 1}
+    ...         return {"dummy_info": True}
 
     >>> sm = getGlobalSiteManager()
     >>> sm.registerAdapter(DummyUserInfoAdapter, (IPropertiedUser,), IInfo)
@@ -118,7 +118,7 @@ The current user info now includes the additional data:
     >>> data = json.loads(response)
     >>> current = data.get("items")[0]
     >>> current.get("dummy_info")
-    1
+    True
 
 Filter users via IUsersFilter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
