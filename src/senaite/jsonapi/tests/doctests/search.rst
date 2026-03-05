@@ -294,3 +294,77 @@ Verify timestamps are in descending order:
     >>> mod_times_desc = [DateTime(it["modified"]) for it in mod_items_desc]
     >>> mod_times_desc[0] >= mod_times_desc[1] >= mod_times_desc[2]
     True
+
+
+Custom DateIndex sorting (getDateReceived)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The second-level precision post-processing applies to any DateIndex field, not
+just ``created`` and ``modified``. Here we test with ``getDateReceived``, a
+custom DateIndex on the sample catalog.
+
+Create the setup objects needed for sample creation:
+
+    >>> from bika.lims.utils.analysisrequest import create_analysisrequest
+    >>> from bika.lims.workflow import doActionFor as do_action_for
+
+    >>> client = portal.clients["client-1"]
+    >>> contact = api.create(client, "Contact", Firstname="Lab", Surname="User")
+    >>> sampletype = portal.setup.sampletypes["sampletype-1"]
+    >>> category = api.create(portal.setup.analysiscategories,
+    ...     "AnalysisCategory", title="Chemistry")
+    >>> service = api.create(portal.bika_setup.bika_analysisservices,
+    ...     "AnalysisService", title="pH", Keyword="pH",
+    ...     Category=category, Price="10")
+    >>> transaction.commit()
+
+Create three samples and receive them with 2-second gaps so that
+``getDateReceived`` has distinct second-level timestamps:
+
+    >>> values = {
+    ...     "Contact": api.get_uid(contact),
+    ...     "DateSampled": DateTime().ISO8601(),
+    ...     "SampleType": api.get_uid(sampletype),
+    ... }
+
+    >>> request = self.request
+    >>> s1 = create_analysisrequest(client, request, values, [api.get_uid(service)])
+    >>> do_action_for(s1, "receive")
+    (...)
+    >>> time.sleep(2)
+    >>> s2 = create_analysisrequest(client, request, values, [api.get_uid(service)])
+    >>> do_action_for(s2, "receive")
+    (...)
+    >>> time.sleep(2)
+    >>> s3 = create_analysisrequest(client, request, values, [api.get_uid(service)])
+    >>> do_action_for(s3, "receive")
+    (...)
+    >>> transaction.commit()
+
+Verify the receive dates differ at second level:
+
+    >>> dr1 = s1.getDateReceived()
+    >>> dr2 = s2.getDateReceived()
+    >>> dr3 = s3.getDateReceived()
+    >>> dr1 < dr2 < dr3
+    True
+
+    >>> sample_ids = [s1.getId(), s2.getId(), s3.getId()]
+
+Sorting by ``getDateReceived`` ascending returns samples in receive order:
+
+    >>> response = get("search?portal_type=AnalysisRequest&sort_on=getDateReceived&sort_order=asc")
+    >>> data = json.loads(response)
+    >>> items = data.get("items")
+    >>> received = [it for it in items if it["id"] in sample_ids]
+    >>> [it["id"] for it in received] == sample_ids
+    True
+
+Descending order:
+
+    >>> response = get("search?portal_type=AnalysisRequest&sort_on=getDateReceived&sort_order=desc")
+    >>> data = json.loads(response)
+    >>> items = data.get("items")
+    >>> received = [it for it in items if it["id"] in sample_ids]
+    >>> [it["id"] for it in received] == list(reversed(sample_ids))
+    True
