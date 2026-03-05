@@ -65,17 +65,26 @@ class Catalog(object):
         else:
             brains = senaiteapi.search(query, catalog=catalog.getId())
 
+        # if no brains found, no need to go further
         if not brains:
             return []
 
         # DateIndex only supports minute-level precision, so we must
         # post-filter results for second-level accuracy
         catalog = brains[0].aq_parent
-        indexes = [catalog.Indexes.get(key, None) for key in query.keys()]
-        indexes = filter(None, indexes)
-        date_indexes = [idx for idx in indexes if idx.meta_type == "DateIndex"]
-        for date_index in date_indexes:
-            brains = self.apply_date_filter(brains, date_index.id, query)
+        indexes = catalog.Indexes
+        schema = catalog.schema()
+
+        # get the DateIndex indexes we've searched against
+        date_indexes = [idx.id for idx in indexes.values()
+                        if query.get(idx.id) and idx.meta_type == "DateIndex"]
+
+        # remove those for which there is no metadata column
+        date_fields = [idx for idx in date_indexes if idx in schema]
+        if date_fields:
+            # filter the brains their date indexes are out of date range
+            brains = [brain for brain in brains
+                      if self.in_date_range(brain, date_fields, query)]
 
         # no need to do manual sort if only one brain
         if len(brains) < 2:
@@ -86,12 +95,12 @@ class Catalog(object):
         if not sort_on:
             return brains
 
-        index = catalog.Indexes.get(sort_on, None)
+        index = indexes.get(sort_on, None)
         if index is None or index.meta_type != "DateIndex":
             return brains
 
         # check if a metadata column exists with same name
-        if sort_on not in catalog.schema():
+        if sort_on not in schema:
             return brains
 
         # sort brains by sort_on to ensure second-level accuracy
@@ -183,48 +192,40 @@ class Catalog(object):
 
         return value
 
-    def apply_date_filter(self, brains, field, query):
-        """Post-filter brains by date field with second-level precision
+    def in_date_range(self, brain, fields, query):
+        """Check if brain's date metadata falls within the queried ranges
 
-        DateIndex truncates to minute-level, so results within the same
-        minute as the threshold may be incorrectly included. This method
-        re-checks the actual metadata value for exact filtering.
+        DateIndex only stores minute-level precision, so the catalog may
+        return brains that don't match at second-level. This method
+        re-checks the actual metadata values for exact filtering.
+
+        Returns False as soon as any date field is out of range.
         """
-        if not brains:
-            return []
+        for field in fields:
+            value = getattr(brain, field, None)
+            if not value:
+                continue
 
-        # check if the field is a metadata column
-        catalog = brains[0].aq_parent
-        if field not in catalog.schema():
-            return brains
+            query_spec = query.get(field) or {}
+            date_value = query_spec.get("query")
+            dates = [dtime.to_DT(d) for d in senaiteapi.to_list(date_value)]
+            dates = list(filter(None, dates))
+            if not dates:
+                continue
 
-        query_spec = query.get(field) or {}
-        date_value = query_spec.get("query")
-        dates = [dtime.to_DT(d) for d in senaiteapi.to_list(date_value)]
-        dates = list(filter(None, dates))
-        if not dates:
-            return brains
-
-        date_range = query_spec.get("range", "min").lower()
-        if date_range == "min:max":
-            if len(dates) != 2:
-                raise ValueError("Not a valid dates range: %r" % date_value)
-            # inclusive lower bound, exclusive upper bound
-            date_from = min(dates)
-            date_to = max(dates)
-            return [b for b in brains
-                    if date_from <= getattr(b, field, None) < date_to]
-
-        if len(dates) != 1:
-            raise ValueError("Not a valid date: %r" % date_value)
-
-        date = dates[0]
-        if date_range == "max":
-            return [b for b in brains if getattr(b, field, None) < date]
-
-        # default: "min" range — inclusive lower bound
-        return [b for b in brains if getattr(b, field, None) >= date]
-
+            date_range = query_spec.get("range", "min").lower()
+            if date_range == "min:max":
+                # inclusive lower bound, exclusive upper bound
+                valid = min(dates) <= value < max(dates)
+            elif date_range == "max":
+                # exclusive upper bound
+                valid = value < max(dates)
+            else:
+                # inclusive lower bound
+                valid = value >= min(dates)
+            if not valid:
+                return False
+        return True
 
 class CatalogQuery(object):
     """Catalog query adapter
