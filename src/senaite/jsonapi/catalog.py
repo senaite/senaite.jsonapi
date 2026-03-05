@@ -29,6 +29,7 @@ from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
 from senaite.jsonapi.underscore import to_list
 from zope import interface
+from senaite.core.api import dtime
 from ZPublisher import HTTPRequest
 
 SEARCHABLE_TEXT_INDEXES = [
@@ -64,30 +65,16 @@ class Catalog(object):
         else:
             brains = senaiteapi.search(query, catalog=catalog.getId())
 
-        # DateIndex only supports minute-level precision, so if the data is
-        # sorted by a DateIndex index, we must manually filter and sort the
-        # results to achieve second-level accuracy
-        created = query.get("created")
-        modified = query.get("modified")
-        sort_on = query.get("sort_on")
-        if not sort_on and not created and not modified:
-            return brains
-
-        brains = self.apply_date_filter(
-            brains,
-            lambda b: getattr(b, "created", None),
-            created["query"] if created else None,
-        )
-        brains = self.apply_date_filter(
-            brains,
-            lambda b: getattr(b, "modified", None),
-            modified["query"] if modified else None,
-        )
+        # DateIndex only supports minute-level precision, so we must
+        # post-filter results for second-level accuracy
+        brains = self.apply_date_filter(brains, "created", query)
+        brains = self.apply_date_filter(brains, "modified", query)
 
         if len(brains) < 2:
             return brains
 
         # check if the sort_on is a DateIndex
+        sort_on = query.get("sort_on")
         catalog = brains[0].aq_parent
         index = catalog.Indexes.get(sort_on, None)
         if index is None or index.meta_type != "DateIndex":
@@ -186,14 +173,47 @@ class Catalog(object):
 
         return value
 
-    def apply_date_filter(self, brains, date_getter, since_date):
-        """Apply a date filter to the brains
+    def apply_date_filter(self, brains, field, query):
+        """Post-filter brains by date field with second-level precision
+
+        DateIndex truncates to minute-level, so results within the same
+        minute as the threshold may be incorrectly included. This method
+        re-checks the actual metadata value for exact filtering.
         """
-        if not since_date:
+        if not brains:
+            return []
+
+        # check if the field is a metadata column
+        catalog = brains[0].aq_parent
+        if field not in catalog.schema():
             return brains
 
-        brains = [b for b in brains if date_getter(b) >= since_date]
-        return brains
+        query_spec = query.get(field) or {}
+        date_value = query_spec.get("query")
+        dates = [dtime.to_DT(d) for d in senaiteapi.to_list(date_value)]
+        dates = list(filter(None, dates))
+        if not dates:
+            return brains
+
+        date_range = query_spec.get("range", "min").lower()
+        if date_range == "min:max":
+            if len(dates) != 2:
+                raise ValueError("Not a valid dates range: %r" % date_value)
+            # inclusive lower bound, exclusive upper bound
+            date_from = min(dates)
+            date_to = max(dates)
+            return [b for b in brains
+                    if date_from <= getattr(b, field, None) < date_to]
+
+        if len(dates) != 1:
+            raise ValueError("Not a valid date: %r" % date_value)
+
+        date = dates[0]
+        if date_range == "max":
+            return [b for b in brains if getattr(b, field, None) < date]
+
+        # default: "min" range — inclusive lower bound
+        return [b for b in brains if getattr(b, field, None) >= date]
 
 
 class CatalogQuery(object):
