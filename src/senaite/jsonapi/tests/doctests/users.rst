@@ -162,3 +162,14 @@ requested role:
     True
     >>> all(map(lambda it: u'Analyst' in it.get('roles', []), items))
     True
+
+Cleanup
+~~~~~~~
+
+Unregister test adapters so they don't leak into other doctests:
+
+    >>> sm.unregisterAdapter(DummyUserInfoAdapter, (IPropertiedUser,), IInfo)
+    True
+    >>> sm.unregisterAdapter(DummyUsersFilterAdapter, (IBrowserRequest,), IUsersFilter, name="dummy")
+    True
+    >>> transaction.commit()
