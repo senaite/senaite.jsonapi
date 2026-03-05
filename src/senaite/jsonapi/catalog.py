@@ -227,6 +227,7 @@ class Catalog(object):
                 return False
         return True
 
+
 class CatalogQuery(object):
     """Catalog query adapter
     """
