@@ -298,6 +298,11 @@ class CatalogQuery(object):
             date = api.calculate_since_date(modified_since)
             query["modified"] = {"query": date, "range": "min"}
 
+        # batch UID lookup: ?uids=uid1,uid2,uid3
+        uids = req.get_uids()
+        if uids:
+            query["UID"] = {"query": uids, "operator": "or"}
+
         return query
 
     def get_keyword_query(self, **kw):
