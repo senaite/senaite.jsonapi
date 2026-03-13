@@ -106,7 +106,7 @@ push doctest:
     ...     def __init__(self, context):
     ...         self.context = context
     ...     def to_dict(self):
-    ...         return {"dummy_info": (1 == 1)}
+    ...         return {"dummy_info": True}
 
     >>> sm = getGlobalSiteManager()
     >>> sm.registerAdapter(DummyUserInfoAdapter, (IPropertiedUser,), IInfo)
