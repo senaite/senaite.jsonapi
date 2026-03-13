@@ -370,6 +370,14 @@ def get_info(brain_or_object, endpoint=None, complete=False):
         # add the snapshot version of this content
         info["version"] = snapshot.get_version(obj)
 
+        # Inject formatted result for analysis objects.
+        # getFormattedResult() handles detection limits, result options,
+        # scientific notation, etc. html=False gives plain text output
+        # (e.g. "< 0.1" instead of "&lt; 0.1").
+        get_formatted = getattr(obj, "getFormattedResult", None)
+        if callable(get_formatted):
+            info["getFormattedResult"] = get_formatted(html=False)
+
         # update the data set with the workflow information
         # -> only possible if `?complete=yes&workflow=yes`
         if req.get_workflow(False):
