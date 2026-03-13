@@ -228,6 +228,20 @@ def get_uids():
     return [v.strip() for v in value.split(",") if v.strip()]
 
 
+def get_fields():
+    """Returns the set of field names requested via the 'fields' parameter.
+
+    Accepts a comma-separated string, e.g. ``?fields=uid,id,title``.
+    Returns an empty set when the parameter is absent or blank.
+    An empty set means no projection is applied and the full object is
+    returned (unchanged behaviour).
+    """
+    value = get("fields", "")
+    if not value:
+        return set()
+    return set(v.strip() for v in value.split(",") if v.strip())
+
+
 def get_request_data():
     """ extract and convert the json data from the request
 
