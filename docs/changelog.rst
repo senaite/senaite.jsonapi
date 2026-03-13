@@ -4,6 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
+- #85 Allow field projection
 - #81 Support second-level precision on searches against DateIndex
 - #83 Fetch multiple items by UID
 - #80 Precise timestamp filtering and sorting for created/modified fields
