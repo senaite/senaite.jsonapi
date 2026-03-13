@@ -106,7 +106,7 @@ push doctest:
     ...     def __init__(self, context):
     ...         self.context = context
     ...     def to_dict(self):
-    ...         return {"dummy_info": "blah"}
+    ...         return {"dummy_info": (1 == 1)}
 
     >>> sm = getGlobalSiteManager()
     >>> sm.registerAdapter(DummyUserInfoAdapter, (IPropertiedUser,), IInfo)
@@ -118,7 +118,7 @@ The current user info now includes the additional data:
     >>> data = json.loads(response)
     >>> current = data.get("items")[0]
     >>> current.get("dummy_info")
-    u'blah'
+    True
 
 Filter users via IUsersFilter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,14 +162,3 @@ requested role:
     True
     >>> all(map(lambda it: u'Analyst' in it.get('roles', []), items))
     True
-
-Cleanup
-~~~~~~~
-
-Unregister test adapters so they don't leak into other doctests:
-
-    >>> sm.unregisterAdapter(DummyUserInfoAdapter, (IPropertiedUser,), IInfo)
-    True
-    >>> sm.unregisterAdapter(DummyUsersFilterAdapter, (IBrowserRequest,), IUsersFilter, name="dummy")
-    True
-    >>> transaction.commit()

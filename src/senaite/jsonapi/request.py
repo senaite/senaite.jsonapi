@@ -216,6 +216,18 @@ def get_modified_since():
     return get("modified_since", None)
 
 
+def get_uids():
+    """Returns a list of UIDs from the 'uids' request parameter.
+
+    Accepts a comma-separated string, e.g. ``?uids=uid1,uid2,uid3``.
+    Returns an empty list when the parameter is absent or blank.
+    """
+    value = get("uids", "")
+    if not value:
+        return []
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+
 def get_request_data():
     """ extract and convert the json data from the request
 
