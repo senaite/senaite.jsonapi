@@ -4,6 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
+- #83 Fetch multiple items by UID
 - #80 Precise timestamp filtering and sorting for created/modified fields
 - #79 Fix WrongType for UIDReferenceField
 - #78 Enhance Users Resource with adapter-based info retrieval and filtering support
