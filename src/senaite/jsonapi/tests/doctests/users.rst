@@ -100,16 +100,13 @@ push doctest:
     >>> from zope.publisher.interfaces.browser import IBrowserRequest
     >>> from senaite.jsonapi import request as req
 
-    >>> True = (1 == 1)
-    >>> False = (1 == 0)
-
     >>> class DummyUserInfoAdapter(object):
     ...     """Adds a dummy flag to user info"""
     ...     implements(IInfo)
     ...     def __init__(self, context):
     ...         self.context = context
     ...     def to_dict(self):
-    ...         return {"dummy_info": True}
+    ...         return {"dummy_info": (1 == 1)}
 
     >>> sm = getGlobalSiteManager()
     >>> sm.registerAdapter(DummyUserInfoAdapter, (IPropertiedUser,), IInfo)
