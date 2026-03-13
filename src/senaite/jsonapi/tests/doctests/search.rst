@@ -145,17 +145,16 @@ But Sample Types are not stored in "senaite_catalog":
     []
 
 
-Sorting by created and modified with second-level precision
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Date sorting and filtering with second-level precision
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When sorting by 'created' or 'modified' indexes, the sorting should have
-second-level precision, not just minute-level precision. This ensures accurate
-ordering of items created or modified within the same minute.
-
-Let's test this by creating multiple sample types in quick succession:
+DateIndex only stores minute-level precision, so objects created or modified
+seconds apart may share the same index value. The catalog post-processes
+results to achieve second-level accuracy for both sorting and filtering.
 
     >>> import time
     >>> from DateTime import DateTime
+    >>> from urllib import quote
 
 Create sample types with controlled timestamps to test second-level precision:
 
@@ -205,10 +204,45 @@ Now test descending order:
     >>> [it["title"] for it in recent_items]
     [u'Gamma', u'Beta', u'Alpha']
 
-Now let's test sorting by 'modified'. The catalog implementation sorts DateIndex
-results manually to achieve better precision than the default minute-level precision.
+The ``created_since`` parameter post-filters by the actual metadata value.
+Using Beta's creation time as cutoff returns Beta and Gamma (inclusive):
 
-First, let's create new samples to modify with clear time separation:
+    >>> cutoff = quote(created2.ISO8601())
+    >>> response = get("sampletype?created_since={}".format(cutoff))
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> sorted([it["title"] for it in items if it["title"] in titles])
+    [u'Beta', u'Gamma']
+
+Using Gamma's creation time as cutoff returns only Gamma:
+
+    >>> cutoff = quote(created3.ISO8601())
+    >>> response = get("sampletype?created_since={}".format(cutoff))
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> sorted([it["title"] for it in items if it["title"] in titles])
+    [u'Gamma']
+
+Using Alpha's creation time as cutoff returns all three:
+
+    >>> cutoff = quote(created1.ISO8601())
+    >>> response = get("sampletype?created_since={}".format(cutoff))
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> sorted([it["title"] for it in items if it["title"] in titles])
+    [u'Alpha', u'Beta', u'Gamma']
+
+A future cutoff returns none of our items:
+
+    >>> future = quote(DateTime(created3 + 1.0 / 86400).ISO8601())
+    >>> response = get("sampletype?created_since={}".format(future))
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> [it["title"] for it in items if it["title"] in titles]
+    []
+
+Sorting by ``modified`` also uses second-level precision. Create sample types
+and modify them with clear time separation:
 
     >>> stm1 = api.create(portal.setup.sampletypes, "SampleType", title="ModAlpha", Prefix="MA")
     >>> time.sleep(2)
@@ -260,3 +294,158 @@ Verify timestamps are in descending order:
     >>> mod_times_desc = [DateTime(it["modified"]) for it in mod_items_desc]
     >>> mod_times_desc[0] >= mod_times_desc[1] >= mod_times_desc[2]
     True
+
+
+Custom DateIndex sorting (getDateReceived)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The second-level precision post-processing applies to any DateIndex field, not
+just ``created`` and ``modified``. Here we test with ``getDateReceived``, a
+custom DateIndex on the sample catalog.
+
+Create the setup objects needed for sample creation:
+
+    >>> from bika.lims.utils.analysisrequest import create_analysisrequest
+    >>> from bika.lims.workflow import doActionFor as do_action_for
+
+    >>> client = portal.clients["client-1"]
+    >>> contact = api.create(client, "Contact", Firstname="Lab", Surname="User")
+    >>> sampletype = portal.setup.sampletypes["sampletype-1"]
+    >>> category = api.create(portal.setup.analysiscategories,
+    ...     "AnalysisCategory", title="Chemistry")
+    >>> service = api.create(portal.bika_setup.bika_analysisservices,
+    ...     "AnalysisService", title="pH", Keyword="pH",
+    ...     Category=category, Price="10")
+    >>> transaction.commit()
+
+Create three samples and receive them with 2-second gaps so that
+``getDateReceived`` has distinct second-level timestamps:
+
+    >>> values = {
+    ...     "Contact": api.get_uid(contact),
+    ...     "DateSampled": DateTime().ISO8601(),
+    ...     "SampleType": api.get_uid(sampletype),
+    ... }
+
+    >>> request = self.request
+    >>> s1 = create_analysisrequest(client, request, values, [api.get_uid(service)])
+    >>> do_action_for(s1, "receive")
+    (...)
+    >>> time.sleep(2)
+    >>> s2 = create_analysisrequest(client, request, values, [api.get_uid(service)])
+    >>> do_action_for(s2, "receive")
+    (...)
+    >>> time.sleep(2)
+    >>> s3 = create_analysisrequest(client, request, values, [api.get_uid(service)])
+    >>> do_action_for(s3, "receive")
+    (...)
+    >>> transaction.commit()
+
+Verify the receive dates differ at second level:
+
+    >>> dr1 = s1.getDateReceived()
+    >>> dr2 = s2.getDateReceived()
+    >>> dr3 = s3.getDateReceived()
+    >>> dr1 < dr2 < dr3
+    True
+
+    >>> sample_ids = [s1.getId(), s2.getId(), s3.getId()]
+
+Sorting by ``getDateReceived`` ascending returns samples in receive order:
+
+    >>> response = get("search?portal_type=AnalysisRequest&sort_on=getDateReceived&sort_order=asc")
+    >>> data = json.loads(response)
+    >>> items = data.get("items")
+    >>> received = [it for it in items if it["id"] in sample_ids]
+    >>> [it["id"] for it in received] == sample_ids
+    True
+
+Descending order:
+
+    >>> response = get("search?portal_type=AnalysisRequest&sort_on=getDateReceived&sort_order=desc")
+    >>> data = json.loads(response)
+    >>> items = data.get("items")
+    >>> received = [it for it in items if it["id"] in sample_ids]
+    >>> [it["id"] for it in received] == list(reversed(sample_ids))
+    True
+
+
+Custom DateIndex filtering (getDateReceived)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The second-level precision post-filtering also works for date range queries
+on custom DateIndex fields. We reuse the samples created above (s1, s2, s3)
+with their distinct ``getDateReceived`` timestamps.
+
+Using s2's receive date as the ``min`` cutoff returns s2 and s3 (inclusive
+lower bound):
+
+    >>> cutoff = quote(dr2.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=min".format(cutoff)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> sorted([it["id"] for it in filtered]) == sorted([s2.getId(), s3.getId()])
+    True
+
+Using s3's receive date as the cutoff returns only s3:
+
+    >>> cutoff = quote(dr3.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=min".format(cutoff)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> [it["id"] for it in filtered]
+    [u'...']
+    >>> filtered[0]["id"] == s3.getId()
+    True
+
+Using s1's receive date returns all three:
+
+    >>> cutoff = quote(dr1.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=min".format(cutoff)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> sorted([it["id"] for it in filtered]) == sorted(sample_ids)
+    True
+
+Using ``max`` range with s2's receive date returns only s1 (exclusive upper
+bound):
+
+    >>> cutoff = quote(dr2.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=max".format(cutoff)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> [it["id"] for it in filtered]
+    [u'...']
+    >>> filtered[0]["id"] == s1.getId()
+    True
+
+Using ``min:max`` range with s1 and s3's receive dates returns s1 and s2
+(inclusive lower, exclusive upper):
+
+    >>> date_from = quote(dr1.ISO8601())
+    >>> date_to = quote(dr3.ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.query:record:list={}&getDateReceived.range:record=min:max".format(date_from, date_to)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> filtered = [it for it in items if it["id"] in sample_ids]
+    >>> sorted([it["id"] for it in filtered]) == sorted([s1.getId(), s2.getId()])
+    True
+
+A future cutoff returns none of our samples:
+
+    >>> future = quote(DateTime(dr3 + 1.0 / 86400).ISO8601())
+    >>> url = "search?portal_type=AnalysisRequest&getDateReceived.query:record:list={}&getDateReceived.range:record=min".format(future)
+    >>> response = get(url)
+    >>> data = json.loads(response)
+    >>> items = data.get("items") or []
+    >>> [it["id"] for it in items if it["id"] in sample_ids]
+    []

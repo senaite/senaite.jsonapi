@@ -21,6 +21,7 @@
 from bika.lims import api as senaiteapi
 from DateTime import DateTime
 from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
+from senaite.core.api import dtime
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
@@ -64,27 +65,45 @@ class Catalog(object):
         else:
             brains = senaiteapi.search(query, catalog=catalog.getId())
 
+        # if no brains found, no need to go further
+        if not brains:
+            return []
+
+        # DateIndex only supports minute-level precision, so we must
+        # post-filter results for second-level accuracy
+        catalog = brains[0].aq_parent
+        indexes = catalog.Indexes
+        schema = catalog.schema()
+
+        # get the DateIndex indexes we've searched against
+        date_indexes = [idx.id for idx in indexes.values()
+                        if query.get(idx.id) and idx.meta_type == "DateIndex"]
+
+        # remove those for which there is no metadata column
+        date_fields = [idx for idx in date_indexes if idx in schema]
+        if date_fields:
+            # filter the brains their date indexes are out of date range
+            brains = [brain for brain in brains
+                      if self.in_date_range(brain, date_fields, query)]
+
+        # no need to do manual sort if only one brain
         if len(brains) < 2:
             return brains
 
-        # DateIndex only supports minute-level precision, so if the data is
-        # sorted by a DateIndex index, we must manually sort the results to
-        # achieve second-level accuracy
+        # check if the sort_on is a DateIndex
         sort_on = query.get("sort_on")
         if not sort_on:
             return brains
 
-        # check if the sort_on is a DateIndex
-        catalog = brains[0].aq_parent
-        index = catalog.Indexes.get(sort_on, None)
+        index = indexes.get(sort_on, None)
         if index is None or index.meta_type != "DateIndex":
             return brains
 
         # check if a metadata column exists with same name
-        if sort_on not in catalog.schema():
+        if sort_on not in schema:
             return brains
 
-        # sort brains by sort_on
+        # sort brains by sort_on to ensure second-level accuracy
         reverse = query.get("sort_order") == "descending"
         return sorted(brains, key=lambda brain: getattr(brain, sort_on, None),
                       reverse=reverse)
@@ -172,6 +191,41 @@ class Catalog(object):
             return value.split(",")
 
         return value
+
+    def in_date_range(self, brain, fields, query):
+        """Check if brain's date metadata falls within the queried ranges
+
+        DateIndex only stores minute-level precision, so the catalog may
+        return brains that don't match at second-level. This method
+        re-checks the actual metadata values for exact filtering.
+
+        Returns False as soon as any date field is out of range.
+        """
+        for field in fields:
+            value = getattr(brain, field, None)
+            if not value:
+                continue
+
+            query_spec = query.get(field) or {}
+            date_value = query_spec.get("query")
+            dates = [dtime.to_DT(d) for d in senaiteapi.to_list(date_value)]
+            dates = list(filter(None, dates))
+            if not dates:
+                continue
+
+            date_range = query_spec.get("range", "min").lower()
+            if date_range == "min:max":
+                # inclusive lower bound, exclusive upper bound
+                valid = min(dates) <= value < max(dates)
+            elif date_range == "max":
+                # exclusive upper bound
+                valid = value < max(dates)
+            else:
+                # inclusive lower bound
+                valid = value >= min(dates)
+            if not valid:
+                return False
+        return True
 
 
 class CatalogQuery(object):
