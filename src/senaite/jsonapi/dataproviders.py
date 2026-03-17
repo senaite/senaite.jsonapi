@@ -20,6 +20,7 @@
 
 from AccessControl import Unauthorized
 from Acquisition import aq_base
+from bika.lims.interfaces import IAnalysis
 from plone.dexterity.interfaces import IDexterityContent
 from Products.Archetypes.interfaces import IBaseObject
 from Products.CMFCore.interfaces import ISiteRoot
@@ -223,6 +224,38 @@ class ATDataProvider(Base):
         # get the schema fields from the data manager
         schema = api.get_schema(context)
         self.keys = schema.keys()
+
+
+class AnalysisDataProvider(Base):
+    """Data provider for Analysis content types.
+
+    Supplements the standard ATDataProvider with computed fields that are
+    implemented as methods rather than AT schema fields and therefore not
+    picked up automatically.
+    """
+    interface.implements(IInfo)
+    component.adapts(IAnalysis)
+
+    def __init__(self, context):
+        super(AnalysisDataProvider, self).__init__(context)
+        # No schema keys – this provider only adds computed fields via
+        # the attributes mapping below.
+        self.keys = []
+        self.attributes = {}
+
+    def to_dict(self):
+        """Return computed analysis fields."""
+        out = {}
+
+        get_formatted = getattr(self.context, "getFormattedResult", None)
+        if callable(get_formatted):
+            out["getFormattedResult"] = get_formatted(html=False)
+
+        is_retest = getattr(self.context, "isRetest", None)
+        if callable(is_retest):
+            out["isRetest"] = is_retest()
+
+        return out
 
 
 class SiteRootDataProvider(Base):

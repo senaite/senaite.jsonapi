@@ -53,6 +53,12 @@
       factory=".dataproviders.DexterityDataProvider"
       />
 
+  <!-- Data provider for Analysis content types (computed fields) -->
+  <adapter
+      name="senaite.jsonapi.dataproviders.AnalysisDataProvider"
+      factory=".dataproviders.AnalysisDataProvider"
+      />
+
 
   <!-- DATA MANAGERS
        Context level interface to get and set values (by name) and get a JSON compatible
