@@ -298,10 +298,16 @@ def make_items_for(brains_or_objects, endpoint=None, complete=False):
     # check if the user wants to include children
     include_children = req.get_children(False)
 
+    # optional field projection: ?fields=uid,id,title,...
+    # empty set means no projection (full object returned)
+    fields = req.get_fields()
+
     def extract_data(brain_or_object):
         info = get_info(brain_or_object, endpoint=endpoint, complete=complete)
         if include_children and is_folderish(brain_or_object):
             info.update(get_children_info(brain_or_object, complete=complete))
+        if fields:
+            info = {k: info[k] for k in fields if k in info}
         return info
 
     return map(extract_data, brains_or_objects)
