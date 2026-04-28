@@ -78,6 +78,9 @@ class SimpleTestLayer(PloneSandboxLayer):
         # Apply Setup Profile (portal_quickinstaller)
         applyProfile(portal, "senaite.core:default")
 
+        # Install the JWT PAS plugin
+        applyProfile(portal, "senaite.jsonapi:default")
+
         # Add test users
         self.add_test_users(portal)
 

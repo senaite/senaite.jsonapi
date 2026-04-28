@@ -1,11 +1,30 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
     xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
     xmlns:zcml="http://namespaces.zope.org/zcml"
     i18n_domain="senaite.jsonapi">
 
   <!-- Package Includes -->
   <include package=".v1"/>
+
+  <!-- GenericSetup profile -->
+  <genericsetup:registerProfile
+      name="default"
+      title="SENAITE JSONAPI"
+      description="Installs SENAITE JSONAPI's JWT PAS plugin"
+      directory="profiles/default"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <!-- Setup import step -->
+  <genericsetup:importStep
+      name="senaite.jsonapi.setuphandler"
+      title="senaite.jsonapi setup handler"
+      description="Installs SENAITE JSONAPI's JWT PAS Pugin"
+      handler="senaite.jsonapi.setuphandlers.setup_handler">
+    <depends name="plone-various"/>
+  </genericsetup:importStep>
 
   <!-- CATALOG
        Unified interface to one or more Portal Catalog tools.

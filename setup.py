@@ -38,6 +38,8 @@ setup(
     install_requires=[
         "setuptools",
         "senaite.core",
+        # PyJWT >=2.0.0 does not support Python 2.x anymore
+        "pyjwt<2.0.0",
     ],
     extras_require={
         "test": [
