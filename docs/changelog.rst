@@ -4,6 +4,7 @@ Changelog
 2.7.0 (unreleased)
 ------------------
 
+- #88 Add Bearer token (JWT) authentication via PAS plugin
 - #87 Inject additional analyses fields
 - #85 Allow field projection
 - #81 Support second-level precision on searches against DateIndex
