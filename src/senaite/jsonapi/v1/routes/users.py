@@ -187,7 +187,8 @@ def login(context, request):
     # it transparently
     request.response.setCookie(
         JWT_COOKIE_ID, token,
-        http_only=True, path="/", same_site="None", expires=expires,
+        http_only=True, secure=True, path="/", same_site="Lax",
+        expires=expires,
     )
 
     # Return the user info merged with the token payload
