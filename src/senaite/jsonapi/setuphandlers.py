@@ -18,10 +18,14 @@
 # Copyright 2017-2025 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+from bika.lims import api
 from Products.PlonePAS.setuphandlers import activatePluginInterfaces
 from senaite.jsonapi import logger
 from senaite.jsonapi import PRODUCT_NAME
+from senaite.jsonapi.config import KEY_STORAGE
+from senaite.jsonapi.pas.plugin import ID as JWT_PLUGIN_ID
 from senaite.jsonapi.pas.plugin import JWTAuthenticationPlugin
+from zope.annotation.interfaces import IAnnotations
 
 
 def setup_handler(context):
@@ -65,3 +69,38 @@ def setup_pas_plugin(portal):
             plugin_registry.movePluginsTop(iface, [plugin_id])
 
     logger.info("Setup %s plugin [DONE]" % plugin_id)
+
+
+def uninstall_handler(context):
+    """Generic setup uninstall handler for senaite.jsonapi
+    """
+    uninstall_file = "%s-uninstall.txt" % PRODUCT_NAME
+    if context.readDataFile(uninstall_file) is None:
+        return
+
+    logger.info("%s uninstall handler [BEGIN]" % PRODUCT_NAME.upper())
+    portal = context.getSite()
+
+    remove_pas_plugin(portal)
+    remove_keystorage(portal)
+
+    logger.info("%s uninstall handler [DONE]" % PRODUCT_NAME.upper())
+
+
+def remove_pas_plugin(portal):
+    """Remove the JWT PAS plugin from the site's acl_users.
+    """
+    pas = portal.acl_users
+    if JWT_PLUGIN_ID in pas.objectIds():
+        logger.info("Remove %s plugin ..." % JWT_PLUGIN_ID)
+        pas.manage_delObjects([JWT_PLUGIN_ID])
+
+
+def remove_keystorage(portal):
+    """Drop the per-user JWT signing secrets from the portal's
+    annotations. All previously-issued tokens become unverifiable.
+    """
+    annotation = IAnnotations(api.get_portal())
+    if KEY_STORAGE in annotation:
+        logger.info("Remove %s key storage ..." % PRODUCT_NAME)
+        del annotation[KEY_STORAGE]

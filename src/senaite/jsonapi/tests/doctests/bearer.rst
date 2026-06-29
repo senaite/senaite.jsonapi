@@ -82,7 +82,7 @@ HTTP libraries, browser extensions, etc.) can use the
 ``X-JWT-Auth-Token`` fallback header instead:
 
     >>> fallback = fresh_browser()
-    >>> fallback.addHeader("X-JWT-Auth-Token", token)
+    >>> fallback.addHeader("X-JWT-Auth-Token", token.encode("ascii"))
     >>> is_authenticated(fallback)
     True
 

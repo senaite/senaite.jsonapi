@@ -26,6 +26,24 @@
     <depends name="plone-various"/>
   </genericsetup:importStep>
 
+  <!-- Uninstall profile -->
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="SENAITE JSONAPI (Uninstall)"
+      description="Removes SENAITE JSONAPI's JWT PAS plugin and key storage"
+      directory="profiles/uninstall"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <!-- Uninstall import step -->
+  <genericsetup:importStep
+      name="senaite.jsonapi.uninstallhandler"
+      title="senaite.jsonapi uninstall handler"
+      description="Removes SENAITE JSONAPI's JWT PAS plugin and key storage"
+      handler="senaite.jsonapi.setuphandlers.uninstall_handler">
+    <depends name="plone-various"/>
+  </genericsetup:importStep>
+
   <!-- CATALOG
        Unified interface to one or more Portal Catalog tools.
   -->
