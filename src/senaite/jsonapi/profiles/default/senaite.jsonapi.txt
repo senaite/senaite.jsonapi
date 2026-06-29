@@ -1,0 +1,1 @@
+Marker file checked by senaite.jsonapi.setuphandlers.setup_handler

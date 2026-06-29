@@ -23,6 +23,10 @@ from plone import api as ploneapi
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
+from senaite.jsonapi.config import JWT_COOKIE_ID
+from senaite.jsonapi.config import JWT_TOKENS_TIMEOUT
+from senaite.jsonapi.pas.plugin import create_token
+from senaite.jsonapi.pas.plugin import timestamp
 from senaite.jsonapi.v1 import add_route
 from senaite.jsonapi.interfaces import IInfo
 from senaite.jsonapi.interfaces import IUsersFilter
@@ -141,34 +145,59 @@ def auth(context, request):
 def login(context, request):
     """ Login Route
 
-    Login route to authenticate a user against Plone.
+    Authenticates the user and issues a JSON Web Token (JWT). Two
+    authentication modes are supported:
+
+    1. HTTP Basic auth (header ``Authorization: Basic ...``): no body
+       fields are needed; the route just issues a token for the user
+       that was already authenticated by the PAS layer.
+    2. Form login: POST ``__ac_name`` and ``__ac_password`` as form
+       fields. The route logs the user in via the cookie auth plugin
+       and then issues the token.
+
+    The JWT is returned in the JSON body as ``token`` (with ``expires``
+    as a Unix timestamp) and is also set as the ``token`` HttpOnly
+    cookie so subsequent requests can be authenticated either via
+    ``Authorization: Bearer <token>`` or via the cookie.
     """
     # extract the data
     __ac_name = request.get("__ac_name", None)
     __ac_password = request.get("__ac_password", None)
 
-    logger.info("*** LOGIN %s ***" % __ac_name)
+    logger.info("*** LOGIN %s ***" % (__ac_name or "<basic>"))
 
-    if __ac_name is None:
-        api.fail(400, "__ac_name is missing")
-    if __ac_password is None:
-        api.fail(400, "__ac_password is missing")
-
-    acl_users = api.get_tool("acl_users")
-
-    # XXX hard coded
-    acl_users.credentials_cookie_auth.login()
-
-    # XXX admin user won't be logged in if I use this approach
-    # acl_users.login()
-    # response = request.response
-    # acl_users.updateCredentials(request, response, __ac_name, __ac_password)
+    # Form-based login path: log the user in via the cookie auth plugin.
+    # Basic-auth requests (and other PAS-authenticated requests) skip this
+    # block since the user is already authenticated by the time the route
+    # is dispatched.
+    if __ac_name is not None and __ac_password is not None:
+        acl_users = api.get_tool("acl_users")
+        # XXX hard coded
+        acl_users.credentials_cookie_auth.login()
 
     if api.is_anonymous():
         api.fail(401, "Invalid Credentials")
 
-    # return the JSON in the same format like the user route
-    return get(context, request, username=__ac_name)
+    # Issue a JWT for the now-authenticated user
+    userid = api.get_current_user().getId()
+    expires = timestamp(seconds=JWT_TOKENS_TIMEOUT)
+    token = create_token(userid, exp=expires)
+
+    # Set the token as an HttpOnly cookie so cookie-based clients can use
+    # it transparently
+    request.response.setCookie(
+        JWT_COOKIE_ID, token,
+        http_only=True, secure=True, path="/", same_site="Lax",
+        expires=expires,
+    )
+
+    # Return the user info merged with the token payload
+    info = get(context, request, username=userid) or {}
+    info.update({
+        "token": token,
+        "expires": expires,
+    })
+    return info
 
 
 @add_route("/logout", "senaite.jsonapi.v1.logout", methods=["GET"])
@@ -184,6 +213,12 @@ def logout(context, request):
 
     acl_users = api.get_tool("acl_users")
     acl_users.logout(request)
+
+    # Expire the JWT cookie on the client side. Note this does not
+    # invalidate the JWT itself — to revoke a token before its
+    # expiration, rotate the user's signing secret with
+    # ``senaite.jsonapi.pas.plugin.rotate_secret``.
+    request.response.expireCookie(JWT_COOKIE_ID, path="/")
 
     return {
         "url": api.url_for("senaite.jsonapi.v1.users"),

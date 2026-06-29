@@ -1,11 +1,54 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
     xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
     xmlns:zcml="http://namespaces.zope.org/zcml"
     i18n_domain="senaite.jsonapi">
 
   <!-- Package Includes -->
   <include package=".v1"/>
+
+  <!-- GenericSetup profile -->
+  <genericsetup:registerProfile
+      name="default"
+      title="SENAITE JSONAPI"
+      description="Installs SENAITE JSONAPI's JWT PAS plugin"
+      directory="profiles/default"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <!-- Hide the uninstall profile from the Add-ons control panel -->
+  <utility
+      factory=".setuphandlers.HiddenProfiles"
+      name="senaite.jsonapi"
+      />
+
+  <!-- Setup import step -->
+  <genericsetup:importStep
+      name="senaite.jsonapi.setuphandler"
+      title="senaite.jsonapi setup handler"
+      description="Installs SENAITE JSONAPI's JWT PAS Pugin"
+      handler="senaite.jsonapi.setuphandlers.setup_handler">
+    <depends name="plone-various"/>
+  </genericsetup:importStep>
+
+  <!-- Uninstall profile -->
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="SENAITE JSONAPI (Uninstall)"
+      description="Removes SENAITE JSONAPI's JWT PAS plugin and key storage"
+      directory="profiles/uninstall"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <!-- Uninstall import step -->
+  <genericsetup:importStep
+      name="senaite.jsonapi.uninstallhandler"
+      title="senaite.jsonapi uninstall handler"
+      description="Removes SENAITE JSONAPI's JWT PAS plugin and key storage"
+      handler="senaite.jsonapi.setuphandlers.uninstall_handler">
+    <depends name="plone-various"/>
+  </genericsetup:importStep>
 
   <!-- CATALOG
        Unified interface to one or more Portal Catalog tools.
