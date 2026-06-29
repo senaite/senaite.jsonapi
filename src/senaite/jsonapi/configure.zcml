@@ -17,6 +17,12 @@
       provides="Products.GenericSetup.interfaces.EXTENSION"
       />
 
+  <!-- Hide the uninstall profile from the Add-ons control panel -->
+  <utility
+      factory=".setuphandlers.HiddenProfiles"
+      name="senaite.jsonapi"
+      />
+
   <!-- Setup import step -->
   <genericsetup:importStep
       name="senaite.jsonapi.setuphandler"

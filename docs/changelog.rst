@@ -8,9 +8,12 @@ Changelog
 
    This release introduces the first GenericSetup profile for
    senaite.jsonapi. Existing sites upgrading from 2.6.x must install
-   the add-on once from `Site Setup` -> `Add-ons` (or apply the
-   `senaite.jsonapi:default` profile) to enable JWT authentication;
-   the cookie/Basic auth paths keep working without the install.
+   the add-on once: go to `Site Setup` -> `Add-ons`, find
+   *SENAITE JSONAPI* in the "Available add-ons" list, and click
+   *Install*. The cookie and Basic auth paths keep working without
+   the install; only the JWT authentication path needs the profile
+   applied. Uninstalling from the same panel removes the PAS plugin
+   and the per-user JWT signing secrets.
 
 - #88 Add Bearer token (JWT) authentication via PAS plugin
 - #87 Inject additional analyses fields

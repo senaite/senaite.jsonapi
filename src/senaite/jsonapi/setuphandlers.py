@@ -19,6 +19,7 @@
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims import api
+from Products.CMFPlone.interfaces import INonInstallable
 from Products.PlonePAS.setuphandlers import activatePluginInterfaces
 from senaite.jsonapi import logger
 from senaite.jsonapi import PRODUCT_NAME
@@ -26,6 +27,24 @@ from senaite.jsonapi.config import KEY_STORAGE
 from senaite.jsonapi.pas.plugin import ID as JWT_PLUGIN_ID
 from senaite.jsonapi.pas.plugin import JWTAuthenticationPlugin
 from zope.annotation.interfaces import IAnnotations
+from zope.interface import implementer
+
+
+@implementer(INonInstallable)
+class HiddenProfiles(object):
+    """Hide the uninstall profile from the Add-ons control panel so it
+    is not listed as an installable add-on. The Add-ons panel only
+    shows the `default` profile; the `uninstall` profile is applied
+    automatically when the user clicks "Uninstall".
+    """
+
+    def getNonInstallableProfiles(self):  # noqa camelCase
+        return [
+            "%s:uninstall" % PRODUCT_NAME,
+        ]
+
+    def getNonInstallableProducts(self):  # noqa camelCase
+        return []
 
 
 def setup_handler(context):
