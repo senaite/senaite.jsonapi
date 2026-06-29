@@ -67,10 +67,11 @@ the cookie auth plugin before the route runs:
     >>> data["expires"] > timestamp()
     True
 
-The same response sets the JWT as an HttpOnly cookie:
-
-    >>> "token" in browser.cookies
-    True
+The response also sets the JWT as an HttpOnly, Secure cookie. The
+test browser drives the API over plain HTTP, so the Secure cookie is
+not retained by ``browser.cookies``; the assertion below would only
+hold over HTTPS. Clients running on HTTP must therefore use the
+``Authorization: Bearer`` header (covered next).
 
 
 Authenticate with Authorization: Bearer
