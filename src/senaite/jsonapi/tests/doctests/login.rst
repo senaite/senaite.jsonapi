@@ -73,6 +73,19 @@ not retained by ``browser.cookies``; the assertion below would only
 hold over HTTPS. Clients running on HTTP must therefore use the
 ``Authorization: Bearer`` header (covered next).
 
+The Set-Cookie header still carries the expected security attributes
+even when the browser drops the cookie itself:
+
+    >>> set_cookie = browser.headers.get("Set-Cookie") or ""
+    >>> "token=" in set_cookie
+    True
+    >>> "HttpOnly" in set_cookie
+    True
+    >>> "Secure" in set_cookie
+    True
+    >>> "SameSite=Lax" in set_cookie
+    True
+
 
 Authenticate with Authorization: Bearer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

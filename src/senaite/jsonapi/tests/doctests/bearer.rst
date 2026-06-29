@@ -74,6 +74,19 @@ header is authenticated by the JWT PAS plugin:
     True
 
 
+The X-JWT-Auth-Token fallback header authenticates the request
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Clients that cannot set the ``Authorization`` header (some embedded
+HTTP libraries, browser extensions, etc.) can use the
+``X-JWT-Auth-Token`` fallback header instead:
+
+    >>> fallback = fresh_browser()
+    >>> fallback.addHeader("X-JWT-Auth-Token", token)
+    >>> is_authenticated(fallback)
+    True
+
+
 An invalid Bearer token does not authenticate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
