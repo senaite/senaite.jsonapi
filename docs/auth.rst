@@ -156,3 +156,109 @@ The ``token`` cookie is set with ``HttpOnly``, ``Secure`` and
 over HTTPS; on plain HTTP setups (local development, non-TLS
 deployments) the cookie will not round-trip and clients must use the
 ``Authorization: Bearer`` header instead.
+
+
+Try it
+------
+
+DevTools console (fastest)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Log into SENAITE via the standard UI so the browser has a Plone
+session, then open the DevTools console and run:
+
+.. code-block:: javascript
+
+    // /login is cookie-authenticated by the existing session and
+    // returns a fresh JWT in the body
+    const r = await fetch("/senaite/@@API/senaite/v1/login",
+                         {credentials: "include"})
+    const {token} = await r.json()
+    console.log(token)
+
+    // Use the token to authenticate any subsequent request
+    const me = await fetch("/senaite/@@API/senaite/v1/users/current", {
+      headers: {Authorization: `Bearer ${token}`}
+    })
+    console.log(await me.json())
+
+Over plain ``http://`` the ``Secure`` ``token`` cookie is not retained
+by the browser, but the JSON body still carries the token — use the
+``Authorization: Bearer`` header.
+
+
+curl
+~~~~
+
+.. code-block:: bash
+
+    # Form login
+    TOKEN=$(curl -s -X POST \
+        http://localhost:8080/senaite/@@API/senaite/v1/login \
+        -d "__ac_name=admin&__ac_password=admin" | jq -r .token)
+
+    # Or Basic auth
+    TOKEN=$(curl -s -u admin:admin \
+        http://localhost:8080/senaite/@@API/senaite/v1/login | jq -r .token)
+
+    # Use it
+    curl -H "Authorization: Bearer $TOKEN" \
+        http://localhost:8080/senaite/@@API/senaite/v1/users/current
+
+Verify the expected failures:
+
+.. code-block:: bash
+
+    # Bogus token -> 401
+    curl -i -H "Authorization: Bearer not-a-real-token" \
+        http://localhost:8080/senaite/@@API/senaite/v1/auth
+
+    # No token -> 401
+    curl -i http://localhost:8080/senaite/@@API/senaite/v1/auth
+
+
+Test the Secure cookie path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``Secure`` flag requires HTTPS. Easiest local option is to put a
+reverse proxy in front of the Zope instance, for example with Caddy:
+
+.. code-block:: bash
+
+    caddy reverse-proxy --from https://localhost:8443 --to localhost:8080
+
+After ``/login``, open DevTools → Application → Cookies →
+``https://localhost:8443`` and verify the ``token`` cookie is set
+with ``HttpOnly``, ``Secure`` and ``SameSite=Lax``. Subsequent
+``fetch`` calls without the ``Authorization`` header are authenticated
+by the cookie automatically.
+
+
+Revocation
+~~~~~~~~~~
+
+Rotate the user's signing secret from a debug shell, then reuse the
+old token to confirm it is rejected:
+
+.. code-block:: python
+
+    bin/instance debug
+    >>> from senaite.jsonapi.pas.plugin import rotate_secret
+    >>> rotate_secret("admin")
+    >>> import transaction; transaction.commit()
+
+.. code-block:: bash
+
+    # Previously valid token -> 401
+    curl -i -H "Authorization: Bearer $TOKEN" \
+        http://localhost:8080/senaite/@@API/senaite/v1/auth
+
+
+REST client (Bruno, Insomnia, Postman)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Define a collection-level variable ``token`` and populate it from the
+``/login`` response (most clients support extracting a JSON field into
+an environment variable). Add the header
+``Authorization: Bearer {{token}}`` at the collection level so every
+request in the collection authenticates transparently.
