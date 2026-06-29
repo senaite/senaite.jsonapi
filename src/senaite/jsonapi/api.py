@@ -749,15 +749,8 @@ def get_fields(brain_or_object):
     # The portal object has no schema
     if is_root(obj):
         return {}
-    schema = get_schema(obj)
-    if is_dexterity_content(obj):
-        names = schema.names()
-        fields = map(lambda name: schema.get(name), names)
-        schema_fields = dict(zip(names, fields))
-        # update with behavior fields
-        schema_fields.update(get_behaviors(obj))
-        return schema_fields
-    return dict(zip(schema.keys(), schema.fields()))
+    # rely on core's api
+    return api.get_fields(obj)
 
 
 def get_field(brain_or_object, name, default=None):

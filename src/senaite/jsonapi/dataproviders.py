@@ -207,9 +207,8 @@ class DexterityDataProvider(Base):
         super(DexterityDataProvider, self).__init__(context)
 
         # get the behavior and schema fields from the data manager
-        schema = api.get_schema(context)
-        behaviors = api.get_behaviors(context)
-        self.keys = schema.names() + behaviors.keys()
+        fields = api.get_fields(context)
+        self.keys = fields.keys()
 
 
 class ATDataProvider(Base):
@@ -222,8 +221,8 @@ class ATDataProvider(Base):
         super(ATDataProvider, self).__init__(context)
 
         # get the schema fields from the data manager
-        schema = api.get_schema(context)
-        self.keys = schema.keys()
+        fields = api.get_fields(context)
+        self.keys = fields.keys()
 
 
 class AnalysisDataProvider(Base):

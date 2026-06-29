@@ -16,6 +16,7 @@ Changelog
    and the per-user JWT signing secrets.
 
 - #88 Add Bearer token (JWT) authentication via PAS plugin
+- #89 Fix inherited schema fields missing for multi-schema Dexterity types
 - #87 Inject additional analyses fields
 - #85 Allow field projection
 - #81 Support second-level precision on searches against DateIndex
