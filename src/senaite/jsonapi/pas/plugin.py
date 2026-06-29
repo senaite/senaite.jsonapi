@@ -123,9 +123,11 @@ def get_jwt_token(request):
     """Extracts the JWT token from the request, in this order of preference:
     Authorization: Bearer header, "token" cookie, X-JWT-Auth-Token header.
     """
-    # Read from Authorization header. Use the public getHeader() API
-    # rather than the private request._auth attribute.
-    auth = request.getHeader("Authorization") or ""
+    # Read from Authorization header. Zope/PAS may consume the
+    # Authorization header from the WSGI environ before our plugin
+    # runs (so getHeader("Authorization") returns None), but the raw
+    # value is cached on request._auth at request init.
+    auth = request._auth or ""  # noqa
     if auth[:7].lower() == "bearer ":
         return auth[7:].strip()
 
