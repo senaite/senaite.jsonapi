@@ -182,6 +182,14 @@ def timestamp(seconds=0, minutes=0, hours=0, days=0):
 def peek_userid(token):
     """Returns the ``userid`` claim of the given token without verifying
     the signature, or None if the token cannot be decoded.
+
+    Decoding the token without verifying its signature is safe in this
+    context: the returned ``userid`` is only used to look up *that
+    user's* signing secret, which is then used to verify the signature
+    in ``decode_token``. A forged token that claims to belong to user
+    X but was signed with anything other than X's real secret fails
+    signature verification and is rejected. The unverified ``userid``
+    is never trusted on its own.
     """
     token = api.to_utf8(token, default=None)
     if not token:
