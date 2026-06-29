@@ -50,7 +50,7 @@ Issue a token via /login
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 An already-authenticated user calls /login and obtains a JWT in the
-response body. The setup helper ``self.getBrowser()`` returns a browser
+response body. The setup helper `self.getBrowser()` returns a browser
 that has a Plone session cookie, so the request is authenticated by
 the cookie auth plugin before the route runs:
 
@@ -69,9 +69,9 @@ the cookie auth plugin before the route runs:
 
 The response also sets the JWT as an HttpOnly, Secure cookie. The
 test browser drives the API over plain HTTP, so the Secure cookie is
-not retained by ``browser.cookies``; the assertion below would only
+not retained by `browser.cookies`; the assertion below would only
 hold over HTTPS. Clients running on HTTP must therefore use the
-``Authorization: Bearer`` header (covered next).
+`Authorization: Bearer` header (covered next).
 
 The Set-Cookie header still carries the expected security attributes
 even when the browser drops the cookie itself:

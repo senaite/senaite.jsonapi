@@ -89,23 +89,31 @@ class JWTAuthenticationPlugin(BasePlugin):
             return None
 
         # Peek the payload (no signature check) to learn the userid the
-        # token claims to belong to
+        # token claims to belong to. The unverified userid is only used
+        # below as a key into the keystorage; it is never trusted on its
+        # own (see peek_userid docstring).
         userid = peek_userid(token)
         if not userid:
             return None
 
-        # Verify signature and expiration with that user's secret
+        # Look up the user *before* touching the keystorage. This avoids
+        # an anonymous DoS where an attacker sprays tokens with random
+        # userids and forces the plugin to create a new signing-secret
+        # entry on the portal's OOBTree annotation for each one.
+        user = api.get_user(userid)
+        if not user:
+            return None
+
+        # Verify signature and expiration with that user's existing
+        # secret. decode_token returns None if no secret is stored for
+        # the user yet (i.e. the user has never logged in via /login).
         payload = decode_token(token, userid)
         if not payload:
             return None
 
-        # Defensive: ensure the verified payload still names the same user
+        # Defensive: ensure the verified payload still names the same
+        # user as the (now signature-verified) claim.
         if api.to_utf8(payload.get("userid"), default=None) != userid:
-            return None
-
-        # Make sure the user still exists
-        user = api.get_user(userid)
-        if not user:
             return None
 
         return userid, userid
@@ -115,10 +123,11 @@ def get_jwt_token(request):
     """Extracts the JWT token from the request, in this order of preference:
     Authorization: Bearer header, "token" cookie, X-JWT-Auth-Token header.
     """
-    # Read from Authorization header
-    auth = request._auth  # noqa
-    if auth and auth[:7].lower() == "bearer ":
-        return auth.split()[-1]
+    # Read from Authorization header. Use the public getHeader() API
+    # rather than the private request._auth attribute.
+    auth = request.getHeader("Authorization") or ""
+    if auth[:7].lower() == "bearer ":
+        return auth[7:].strip()
 
     # Read from cookie
     token = request.cookies.get(JWT_COOKIE_ID)
@@ -160,7 +169,7 @@ def signing_secret(userid):
 
 def rotate_secret(userid):
     """Discards the signing secret for the given userid, so a new one is
-    generated on the next call to ``signing_secret``. All previously
+    generated on the next call to `signing_secret`. All previously
     issued tokens for the user are invalidated.
     """
     userid = api.to_utf8(userid, default=None)
@@ -180,36 +189,68 @@ def timestamp(seconds=0, minutes=0, hours=0, days=0):
 
 
 def peek_userid(token):
-    """Returns the ``userid`` claim of the given token without verifying
+    """Returns the `userid` claim of the given token without verifying
     the signature, or None if the token cannot be decoded.
 
     Decoding the token without verifying its signature is safe in this
-    context: the returned ``userid`` is only used to look up *that
+    context: the returned `userid` is only used to look up *that
     user's* signing secret, which is then used to verify the signature
-    in ``decode_token``. A forged token that claims to belong to user
+    in `decode_token`. A forged token that claims to belong to user
     X but was signed with anything other than X's real secret fails
-    signature verification and is rejected. The unverified ``userid``
+    signature verification and is rejected. The unverified `userid`
     is never trusted on its own.
     """
     token = api.to_utf8(token, default=None)
     if not token:
         return None
     try:
-        payload = jwt.decode(token, verify=False)
+        # Disable signature verification at peek time, but still
+        # require HS256 as the algorithm so a forged "alg": "none"
+        # token cannot reach signature verification with no secret.
+        # The `verify=False` kwarg was removed in PyJWT 2.x; the
+        # `options` form is supported by both 1.x and 2.x.
+        payload = jwt.decode(
+            token, options={"verify_signature": False},
+            algorithms=["HS256"],
+        )
     except (ValueError, TypeError, jwt.InvalidTokenError):
         return None
     return api.to_utf8(payload.get("userid"), default=None)
 
 
+def get_signing_secret(userid):
+    """Returns the existing signing secret for `userid` or None.
+
+    Unlike `signing_secret`, this never creates a new secret entry,
+    so it is safe to call with an unverified userid claim (e.g. during
+    token verification).
+    """
+    userid = api.to_utf8(userid, default=None)
+    if not userid:
+        return None
+    data = get_keystorage().get(userid)
+    if not data:
+        return None
+    return data.get("key")
+
+
 def decode_token(token, userid):
-    """Decodes the given JWT, verifies the signature with ``userid``'s
+    """Decodes the given JWT, verifies the signature with `userid`'s
     secret and checks the expiration. Returns the payload or None.
+
+    Returns None if no signing secret exists for `userid` yet; the
+    keystorage entry is only created by `create_token` (called from
+    `/login`), never by the verification path. This prevents an
+    anonymous attacker from forcing the portal to create one
+    keystorage entry per token claim.
     """
     token = api.to_utf8(token, default=None)
     if not token:
         return None
+    secret = get_signing_secret(userid)
+    if not secret:
+        return None
     try:
-        secret = signing_secret(userid)
         return jwt.decode(token, secret, algorithms=["HS256"])
     except (ValueError, TypeError, jwt.InvalidTokenError):
         return None

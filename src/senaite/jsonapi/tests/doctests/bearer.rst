@@ -67,7 +67,7 @@ once the user is authenticated):
     >>> isinstance(token, basestring) and len(token) > 0
     True
 
-A fresh browser carrying that token in the ``Authorization: Bearer``
+A fresh browser carrying that token in the `Authorization: Bearer`
 header is authenticated by the JWT PAS plugin:
 
     >>> is_authenticated(with_bearer(fresh_browser(), token))
@@ -77,9 +77,9 @@ header is authenticated by the JWT PAS plugin:
 The X-JWT-Auth-Token fallback header authenticates the request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Clients that cannot set the ``Authorization`` header (some embedded
+Clients that cannot set the `Authorization` header (some embedded
 HTTP libraries, browser extensions, etc.) can use the
-``X-JWT-Auth-Token`` fallback header instead:
+`X-JWT-Auth-Token` fallback header instead:
 
     >>> fallback = fresh_browser()
     >>> fallback.addHeader("X-JWT-Auth-Token", token.encode("ascii"))
@@ -110,10 +110,31 @@ verification:
     False
 
 
+A token for an unknown user does not create a keystorage entry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tokens that claim to belong to a user who does not exist must be
+rejected without touching the per-user keystorage. Otherwise an
+anonymous attacker can force unbounded ZODB writes by spraying
+tokens with random userids.
+
+    >>> from senaite.jsonapi.pas.plugin import get_keystorage
+    >>> before = set(get_keystorage().keys())
+
+    >>> attacker = pyjwt.encode(
+    ...     {"userid": "nobody-12345", "exp": timestamp(seconds=3600)},
+    ...     "attacker-secret", algorithm="HS256")
+    >>> is_authenticated(with_bearer(fresh_browser(), attacker))
+    False
+
+    >>> set(get_keystorage().keys()) == before
+    True
+
+
 An expired token does not authenticate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A token whose ``exp`` claim lies in the past is rejected by PyJWT:
+A token whose `exp` claim lies in the past is rejected by PyJWT:
 
     >>> expired_token = create_token(TEST_USER_ID, exp=timestamp(seconds=-60))
     >>> transaction.commit()
@@ -124,7 +145,7 @@ A token whose ``exp`` claim lies in the past is rejected by PyJWT:
 Rotating the user's secret revokes existing tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After ``rotate_secret``, the previously-issued token no longer
+After `rotate_secret`, the previously-issued token no longer
 verifies:
 
     >>> rotate_secret(TEST_USER_ID)
