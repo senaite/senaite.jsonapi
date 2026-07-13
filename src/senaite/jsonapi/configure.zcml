@@ -204,6 +204,11 @@
       factory=".fieldmanagers.DXUIDReferenceFieldManager"
       />
 
+  <!-- Adapter for DX DataGridField Field -->
+  <adapter
+      for="senaite.core.schema.interfaces.IDataGridField"
+      factory=".fieldmanagers.DataGridFieldManager"
+      />
 
   <!-- ZOPE SCHEMA FIELD MANAGERS
        Field level interface to get and set values and get a JSON compatible

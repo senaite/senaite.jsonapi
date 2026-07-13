@@ -94,6 +94,42 @@ class ZopeSchemaFieldManager(object):
         return self.field.get(instance)
 
 
+class DataGridFieldManager(ZopeSchemaFieldManager):
+    """Adapter to get/set the value of DataGridField (grid/records) fields.
+ 
+    Kept entirely separate from ZopeSchemaFieldManager so that DataGrid-
+    specific normalization never affects any other field type.
+    """
+    interface.implements(IFieldManager)
+ 
+    def _normalize_datagrid(self, value):
+        """UIDReferenceField sub-fields nested inside a DataGridRow always
+        require a list of native `str` UIDs - never a bare value, and
+        never `unicode` (which is what every JSON API request delivers,
+        regardless of what the client originally sent).
+        """
+        schema = self.field.value_type.schema
+ 
+        for row in value:
+            for name, field in getFields(schema).items():
+                if isinstance(field, UIDReferenceField):
+                    uid = row.get(name)
+                    if not uid:
+                        continue
+                    if isinstance(uid, list):
+                        row[name] = [str(u) for u in uid]
+                    else:
+                        row[name] = [str(uid)]
+ 
+        return value
+ 
+    def set(self, instance, value, **kw):
+        """Set the value of the field
+        """
+        value = self._normalize_datagrid(value)
+        return self._set(instance, value, **kw)
+
+
 class DatetimeFieldManager(ZopeSchemaFieldManager):
     """Adapter to get/set the value of Datetime Fields
     """
