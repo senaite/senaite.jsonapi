@@ -24,12 +24,14 @@ import dateutil
 from AccessControl import Unauthorized
 from DateTime import DateTime
 from Products.Archetypes.utils import mapply
+from senaite.core.schema.uidreferencefield import UIDReferenceField
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import underscore as u
 from senaite.jsonapi.interfaces import IFieldManager
 from zope import interface
 from zope.interface import implementer
+from zope.schema import getFields
 from zope.schema._bootstrapinterfaces import WrongContainedType
 from zope.schema._bootstrapinterfaces import WrongType
 
@@ -100,11 +102,6 @@ class DataGridFieldManager(ZopeSchemaFieldManager):
     interface.implements(IFieldManager)
 
     def _normalize_datagrid(self, value):
-        """UIDReferenceField sub-fields nested inside a DataGridRow always
-        require a list of native `str` UIDs - never a bare value, and
-        never `unicode` (which is what every JSON API request delivers,
-        regardless of what the client originally sent).
-        """
         schema = self.field.value_type.schema
 
         for row in value:
@@ -113,6 +110,8 @@ class DataGridFieldManager(ZopeSchemaFieldManager):
                     uid = row.get(name)
                     if not uid:
                         continue
+                    # UIDReferenceField sub-fields nested inside a DataGridRow
+                    # always require a list of native `str` UIDs
                     if isinstance(uid, list):
                         row[name] = [str(u) for u in uid]
                     else:
