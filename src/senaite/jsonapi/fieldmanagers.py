@@ -95,13 +95,10 @@ class ZopeSchemaFieldManager(object):
 
 
 class DataGridFieldManager(ZopeSchemaFieldManager):
-    """Adapter to get/set the value of DataGridField (grid/records) fields.
- 
-    Kept entirely separate from ZopeSchemaFieldManager so that DataGrid-
-    specific normalization never affects any other field type.
+    """Adapter to get/set the value of DataGridField (grid/records) fields
     """
     interface.implements(IFieldManager)
- 
+
     def _normalize_datagrid(self, value):
         """UIDReferenceField sub-fields nested inside a DataGridRow always
         require a list of native `str` UIDs - never a bare value, and
@@ -109,7 +106,7 @@ class DataGridFieldManager(ZopeSchemaFieldManager):
         regardless of what the client originally sent).
         """
         schema = self.field.value_type.schema
- 
+
         for row in value:
             for name, field in getFields(schema).items():
                 if isinstance(field, UIDReferenceField):
@@ -120,9 +117,8 @@ class DataGridFieldManager(ZopeSchemaFieldManager):
                         row[name] = [str(u) for u in uid]
                     else:
                         row[name] = [str(uid)]
- 
         return value
- 
+
     def set(self, instance, value, **kw):
         """Set the value of the field
         """
