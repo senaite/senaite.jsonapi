@@ -16,6 +16,7 @@ Changelog
    and the per-user JWT signing secrets.
 
 - #92 Restrict /registry, /settings, /users to prevent info leaks
+- #91 Add DataGridFieldManager to fix UID reference validation in DataGrid fields
 - #90 Fix JWT authentication security issues
 - #88 Add Bearer token (JWT) authentication via PAS plugin
 - #89 Fix inherited schema fields missing for multi-schema Dexterity types
