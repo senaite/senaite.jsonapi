@@ -83,16 +83,12 @@ by the users doctest below.
 /users listing is restricted to managers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A Manager can enumerate all users. The Manager path uses the fixture's
-cookie-authenticated browser (self.getBrowser()) rather than Basic
-auth, because the plone.app.testing test-user Basic-auth path is not
-reliable across every plone.app.testing build shipped in CI:
-
-    >>> mgr = self.getBrowser()
-    >>> mgr.open("{}/users".format(api_url))
-    >>> data = json.loads(mgr.contents)
-    >>> data["count"] > 1
-    True
+The Manager-can-enumerate positive path is already covered by the
+existing users.rst doctest, which runs as TEST_USER_ID (LabManager +
+Manager) and asserts the full member listing. The tests below cover
+the security-relevant behavior added by this PR: that a non-Manager
+account cannot enumerate other users, cannot inspect another user's
+record by id, and can still see its own record.
 
 A non-Manager gets silently collapsed to /current when requesting the
 full listing (no enumeration leak):
