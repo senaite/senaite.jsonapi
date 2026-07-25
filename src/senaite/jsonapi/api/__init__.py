@@ -31,14 +31,8 @@ from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 from DateTime import DateTime
 from plone import api as ploneapi
 from plone.behavior.interfaces import IBehaviorAssignable
-from plone.i18n.interfaces import ILanguageSchema
 from plone.jsonapi.core import router
 from Products.ATContentTypes.utils import DT2dt
-from Products.CMFPlone.interfaces.controlpanel import IDateAndTimeSchema
-from Products.CMFPlone.interfaces.controlpanel import IMailSchema
-from Products.CMFPlone.interfaces.controlpanel import IMaintenanceSchema
-from Products.CMFPlone.interfaces.controlpanel import ISecuritySchema
-from Products.CMFPlone.interfaces.controlpanel import IUserGroupsSettingsSchema
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
 from senaite.core.api import dtime
@@ -59,20 +53,11 @@ from zope.component import getAdapters
 from zope.component import getMultiAdapter
 from zope.component import queryAdapter
 from zope.deprecation import deprecate
-from zope.schema import getFieldNames
 from zope.schema import getFields
 
 _marker = object()
 
 DEFAULT_ENDPOINT = "senaite.jsonapi.v1.get"
-
-CONTROLPANEL_INTERFACE_MAPPING = {
-    "mail": [IMailSchema],
-    "language": [ILanguageSchema],
-    "dateandtime": [IDateAndTimeSchema],
-    "usergroups": [IUserGroupsSettingsSchema, ISecuritySchema],
-    "maintenance": [IMaintenanceSchema],
-}
 
 SKIP_UPDATE_FIELDS = ["id", ]
 
@@ -1545,25 +1530,6 @@ def deactivate_object(brain_or_object):
         fail(401, "Not allowed to deactivate object '%s'" % obj.getId())
 
 
-def get_registry_records_by_keyword(keyword=None):
-    """Get all the registry records (names and values) whose name
-     contains the specified keyword or, if keyword is None, return
-     all registry items
-
-    :param keyword: The keyword that has to be contained in the record name
-    :type keyword: str or None
-    :returns: Dictionary mapping the names of the found records to its values
-    """
-    portal_reg = ploneapi.portal.get_tool(name="portal_registry")
-    found_registers = {}
-    for record in portal_reg.records:
-        if keyword is None:
-            found_registers[record] = api.get_registry_record(record)
-        elif keyword.lower() in record.lower():
-            found_registers[record] = api.get_registry_record(record)
-    return found_registers
-
-
 def is_relationship_object(brain_or_object):
     """Checks if the passed in brain or object is a relationship object
 
@@ -1573,52 +1539,6 @@ def is_relationship_object(brain_or_object):
     if 'at_references' in get_path(brain_or_object):
         return True
     return False
-
-
-def get_settings_by_keyword(keyword=None):
-    """Get the settings associated to the specified keyword or, if
-     keyword is None, get all the settings.
-
-    :param keyword: settings to be retrieved
-    :return: dictionary with the settings plus a key to identify from which
-    keyword where retrieved.
-    """
-    settings = []
-    if keyword is None:
-        # iterate over all the schemas to return all settings
-        for key, ischemas in CONTROLPANEL_INTERFACE_MAPPING.items():
-            settings_from_ifaces = map(get_settings_from_interface, ischemas)
-            settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
-            settings.append({key: settings_from_key,
-                             "api_url": url_for("senaite.jsonapi.v1.settings", key=key)})
-        return settings
-    # if keyword has value then get only the settings associated to the key
-    settings_from_ifaces = map(get_settings_from_interface, CONTROLPANEL_INTERFACE_MAPPING[keyword])
-    settings_from_key = {k: v for d in settings_from_ifaces for k, v in d.items()}
-    settings.append({keyword: settings_from_key,
-                     "api_url": url_for("senaite.jsonapi.v1.settings", key=keyword)})
-    return settings
-
-
-def get_settings_from_interface(iface):
-    """Get the configuration settings associated to a list of schema
-    interfaces
-
-    :param iface: The schema interface from which we want to get its
-    fields
-    :return: Dictionary with iface name as key and as value a dictionary
-    with the setting names (keys) linked to that schema and its
-    values.
-    """
-    settings = {}
-    schema_id = iface.getName()
-    settings[schema_id] = {}
-    schema = getAdapter(api.get_portal(), iface)
-    for setting in getFieldNames(iface):
-        value = getattr(schema, setting, None)
-        if is_json_serializable(value):
-            settings[schema_id][setting] = value
-    return settings
 
 
 # -----------------------------------------------------------------------------
@@ -1659,3 +1579,7 @@ from senaite.jsonapi.api.users import get_current_user  # noqa: E402,F401
 from senaite.jsonapi.api.users import get_member_ids  # noqa: E402,F401
 from senaite.jsonapi.api.users import get_user  # noqa: E402,F401
 from senaite.jsonapi.api.users import get_user_properties  # noqa: E402,F401
+from senaite.jsonapi.api.settings import CONTROLPANEL_INTERFACE_MAPPING  # noqa: E402,F401
+from senaite.jsonapi.api.settings import get_registry_records_by_keyword  # noqa: E402,F401
+from senaite.jsonapi.api.settings import get_settings_by_keyword  # noqa: E402,F401
+from senaite.jsonapi.api.settings import get_settings_from_interface  # noqa: E402,F401
