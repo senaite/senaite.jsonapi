@@ -190,6 +190,15 @@ def login(context, request):
 
     logger.info("*** LOGIN %s ***" % (__ac_name or "<basic>"))
 
+    # Credentials submitted via GET land in access logs, Referer
+    # headers and browser history. Warn now, plan removal for 2.8.0.
+    if request.get("REQUEST_METHOD", "") == "GET" and (
+            __ac_name is not None or __ac_password is not None):
+        logger.warn(
+            "GET /login with credentials is deprecated and will be "
+            "removed in senaite.jsonapi 2.8.0. Use POST instead."
+        )
+
     # Form-based login path: log the user in via the cookie auth plugin.
     # Basic-auth requests (and other PAS-authenticated requests) skip this
     # block since the user is already authenticated by the time the route
