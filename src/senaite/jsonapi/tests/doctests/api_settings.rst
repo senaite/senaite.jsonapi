@@ -141,17 +141,11 @@ get_settings_by_keyword via the /settings route
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `get_settings_by_keyword` calls `api.url_for` which needs a live
-request, so it is exercised through the HTTP route.
+request, so it is exercised through the HTTP route. The cookie-login
+browser is used instead of Basic auth because the fixture's Basic-auth
+path for TEST_USER_NAME is not reliable across every CI build.
 
-    >>> def as_manager():
-    ...     b = Browser(self.portal)
-    ...     b.addHeader("Accept-Language", "en-US")
-    ...     b.handleErrors = False
-    ...     creds = b64encode("{}:{}".format(TEST_USER_NAME, TEST_USER_PASSWORD))
-    ...     b.addHeader("Authorization", "Basic {}".format(creds))
-    ...     return b
-
-    >>> b = as_manager()
+    >>> b = self.getBrowser()
     >>> b.open("{}/settings/mail".format(api_url))
     >>> data = json.loads(b.contents)
     >>> items = data["items"]
@@ -179,7 +173,7 @@ usergroups merges both mapped interfaces into a single section
 (`IUserGroupsSettingsSchema` + `ISecuritySchema`). Both must appear
 as sub-keys under `"usergroups"`:
 
-    >>> b = as_manager()
+    >>> b = self.getBrowser()
     >>> b.open("{}/settings/usergroups".format(api_url))
     >>> ug = json.loads(b.contents)["items"][0]["usergroups"]
     >>> sorted(k.encode("ascii") for k in ug.keys())
