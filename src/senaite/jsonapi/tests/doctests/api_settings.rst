@@ -65,7 +65,19 @@ CONTROLPANEL_INTERFACE_MAPPING covers the expected keys
 get_settings_from_interface returns {schema_name: {field: value}}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Set known values on the mail control panel so we can assert them
+end-to-end through the helper:
+
+    >>> from plone import api as ploneapi
     >>> from Products.CMFPlone.interfaces.controlpanel import IMailSchema
+    >>> from zope.component import getAdapter
+    >>> mail = getAdapter(portal, IMailSchema)
+    >>> mail.smtp_host = u"mail.example.com"
+    >>> mail.smtp_port = 2525
+    >>> mail.email_from_name = u"SENAITE Lab"
+    >>> mail.email_from_address = "lab@example.com"
+    >>> transaction.commit()
+
     >>> result = api_settings.get_settings_from_interface(IMailSchema)
 
 The outer key is the schema class name:
@@ -73,30 +85,55 @@ The outer key is the schema class name:
     >>> list(result.keys())
     ['IMailSchema']
 
-Every value in the inner dict must be JSON-serializable — that is the
-point of the helper's filter:
+The values we just wrote come back verbatim:
 
-    >>> serialized = json.dumps(result)
-    >>> "IMailSchema" in serialized
+    >>> fields = result["IMailSchema"]
+    >>> fields["smtp_host"]
+    u'mail.example.com'
+    >>> fields["smtp_port"]
+    2525
+    >>> fields["email_from_name"]
+    u'SENAITE Lab'
+    >>> fields["email_from_address"]
+    'lab@example.com'
+
+The whole dict must be JSON-serializable — that is the point of the
+helper's filter:
+
+    >>> "mail.example.com" in json.dumps(result)
     True
 
 
 get_registry_records_by_keyword filters by substring, case-insensitive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    >>> plone_records = api_settings.get_registry_records_by_keyword("plone")
-    >>> isinstance(plone_records, dict)
+The mail schema fields also land in the portal registry, so setting
+them above gave us a known key/value pair to look up here. Filtering
+by `smtp_host` returns the record with our stored value:
+
+    >>> hits = api_settings.get_registry_records_by_keyword("smtp_host")
+    >>> "plone.smtp_host" in hits
     True
-    >>> len(plone_records) > 0
-    True
-    >>> all(["plone" in name.lower() for name in plone_records])
+    >>> hits["plone.smtp_host"]
+    u'mail.example.com'
+
+The filter is case-insensitive:
+
+    >>> upper = api_settings.get_registry_records_by_keyword("SMTP_HOST")
+    >>> upper == hits
     True
 
-Passing None returns every record; the total strictly exceeds the
+A keyword that matches nothing returns an empty dict:
+
+    >>> api_settings.get_registry_records_by_keyword(
+    ...     "no-such-registry-key")
+    {}
+
+Passing None returns every record; the total strictly exceeds any
 filtered subset:
 
     >>> total = api_settings.get_registry_records_by_keyword(None)
-    >>> len(total) > len(plone_records)
+    >>> len(total) > len(hits)
     True
 
 
@@ -124,6 +161,14 @@ request, so it is exercised through the HTTP route.
     True
     >>> items[0]["api_url"].endswith("/settings/mail")
     True
+
+The values we set above flow all the way through the route:
+
+    >>> mail_section = items[0]["mail"]["IMailSchema"]
+    >>> mail_section["smtp_host"]
+    u'mail.example.com'
+    >>> mail_section["email_from_address"]
+    u'lab@example.com'
 
 
 
