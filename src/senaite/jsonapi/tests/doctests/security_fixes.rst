@@ -83,9 +83,12 @@ by the users doctest below.
 /users listing is restricted to managers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A Manager can enumerate all users:
+A Manager can enumerate all users. The Manager path uses the fixture's
+cookie-authenticated browser (self.getBrowser()) rather than Basic
+auth, because the plone.app.testing test-user Basic-auth path is not
+reliable across every plone.app.testing build shipped in CI:
 
-    >>> mgr = as_user(TEST_USER_NAME, TEST_USER_PASSWORD)
+    >>> mgr = self.getBrowser()
     >>> mgr.open("{}/users".format(api_url))
     >>> data = json.loads(mgr.contents)
     >>> data["count"] > 1
