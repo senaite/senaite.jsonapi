@@ -24,12 +24,14 @@ import dateutil
 from AccessControl import Unauthorized
 from DateTime import DateTime
 from Products.Archetypes.utils import mapply
+from senaite.core.schema.uidreferencefield import UIDReferenceField
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import underscore as u
 from senaite.jsonapi.interfaces import IFieldManager
 from zope import interface
 from zope.interface import implementer
+from zope.schema import getFields
 from zope.schema._bootstrapinterfaces import WrongContainedType
 from zope.schema._bootstrapinterfaces import WrongType
 
@@ -92,6 +94,35 @@ class ZopeSchemaFieldManager(object):
 
         # TODO: Check security on the field level
         return self.field.get(instance)
+
+
+class DataGridFieldManager(ZopeSchemaFieldManager):
+    """Adapter to get/set the value of DataGridField (grid/records) fields
+    """
+    interface.implements(IFieldManager)
+
+    def _normalize_datagrid(self, value):
+        schema = self.field.value_type.schema
+
+        for row in value:
+            for name, field in getFields(schema).items():
+                if isinstance(field, UIDReferenceField):
+                    uid = row.get(name)
+                    if not uid:
+                        continue
+                    # UIDReferenceField sub-fields nested inside a DataGridRow
+                    # always require a list of native `str` UIDs
+                    if isinstance(uid, list):
+                        row[name] = [str(u) for u in uid]
+                    else:
+                        row[name] = [str(uid)]
+        return value
+
+    def set(self, instance, value, **kw):
+        """Set the value of the field
+        """
+        value = self._normalize_datagrid(value)
+        return self._set(instance, value, **kw)
 
 
 class DatetimeFieldManager(ZopeSchemaFieldManager):
