@@ -48,7 +48,6 @@ from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.interfaces import IInfo
 from senaite.jsonapi.interfaces import IUpdate
-from zope.component import getAdapter
 from zope.component import getAdapters
 from zope.component import getMultiAdapter
 from zope.component import queryAdapter
