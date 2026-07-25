@@ -8,6 +8,15 @@
   <!-- Package Includes -->
   <include package=".v1"/>
 
+  <!-- Clear maybe_webdav_client for API requests so PUT/PATCH/DELETE
+       reach the API view instead of Zope's WebDAV machinery. Keeps the
+       REST verbs working on the released plone.jsonapi.core. -->
+  <subscriber
+      for="ZPublisher.interfaces.IPubStart"
+      handler=".webdav.allow_api_verbs"
+      />
+
+
   <!-- GenericSetup profile -->
   <genericsetup:registerProfile
       name="default"
