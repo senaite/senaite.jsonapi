@@ -20,7 +20,8 @@
 
 from senaite.jsonapi import api
 from senaite.jsonapi.v1 import add_route
-from senaite.jsonapi.exceptions import APIError
+from senaite.jsonapi.exceptions import BadRequestError
+from senaite.jsonapi.exceptions import NotFoundError
 
 ACTIONS = "create,update,delete"
 
@@ -50,7 +51,7 @@ def get(context, request, resource=None, uid=None):
 
     portal_type = api.resource_to_portal_type(resource)
     if portal_type is None:
-        raise APIError(404, "Not Found")
+        raise NotFoundError("Not Found")
 
     return api.get_batched(portal_type=portal_type, uid=uid, endpoint="senaite.jsonapi.v1.get")
 
@@ -82,7 +83,8 @@ def action(context, request, action=None, resource=None, uid=None):
     func_name = "{}_items".format(action)
     action_func = getattr(api, func_name, None)
     if action_func is None:
-        api.fail(500, "API has no member named '{}'".format(func_name))
+        raise BadRequestError(
+            "API has no member named '{}'".format(func_name))
 
     portal_type = api.resource_to_portal_type(resource)
     items = action_func(portal_type=portal_type, uid=uid)

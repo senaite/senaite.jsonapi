@@ -209,7 +209,8 @@ def login(context, request):
         acl_users.credentials_cookie_auth.login()
 
     if api.is_anonymous():
-        api.fail(401, "Invalid Credentials")
+        from senaite.jsonapi.exceptions import UnauthorizedError
+        raise UnauthorizedError("Invalid Credentials")
 
     # Issue a JWT for the now-authenticated user
     userid = api.get_current_user().getId()
