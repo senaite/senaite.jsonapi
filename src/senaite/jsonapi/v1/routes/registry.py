@@ -26,8 +26,13 @@ from senaite.jsonapi.v1 import add_route
 @add_route("/registry", "senaite.jsonapi.v1.registry", methods=["GET"])
 @add_route("/registry/<string:key>", "senaite.jsonapi.v1.registry", methods=["GET"])
 def get(context, request, key=None):
-    """Return all registry items if key is None, otherwise try to fetch the registry key
+    """Return all registry items if key is None, otherwise try to fetch
+    the registry key. Requires the "Manage portal" permission because
+    the registry can hold sensitive configuration (mail server
+    passwords, integration credentials, etc.).
     """
+    api.check_permission("Manage portal")
+
     registry_records = api.get_registry_records_by_keyword(key)
 
     # Prepare batch

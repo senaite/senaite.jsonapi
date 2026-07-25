@@ -610,6 +610,21 @@ def fail(status, msg):
     raise APIError(status, "{}".format(msg))
 
 
+def check_permission(permission, context=None):
+    """Check the given permission on context (portal root if None).
+
+    Raises APIError 401 for anonymous callers, 403 for authenticated
+    callers that lack the permission. Returns None on success.
+    """
+    if context is None:
+        context = get_portal()
+    if ploneapi.user.has_permission(permission, obj=context):
+        return
+    if is_anonymous():
+        fail(401, "Authentication required")
+    fail(403, "You do not have permission to access this resource")
+
+
 def search(portal_type=None, **kw):
     """Search the catalog adapter
 
