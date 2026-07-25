@@ -39,7 +39,6 @@ from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
 from senaite.jsonapi.interfaces import IDataManager
 from zope.component import getMultiAdapter
-from zope.component import queryAdapter
 from zope.schema import getFields
 
 _marker = object()
