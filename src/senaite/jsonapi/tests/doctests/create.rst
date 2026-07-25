@@ -344,7 +344,7 @@ instead of the plone's default creation.
 Creation restrictions
 ~~~~~~~~~~~~~~~~~~~~~
 
-We get a 401 error if we try to create an object inside portal root:
+We get a 403 error if we try to create an object inside portal root:
 
     >>> data = {"title": "My clients folder",
     ...         "portal_type": "ClientsFolder",
@@ -352,9 +352,9 @@ We get a 401 error if we try to create an object inside portal root:
     >>> post("create", data)
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    HTTPError: HTTP Error 403: Forbidden
 
-We get a 401 error if we try to create an object inside setup folder:
+We get a 403 error if we try to create an object inside setup folder:
 
     >>> data = {"title": "My Analysis Categories folder",
     ...         "portal_type": "AnalysisCategories",
@@ -362,9 +362,9 @@ We get a 401 error if we try to create an object inside setup folder:
     >>> post("create", data)
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    HTTPError: HTTP Error 403: Forbidden
 
-We get a 401 error when we try to create an object from a type that is not
+We get a 403 error when we try to create an object from a type that is not
 allowed by the container:
 
     >>> data = {"title": "My Method",
@@ -373,4 +373,4 @@ allowed by the container:
     >>> post("create", data)
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    HTTPError: HTTP Error 403: Forbidden
