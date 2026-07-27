@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #94 Extract registry and settings helpers to api/settings
 - #93 Convert api module into a package and extract user helpers
 - #92 Restrict /registry, /settings, /users to prevent info leaks
 - #91 Add DataGridFieldManager to fix UID reference validation in DataGrid fields
