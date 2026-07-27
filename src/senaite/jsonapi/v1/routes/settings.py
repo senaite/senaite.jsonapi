@@ -27,7 +27,11 @@ from senaite.jsonapi.v1 import add_route
 @add_route("/settings/<string:key>", "senaite.jsonapi.v1.settings", methods=["GET"])
 def get(context, request, key=None):
     """Return settings by keyword. If key is None, return all settings.
+    Requires the "Manage portal" permission because the control-panel
+    settings can expose sensitive configuration.
     """
+    api.check_permission("Manage portal")
+
     settings = api.get_settings_by_keyword(key)
 
     # Prepare batch

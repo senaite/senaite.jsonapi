@@ -33,6 +33,16 @@ from senaite.jsonapi.interfaces import IUsersFilter
 from zope.component import getAdapters
 
 
+def _can_manage_users():
+    """Return True if the current user may list/inspect other users.
+
+    Uses the "Manage users" permission (granted to Manager by default)
+    so the check remains meaningful on sites that customize roles.
+    """
+    portal = api.get_portal()
+    return ploneapi.user.has_permission("Manage users", obj=portal)
+
+
 def get_user_info(user):
     """Get the user information
     """
@@ -84,13 +94,27 @@ def get_user_info(user):
 @add_route("/users", "senaite.jsonapi.v1.users", methods=["GET"])
 @add_route("/users/<string:username>", "senaite.jsonapi.v1.users", methods=["GET"])
 def get(context, request, username=None):
-    """Plone users route
+    """Users route.
+
+    Anonymous callers are silently restricted to /current (their own
+    anonymous view). Authenticated callers can query themselves and, if
+    they hold the "Manage users" permission (typically Manager),
+    enumerate other users. Without that permission, requests for other
+    userids or an unfiltered listing are collapsed to /current so the
+    endpoint cannot be used to enumerate accounts.
     """
     user_ids = []
 
-    # Don't allow anonymous users to query a user other than themselves
+    # Anonymous callers can only see the "current" (anonymous) view
     if api.is_anonymous():
         username = "current"
+
+    # Authenticated non-managers cannot enumerate users or view others
+    if not _can_manage_users():
+        current_id = api.get_current_user().getId()
+        if username is None or (username != "current"
+                                and username != current_id):
+            username = "current"
 
     # query all users if no username was given
     if username is None:
@@ -165,6 +189,15 @@ def login(context, request):
     __ac_password = request.get("__ac_password", None)
 
     logger.info("*** LOGIN %s ***" % (__ac_name or "<basic>"))
+
+    # Credentials submitted via GET land in access logs, Referer
+    # headers and browser history. Warn now, plan removal for 2.8.0.
+    if request.get("REQUEST_METHOD", "") == "GET" and (
+            __ac_name is not None or __ac_password is not None):
+        logger.warn(
+            "GET /login with credentials is deprecated and will be "
+            "removed in senaite.jsonapi 2.8.0. Use POST instead."
+        )
 
     # Form-based login path: log the user in via the cookie auth plugin.
     # Basic-auth requests (and other PAS-authenticated requests) skip this
