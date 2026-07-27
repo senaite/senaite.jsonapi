@@ -392,23 +392,40 @@ def is_creation_allowed(portal_type, container):
     return True
 
 
+def is_setup(obj):
+    """True if `obj` is one of the setup config singletons.
+
+    These are the AT `bika_setup` and the DX `senaite_setup` objects
+    that carry site-wide configuration (self verification, ID formatting,
+    ...). They live directly at the portal root.
+    """
+    setups = [bika_api.get_setup(), bika_api.get_senaite_setup()]
+    return any(obj == setup for setup in setups if setup is not None)
+
+
 def is_update_allowed(obj):
     """True if `obj` may be updated.
 
     Same denylist as `is_creation_allowed` (portal, bika_setup,
     senaite_setup), applied to the object's parent, plus an optional
     `IUpdate` adapter's opinion.
+
+    The setup config singletons themselves are an exception: they hold
+    site-wide settings and are meant to be updated, even though they sit
+    at the portal root (which the parent check below would otherwise
+    refuse). Only their children stay read-only.
     """
     if bika_api.is_portal(obj):
         return False
 
-    parent = bika_api.get_parent(obj)
-    if bika_api.is_portal(parent):
-        return False
-    if parent == bika_api.get_setup():
-        return False
-    if parent == bika_api.get_senaite_setup():
-        return False
+    if not is_setup(obj):
+        parent = bika_api.get_parent(obj)
+        if bika_api.is_portal(parent):
+            return False
+        if parent == bika_api.get_setup():
+            return False
+        if parent == bika_api.get_senaite_setup():
+            return False
 
     adapter = queryAdapter(obj, IUpdate)
     if adapter:
