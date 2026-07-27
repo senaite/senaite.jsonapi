@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #102 Support DX Duration (Timedelta) fields via a field manager
 - #101 Encode AT string field values to native str before validation
 - #100 Normalize UID references through the field manager, not the setter
 - #99 Report the reason when object creation fails
