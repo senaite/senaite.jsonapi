@@ -311,6 +311,35 @@ Create an Analysis Service
     >>> ecoli.getCategory()
     <AnalysisCategory at /plone/setup/analysiscategories/analysiscategory-1>
 
+Create with a JSON body
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Field values from a JSON body arrive as unicode. AT fields with strict
+type-checking validators (`isDecimal`, `isEmail`, ...) must still accept
+them (they expect a native `str`):
+
+    >>> def create_json(data):
+    ...     browser.post(
+    ...         "{}/create".format(api_url), json.dumps(data),
+    ...         "application/json")
+    ...     response = json.loads(browser.contents)
+    ...     items = response.get("items")
+    ...     assert len(items) == 1, browser.contents
+    ...     return api.get_object(items[0]["uid"])
+
+    >>> data = {"portal_type": "AnalysisService",
+    ...         "parent_path": api.get_path(setup.bika_analysisservices),
+    ...         "title": "Nitrate",
+    ...         "Keyword": "NO3",
+    ...         "Price": u"12.50",
+    ...         "Category": api.get_uid(category)}
+    >>> nitrate = create_json(data)
+    >>> nitrate.getKeyword()
+    'NO3'
+    >>> nitrate.getPrice()
+    '12.50'
+
+
 Creating a Sample
 ~~~~~~~~~~~~~~~~~
 
