@@ -664,14 +664,18 @@ class UIDReferenceFieldMixin(object):
             elif api.is_path(v):
                 refs.append(api.get_object_by_path(v))
 
-        # Handle non multi valued fields
+        # convert all references to UIDs
+        refs = [str(api.get_uid(ref)) for ref in refs if ref]
+
+        # Single valued fields expect a scalar value, not a list. Passing a
+        # list makes the field validator of e.g. an AT UIDReferenceField
+        # reject the value with "[...] is not supported", so unwrap it here
+        # (None clears the reference). Multi valued fields keep the list.
         if not self.multi_valued:
             if len(refs) > 1:
                 raise ValueError("Multiple values given for single valued "
                                  "field {}".format(repr(self.field)))
-
-        # convert all references to UIDs
-        refs = [str(api.get_uid(ref)) for ref in refs if ref]
+            refs = refs[0] if refs else None
 
         return self._set(instance, refs, **kw)
 
