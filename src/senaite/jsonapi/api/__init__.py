@@ -199,7 +199,7 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
         if not is_update_allowed(obj):
             fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
 
-        obj = update_object_with_data(obj, record)
+        obj = update_object_with_data(obj, record, partial=True)
         return make_items_for([obj], endpoint=endpoint)
 
     # no uid -> go through the record items
@@ -216,7 +216,7 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
             fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
 
         # update the object with the given record data
-        obj = update_object_with_data(obj, record)
+        obj = update_object_with_data(obj, record, partial=True)
         results.append(obj)
 
     if not results:
@@ -1427,13 +1427,16 @@ def create_analysisrequest(container, **data):
     return create_ar(container, request, data)
 
 
-def update_object_with_data(content, record):
+def update_object_with_data(content, record, partial=False):
     """Update the content with the record data
 
     :param content: A single folderish catalog brain or content object
     :type content: ATContentType/DexterityContentType/CatalogBrain
     :param record: The data to update
     :type record: dict
+    :param partial: When True (update route), only validate the submitted
+        fields. When False (creation), validate the whole object.
+    :type partial: bool
     :returns: The updated content object
     :rtype: object
     :raises:
@@ -1480,10 +1483,15 @@ def update_object_with_data(content, record):
 
             logger.debug("update_object_with_data::field %r updated", k)
 
-    # Validate the entire content object
-    invalid = api.validate(content)
-    if invalid:
-        fail(400, u.to_json(invalid))
+    # Validate the object. On a partial update the field managers already
+    # validated each submitted field on set, so a second whole-object
+    # validation only re-checks untouched fields, which can spuriously fail
+    # on a stored legacy value or a Dexterity behavior invariant. Skip it for
+    # partial updates; creation still validates the full object (see #66).
+    if not partial:
+        invalid = api.validate(content)
+        if invalid:
+            fail(400, u.to_json(invalid))
 
     # do a wf transition
     if record.get("transition", None):
