@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #108 Add introspection endpoints for types, schema and workflow
 - #107 Validate only the submitted fields on update
 - #106 Fix single-valued UID reference fields not settable through the JSON API
 - #94 Extract registry and settings helpers to api/settings
