@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #110 Fix /registry route failing on datetime registry values
 - #109 Add a partition operation endpoint
 - #94 Extract registry and settings helpers to api/settings
 - #93 Convert api module into a package and extract user helpers
