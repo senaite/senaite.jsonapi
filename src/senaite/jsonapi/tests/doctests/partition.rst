@@ -86,6 +86,29 @@ The new partition points back to the primary sample:
     True
 
 
+Detach, reattach and publish
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Only *creating* a partition needs a dedicated endpoint, because it takes
+parameters (which analyses, sample type, container). The rest of the
+partition lifecycle are plain workflow transitions, so they go through the
+standard update route with the `transition` key (see the UPDATE doctest for
+the mechanism):
+
+Detach a partition (it then behaves like a primary sample and carries the
+`IDetachedPartition` marker)::
+
+    POST update {"uid": "<partition uid>", "transition": "detach"}
+
+Reattach it to its original primary sample::
+
+    POST update {"uid": "<partition uid>", "transition": "reattach"}
+
+Publish a verified sample::
+
+    POST update {"uid": "<verified sample uid>", "transition": "publish"}
+
+
 Multiple partitions in one call
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
