@@ -137,6 +137,31 @@ filtered subset:
     True
 
 
+Non JSON serializable values are coerced
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some registry records hold `datetime` values, which the JSON encoder used
+by the route cannot serialize. Such values are coerced to ISO strings:
+
+    >>> from datetime import datetime
+    >>> from plone.registry import field
+    >>> from plone.registry.record import Record
+    >>> reg = ploneapi.portal.get_tool("portal_registry")
+    >>> reg.records["senaite.jsonapi.test_datetime"] = Record(
+    ...     field.Datetime(title=u"Test"),
+    ...     datetime(2014, 8, 14, 0, 0, 0, 3))
+    >>> transaction.commit()
+
+    >>> hits = api_settings.get_registry_records_by_keyword("test_datetime")
+    >>> hits["senaite.jsonapi.test_datetime"]
+    '2014-08-14T00:00:00.000003'
+
+So the whole record set is now JSON serializable:
+
+    >>> ignored = json.dumps(
+    ...     api_settings.get_registry_records_by_keyword(None))
+
+
 get_settings_by_keyword via the /settings route
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
