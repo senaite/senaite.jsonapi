@@ -26,13 +26,11 @@ import transaction
 from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
 from bika.lims import api
-from bika.lims.api import snapshot
 from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 from DateTime import DateTime
 from plone import api as ploneapi
 from plone.behavior.interfaces import IBehaviorAssignable
 from plone.jsonapi.core import router
-from Products.ATContentTypes.utils import DT2dt
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
 from senaite.core.api import dtime
@@ -45,7 +43,6 @@ from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
 from senaite.jsonapi.interfaces import ICreate
 from senaite.jsonapi.interfaces import IDataManager
-from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.interfaces import IInfo
 from senaite.jsonapi.interfaces import IUpdate
 from zope.component import getAdapters
@@ -297,289 +294,10 @@ def make_items_for(brains_or_objects, endpoint=None, complete=False):
     return map(extract_data, brains_or_objects)
 
 
-# -----------------------------------------------------------------------------
-#   Info Functions (JSON compatible data representation)
-# -----------------------------------------------------------------------------
-
-def get_info(brain_or_object, endpoint=None, complete=False):
-    """Extract the data from the catalog brain or object
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param endpoint: The named URL endpoint for the root of the items
-    :type endpoint: str/unicode
-    :param complete: Flag to wake up the object and fetch all data
-    :type complete: bool
-    :returns: Data mapping for the object/catalog brain
-    :rtype: dict
-    """
-
-    # also extract the brain data for objects
-    if not is_brain(brain_or_object):
-        brain_or_object = get_brain(brain_or_object)
-        if brain_or_object is None:
-            logger.warn("Couldn't find/fetch brain of {}".format(brain_or_object))
-            return {}
-        complete = True
-
-    # When querying uid catalog we have to be sure that we skip the objects
-    # used to relate two or more objects
-    if is_relationship_object(brain_or_object):
-        logger.warn("Skipping relationship object {}".format(repr(brain_or_object)))
-        return {}
-
-    # extract the data from the initial object with proper adapters
-    info = {}
-    for name, adapter in getAdapters((brain_or_object, ), IInfo):
-        info.update(adapter.to_dict())
-
-    # update with url info (always included)
-    url_info = get_url_info(brain_or_object, endpoint)
-    info.update(url_info)
-
-    # include the parent url info
-    parent = get_parent_info(brain_or_object)
-    info.update(parent)
-
-    # add the complete data of the object if requested
-    # -> requires to wake up the object if it is a catalog brain
-    if complete:
-        # ensure we have a full content object
-        obj = api.get_object(brain_or_object)
-
-        # updates the dict representation with info from custom adapters
-        for name, adapter in getAdapters((obj, ), IInfo):
-            info.update(adapter.to_dict())
-
-        # add the snapshot version of this content
-        info["version"] = snapshot.get_version(obj)
-
-        # update the data set with the workflow information
-        # -> only possible if `?complete=yes&workflow=yes`
-        if req.get_workflow(False):
-            info.update(get_workflow_info(obj))
-
-        # # add sharing data if the user requested it
-        # # -> only possible if `?complete=yes`
-        # if req.get_sharing(False):
-        #     sharing = get_sharing_info(obj)
-        #     info.update({"sharing": sharing})
-
-    return info
-
-
-def get_url_info(brain_or_object, endpoint=None):
-    """Generate url information for the content object/catalog brain
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param endpoint: The named URL endpoint for the root of the items
-    :type endpoint: str/unicode
-    :returns: URL information mapping
-    :rtype: dict
-    """
-
-    # If no endpoint was given, guess the endpoint by portal type
-    if endpoint is None:
-        endpoint = get_endpoint(brain_or_object)
-
-    uid = get_uid(brain_or_object)
-    portal_type = get_portal_type(brain_or_object)
-    resource = portal_type_to_resource(portal_type)
-
-    return {
-        "uid": uid,
-        "url": get_url(brain_or_object),
-        "api_url": url_for(endpoint, resource=resource, uid=uid),
-    }
-
-
-def get_parent_info(brain_or_object, endpoint=None):
-    """Generate url information for the parent object
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param endpoint: The named URL endpoint for the root of the items
-    :type endpoint: str/unicode
-    :returns: URL information mapping
-    :rtype: dict
-    """
-
-    # special case for the portal object
-    if is_root(brain_or_object):
-        return {}
-
-    # get the parent object
-    try:
-        parent = get_parent(brain_or_object)
-    except Unauthorized:
-        return {
-            "parent_id": "",
-            "parent_uid": "",
-            "parent_url": "",
-        }
-    portal_type = get_portal_type(parent)
-    resource = portal_type_to_resource(portal_type)
-
-    # fall back if no endpoint specified
-    if endpoint is None:
-        endpoint = get_endpoint(parent)
-
-    return {
-        "parent_id": get_id(parent),
-        "parent_uid": get_uid(parent),
-        "parent_url": url_for(endpoint, resource=resource, uid=get_uid(parent))
-    }
-
-
-def get_children_info(brain_or_object, complete=False):
-    """Generate data items of the contained contents
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param complete: Flag to wake up the object and fetch all data
-    :type complete: bool
-    :returns: info mapping of contained content items
-    :rtype: list
-    """
-
-    # fetch the contents (if folderish)
-    children = get_contents(brain_or_object)
-
-    def extract_data(brain_or_object):
-        return get_info(brain_or_object, complete=complete)
-    items = map(extract_data, children)
-
-    return {
-        "children_count": len(items),
-        "children": items
-    }
-
-
-def get_file_info(obj, fieldname, default=None):
-    """Extract file data from a file field
-
-    :param obj: Content object
-    :type obj: ATContentType/DexterityContentType
-    :param fieldname: Schema name of the field
-    :type fieldname: str/unicode
-    :returns: File data mapping
-    :rtype: dict
-    """
-
-    # extract the file field from the object if omitted
-    field = get_field(obj, fieldname)
-
-    # get the value with the fieldmanager
-    fm = IFieldManager(field)
-
-    # return None if we have no file data
-    if fm.get_size(obj) == 0:
-        return None
-
-    out = {
-        "content_type": fm.get_content_type(obj),
-        "filename": fm.get_filename(obj),
-        "download": fm.get_download_url(obj),
-    }
-
-    # only return file data only if requested (?filedata=yes)
-    if req.get_filedata(False):
-        data = fm.get_data(obj)
-        out["data"] = data.encode("base64")
-
-    return out
-
-
-def get_workflow_info(brain_or_object, endpoint=None):
-    """Generate workflow information of the assigned workflows
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param endpoint: The named URL endpoint for the root of the items
-    :type endpoint: str/unicode
-    :returns: Workflows info
-    :rtype: dict
-    """
-
-    # ensure we have a full content object
-    obj = get_object(brain_or_object)
-
-    # get the portal workflow tool
-    wf_tool = get_tool("portal_workflow")
-
-    # the assigned workflows of this object
-    workflows = wf_tool.getWorkflowsFor(obj)
-
-    # no worfkflows assigned -> return
-    if not workflows:
-        return []
-
-    def to_transition_info(transition):
-        """ return the transition information
-        """
-        return {
-            "title": transition["title"],
-            "value": transition["id"],
-            "display": transition["description"],
-            "url": transition["url"],
-        }
-
-    def to_review_history_info(review_history):
-        """ return the transition information
-        """
-        converted = DT2dt(review_history.get('time')).\
-            strftime("%Y-%m-%d %H:%M:%S")
-        review_history['time'] = converted
-        return review_history
-
-    out = []
-
-    for workflow in workflows:
-
-        # get the status info of the current state (dictionary)
-        info = wf_tool.getStatusOf(workflow.getId(), obj)
-        if info is None:
-            continue
-
-        # get the current review_status
-        review_state = info.get("review_state", None)
-        inactive_state = info.get("inactive_state", None)
-        cancellation_state = info.get("cancellation_state", None)
-        worksheetanalysis_review_state = info.get("worksheetanalysis_review_state", None)
-
-        state = review_state or \
-            inactive_state or \
-            cancellation_state or \
-            worksheetanalysis_review_state
-
-        if state is None:
-            logger.warn("No state variable found for {} -> {}".format(
-                repr(obj), info))
-            continue
-
-        # get the wf status object
-        status_info = workflow.states[state]
-
-        # get the title of the current status
-        status = status_info.title
-
-        # get the transition informations
-        transitions = map(to_transition_info, wf_tool.getTransitionsFor(obj))
-
-        # get the review history
-        rh = map(to_review_history_info,
-                 workflow.getInfoFor(obj, 'review_history', ''))
-
-        out.append({
-            "workflow": workflow.getId(),
-            "status": status,
-            "review_state": state,
-            "transitions": transitions,
-            "review_history": rh,
-        })
-
-    return {"workflow_info": out}
+# Serialization helpers (get_info, get_url_info, get_parent_info,
+# get_children_info, get_file_info, get_workflow_info) live in
+# senaite.jsonapi.api.serialization and are re-exported at the bottom
+# of this module.
 
 
 # -----------------------------------------------------------------------------
@@ -1582,3 +1300,9 @@ from senaite.jsonapi.api.settings import CONTROLPANEL_INTERFACE_MAPPING  # noqa:
 from senaite.jsonapi.api.settings import get_registry_records_by_keyword  # noqa: E402,F401
 from senaite.jsonapi.api.settings import get_settings_by_keyword  # noqa: E402,F401
 from senaite.jsonapi.api.settings import get_settings_from_interface  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_url_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_parent_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_children_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_file_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_workflow_info  # noqa: E402,F401
