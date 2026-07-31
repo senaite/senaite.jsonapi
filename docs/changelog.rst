@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #96 Add typed exception subclasses for the JSON API error envelope
 - #95 Extract serialization helpers to api/serialization
 - #94 Extract registry and settings helpers to api/settings
 - #93 Convert api module into a package and extract user helpers

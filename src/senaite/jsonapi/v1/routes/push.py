@@ -20,6 +20,10 @@
 
 from senaite.jsonapi import api
 from senaite.jsonapi import request as req
+from senaite.jsonapi.exceptions import APIError
+from senaite.jsonapi.exceptions import BadRequestError
+from senaite.jsonapi.exceptions import NotFoundError
+from senaite.jsonapi.exceptions import UnauthorizedError
 from senaite.jsonapi.interfaces import IPushConsumer
 from senaite.jsonapi.v1 import add_route
 from zope.component import queryAdapter
@@ -33,15 +37,15 @@ def push(context, request):
 
     # Cannot push being an anonymous user!
     if api.is_anonymous():
-        api.fail(401, "Anonymous user")
+        raise UnauthorizedError("Anonymous user")
 
     # extract the data from the request
     records = req.get_request_data()
     if not records:
-        api.fail(500, "No data sent")
+        raise BadRequestError("No data sent")
 
     if len(records) > 1:
-        api.fail(500, "Push with multiple entries is not supported")
+        raise BadRequestError("Push with multiple entries is not supported")
 
     # Get the record containing the data for this push
     record = records[0]
@@ -49,16 +53,20 @@ def push(context, request):
     # Name of the adapter that will be able to handle this POST data
     name = record.get("consumer")
     if not name:
-        api.fail(500, "No consumer name provided")
+        raise BadRequestError("No consumer name provided")
 
     consumer = queryAdapter(record, IPushConsumer, name=name)
     if consumer is None:
-        api.fail(500, "No consumer registered for name={}".format(name))
+        raise NotFoundError("No consumer registered for name={}".format(name))
 
     try:
         success = consumer.process()
     except Exception as e:
-        api.fail(500, str(e))
+        # Re-raise typed API errors so the correct status propagates;
+        # anything else is a genuine internal error.
+        if isinstance(e, APIError):
+            raise
+        raise APIError(str(e), status=500)
 
     return {
         "url": api.url_for("senaite.jsonapi.v1.push"),

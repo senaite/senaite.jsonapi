@@ -250,8 +250,9 @@ def get_request_data():
     request = get_request()
     data = request.get("BODY", "{}")
     if not is_json_deserializable(data):
-        from senaite.jsonapi.exceptions import APIError
-        raise APIError(400, "Request Data is not JSON deserializable – Check JSON Syntax!")
+        from senaite.jsonapi.exceptions import BadRequestError
+        raise BadRequestError(
+            "Request Data is not JSON deserializable – Check JSON Syntax!")
     out_data = json.loads(data)
 
     # When using requests.post, the data is stored as a dict in request.form
