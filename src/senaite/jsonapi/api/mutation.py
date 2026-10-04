@@ -37,6 +37,7 @@ import copy
 import transaction
 from AccessControl import Unauthorized
 from bika.lims import api as bika_api
+from senaite.core.interfaces import ILaboratory
 from bika.lims.utils.analysisrequest import (
     create_analysisrequest as _create_ar,
 )
@@ -404,9 +405,18 @@ def is_setup(obj):
     These are the AT `bika_setup` and the DX `senaite_setup` objects
     that carry site-wide configuration (self verification, ID formatting,
     ...). They live directly at the portal root.
+
+    The Laboratory counts as one of them. It is configuration, not a
+    reference catalog, but its migration to Dexterity moved it under the
+    DX setup folder, where the parent check below treats it like the
+    catalogs and refuses every update. The effect is a laboratory that
+    can never be filled in through the API, which shows up on every
+    published report as an empty letterhead.
     """
     setups = [bika_api.get_setup(), bika_api.get_senaite_setup()]
-    return any(obj == setup for setup in setups if setup is not None)
+    if any(obj == setup for setup in setups if setup is not None):
+        return True
+    return ILaboratory.providedBy(obj)
 
 
 def is_update_allowed(obj):
