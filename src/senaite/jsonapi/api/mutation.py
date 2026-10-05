@@ -87,6 +87,7 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
     records = req.get_request_data()
 
     results = []
+    errors = []
     for record in records:
         if portal_type is None:
             portal_type = record.pop("portal_type", None)
@@ -111,9 +112,17 @@ def create_items(portal_type=None, uid=None, endpoint=None, **kw):
         except Exception as e:
             sp.rollback()
             logger.exception("Error while creating object: %s", e)
+            errors.append(str(e))
 
     if not results:
-        raise BadRequestError("No Objects could be created")
+        # Surface the underlying reason(s) -- e.g. missing required
+        # fields reported by the object's validation ({"field": "required
+        # field"}) -- instead of a generic failure, so the caller sees
+        # exactly what to fix.
+        detail = "; ".join(filter(None, errors))
+        raise BadRequestError(
+            "No objects could be created: {}".format(detail)
+            if detail else "No objects could be created")
 
     return make_items_for(results, endpoint=endpoint)
 

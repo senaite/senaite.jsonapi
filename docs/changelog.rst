@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #99 Report the reason when object creation fails
 - #98 Accept REST verbs PUT/PATCH/DELETE on the action route
 - #97 Extract create/update/delete helpers to api/mutation
 - #96 Add typed exception subclasses for the JSON API error envelope
