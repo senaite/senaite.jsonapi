@@ -258,6 +258,12 @@
       factory=".fieldmanagers.DatetimeFieldManager"
       />
 
+  <!-- Adapter for DX Duration (Timedelta) Fields -->
+  <adapter
+      for="senaite.core.schema.interfaces.IDurationField"
+      factory=".fieldmanagers.DurationFieldManager"
+      />
+
   <!-- Adapter for Named Image Fields -->
   <adapter
       for="plone.namedfile.interfaces.INamedImageField"

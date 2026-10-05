@@ -339,6 +339,17 @@ them (they expect a native `str`):
     >>> nitrate.getPrice()
     '12.50'
 
+A DX Duration field (`zope.schema.Timedelta`) cannot be carried by JSON
+directly; it accepts a `{days, hours, minutes, seconds}` mapping:
+
+    >>> data = {"portal_type": "SamplePoint",
+    ...         "parent_path": api.get_path(portal.setup.samplepoints),
+    ...         "title": "Well 1",
+    ...         "sampling_frequency": {"days": 7}}
+    >>> sample_point = create_json(data)
+    >>> sample_point.sampling_frequency
+    datetime.timedelta(7)
+
 
 Creating a Sample
 ~~~~~~~~~~~~~~~~~

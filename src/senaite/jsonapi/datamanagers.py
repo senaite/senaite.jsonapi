@@ -31,7 +31,14 @@ from senaite.jsonapi import logger
 from senaite.jsonapi import api
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi.fieldmanagers import DurationFieldManager
 from senaite.jsonapi.fieldmanagers import UIDReferenceFieldMixin
+
+# Field managers that normalize the incoming value (resolve UIDs, coerce
+# a duration mapping to a timedelta, ...). For these the raw set<Name>
+# mutator would store the value unconverted, so the data manager must go
+# through the field manager instead of the setter.
+NORMALIZING_FIELD_MANAGERS = (UIDReferenceFieldMixin, DurationFieldManager)
 
 
 class BaseDataManager(object):
@@ -231,14 +238,15 @@ class DexterityDataManager(BaseDataManager):
 
         field = api.get_field(self.context, name)
 
-        # UID reference fields must be set via their field manager, which
-        # normalizes the value (resolves objects/paths and coerces UIDs
-        # to native str). A raw setter would store the value as given --
-        # e.g. a unicode UID from a JSON payload -- which then fails the
-        # field's ASCIILine value_type validation with WrongContainedType.
+        # Fields whose manager normalizes the value must be set via that
+        # manager (e.g. UID references coerced to native str, or a
+        # duration mapping coerced to a timedelta). A raw setter would
+        # store the value as given -- a unicode UID that fails the
+        # ASCIILine value_type, or a dict that a Timedelta field rejects
+        # as "wrong type".
         if field is not None:
             fieldmanager = IFieldManager(field)
-            if isinstance(fieldmanager, UIDReferenceFieldMixin):
+            if isinstance(fieldmanager, NORMALIZING_FIELD_MANAGERS):
                 return fieldmanager.set(self.context, value, **kw)
 
         # Otherwise prefer a content-type setter: it may carry side
