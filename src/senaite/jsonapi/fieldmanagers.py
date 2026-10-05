@@ -21,7 +21,9 @@
 import mimetypes
 
 import dateutil
+import six
 from AccessControl import Unauthorized
+from bika.lims import api as bika_api
 from DateTime import DateTime
 from Products.Archetypes.utils import mapply
 from senaite.core.schema.uidreferencefield import UIDReferenceField
@@ -303,6 +305,13 @@ class ATFieldManager(object):
         if not self.field.writeable(instance):
             raise Unauthorized("Field {} is read only."
                                .format(self.name))
+
+        # AT validators (isEmail, isDecimal, ...) expect a native str, but
+        # JSON values arrive as unicode and fail with "expected 'string'".
+        # Encode text values to utf-8 str; leave dicts/lists/other types
+        # untouched (records/datagrid/reference fields).
+        if isinstance(value, six.text_type):
+            value = bika_api.to_utf8(value)
 
         # validate the value
         error = self.field.validate(value, instance)
