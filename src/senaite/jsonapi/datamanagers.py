@@ -31,6 +31,7 @@ from senaite.jsonapi import logger
 from senaite.jsonapi import api
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi.fieldmanagers import UIDReferenceFieldMixin
 
 
 class BaseDataManager(object):
@@ -225,22 +226,31 @@ class DexterityDataManager(BaseDataManager):
         if not self.can_write():
             raise Unauthorized("You are not allowed to modify this content")
 
-        # prioritize setters over fields
         setter = "".join(pt[:1].upper() + pt[1:] for pt in name.split("_"))
         setter = getattr(self.context, "set%s" % setter, None)
+
+        field = api.get_field(self.context, name)
+
+        # UID reference fields must be set via their field manager, which
+        # normalizes the value (resolves objects/paths and coerces UIDs
+        # to native str). A raw setter would store the value as given --
+        # e.g. a unicode UID from a JSON payload -- which then fails the
+        # field's ASCIILine value_type validation with WrongContainedType.
+        if field is not None:
+            fieldmanager = IFieldManager(field)
+            if isinstance(fieldmanager, UIDReferenceFieldMixin):
+                return fieldmanager.set(self.context, value, **kw)
+
+        # Otherwise prefer a content-type setter: it may carry side
+        # effects and also covers BBB properties without a schema field
+        # (e.g. Department.DepartmentID).
         if setter:
             return setter(value)
 
-        # fetch the field by name
-        field = api.get_field(self.context, name)
-
-        # bail out if we have no field
-        if not field:
+        # No setter: fall back to the field manager.
+        if field is None:
             return False
-
-        # call the field adapter and set the value
-        fieldmanager = IFieldManager(field)
-        return fieldmanager.set(self.context, value, **kw)
+        return IFieldManager(field).set(self.context, value, **kw)
 
     def json_data(self, name):
         """Get a JSON compatible structure for the named attribute
