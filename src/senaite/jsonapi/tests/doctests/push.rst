@@ -76,4 +76,4 @@ Non-registered adapter
     >>> post("push", {"consumer": "zummy"})
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 500: Internal Server Error
+    HTTPError: HTTP Error 404: Not Found

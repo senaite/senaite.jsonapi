@@ -21,7 +21,10 @@
 import mimetypes
 
 import dateutil
+import six
 from AccessControl import Unauthorized
+from bika.lims import api as bika_api
+from datetime import timedelta
 from DateTime import DateTime
 from Products.Archetypes.utils import mapply
 from senaite.core.schema.uidreferencefield import UIDReferenceField
@@ -145,6 +148,58 @@ class DatetimeFieldManager(ZopeSchemaFieldManager):
         if callable(value):
             value = value()
         return api.to_iso_date(value, default=default)
+
+
+class DurationFieldManager(ZopeSchemaFieldManager):
+    """Adapter to get/set DX DurationField (zope.schema Timedelta) values.
+
+    The stored value is a `datetime.timedelta`, which JSON cannot carry.
+    Accept a `{"days", "hours", "minutes", "seconds"}` mapping (or a
+    number of minutes, or a timedelta) on set, and serialize back to that
+    mapping.
+    """
+    interface.implements(IFieldManager)
+
+    UNITS = ("weeks", "days", "hours", "minutes", "seconds")
+
+    def set(self, instance, value, **kw):
+        value = self.to_timedelta(value)
+        self.field.validate(value)
+        return self.field.set(instance, value)
+
+    def json_data(self, instance, default=None):
+        value = self.get(instance)
+        if not isinstance(value, timedelta):
+            return default
+        return self.to_mapping(value)
+
+    @classmethod
+    def to_timedelta(cls, value):
+        if value is None or isinstance(value, timedelta):
+            return value
+        if isinstance(value, dict):
+            kwargs = {}
+            for unit in cls.UNITS:
+                num = value.get(unit)
+                if num:
+                    kwargs[unit] = float(num)
+            return timedelta(**kwargs)
+        if isinstance(value, (int, float)):
+            return timedelta(minutes=value)
+        return value
+
+    @staticmethod
+    def to_mapping(value):
+        total = int(value.total_seconds())
+        days, rem = divmod(total, 86400)
+        hours, rem = divmod(rem, 3600)
+        minutes, seconds = divmod(rem, 60)
+        return {
+            "days": days,
+            "hours": hours,
+            "minutes": minutes,
+            "seconds": seconds,
+        }
 
 
 class RichTextFieldManager(ZopeSchemaFieldManager):
@@ -303,6 +358,13 @@ class ATFieldManager(object):
         if not self.field.writeable(instance):
             raise Unauthorized("Field {} is read only."
                                .format(self.name))
+
+        # AT validators (isEmail, isDecimal, ...) expect a native str, but
+        # JSON values arrive as unicode and fail with "expected 'string'".
+        # Encode text values to utf-8 str; leave dicts/lists/other types
+        # untouched (records/datagrid/reference fields).
+        if isinstance(value, six.text_type):
+            value = bika_api.to_utf8(value)
 
         # validate the value
         error = self.field.validate(value, instance)
@@ -616,10 +678,10 @@ class ARAnalysesFieldManager(ATFieldManager):
             uid = None
             if isinstance(item, dict):
                 uid = item.get("uid")
-            if api.is_uid(value):
+            elif api.is_uid(item):
                 uid = item
             if uid is None:
-                logger.warn("Could extract UID of value")
+                logger.warn("Could not extract UID from value %r", item)
                 continue
             uids.append(uid)
 

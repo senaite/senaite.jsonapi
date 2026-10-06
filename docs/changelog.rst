@@ -16,6 +16,18 @@ Changelog
    and the per-user JWT signing secrets.
 
 - #106 Fix single-valued UID reference fields not settable through the JSON API
+- #112 Allow updating the Laboratory through the API
+- #105 Assemble worksheets (layout + QC analyses) through the API
+- #104 Fix Analyses field ignoring a plain list of analysis service UIDs
+- #103 Allow updating the setup configuration objects
+- #102 Support DX Duration (Timedelta) fields via a field manager
+- #101 Encode AT string field values to native str before validation
+- #100 Normalize UID references through the field manager, not the setter
+- #99 Report the reason when object creation fails
+- #98 Accept REST verbs PUT/PATCH/DELETE on the action route
+- #97 Extract create/update/delete helpers to api/mutation
+- #96 Add typed exception subclasses for the JSON API error envelope
+- #95 Extract serialization helpers to api/serialization
 - #94 Extract registry and settings helpers to api/settings
 - #93 Convert api module into a package and extract user helpers
 - #92 Restrict /registry, /settings, /users to prevent info leaks

@@ -311,6 +311,46 @@ Create an Analysis Service
     >>> ecoli.getCategory()
     <AnalysisCategory at /plone/setup/analysiscategories/analysiscategory-1>
 
+Create with a JSON body
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Field values from a JSON body arrive as unicode. AT fields with strict
+type-checking validators (`isDecimal`, `isEmail`, ...) must still accept
+them (they expect a native `str`):
+
+    >>> def create_json(data):
+    ...     browser.post(
+    ...         "{}/create".format(api_url), json.dumps(data),
+    ...         "application/json")
+    ...     response = json.loads(browser.contents)
+    ...     items = response.get("items")
+    ...     assert len(items) == 1, browser.contents
+    ...     return api.get_object(items[0]["uid"])
+
+    >>> data = {"portal_type": "AnalysisService",
+    ...         "parent_path": api.get_path(setup.bika_analysisservices),
+    ...         "title": "Nitrate",
+    ...         "Keyword": "NO3",
+    ...         "Price": u"12.50",
+    ...         "Category": api.get_uid(category)}
+    >>> nitrate = create_json(data)
+    >>> nitrate.getKeyword()
+    'NO3'
+    >>> nitrate.getPrice()
+    '12.50'
+
+A DX Duration field (`zope.schema.Timedelta`) cannot be carried by JSON
+directly; it accepts a `{days, hours, minutes, seconds}` mapping:
+
+    >>> data = {"portal_type": "SamplePoint",
+    ...         "parent_path": api.get_path(portal.setup.samplepoints),
+    ...         "title": "Well 1",
+    ...         "sampling_frequency": {"days": 7}}
+    >>> sample_point = create_json(data)
+    >>> sample_point.sampling_frequency
+    datetime.timedelta(7)
+
+
 Creating a Sample
 ~~~~~~~~~~~~~~~~~
 
@@ -344,7 +384,7 @@ instead of the plone's default creation.
 Creation restrictions
 ~~~~~~~~~~~~~~~~~~~~~
 
-We get a 401 error if we try to create an object inside portal root:
+We get a 403 error if we try to create an object inside portal root:
 
     >>> data = {"title": "My clients folder",
     ...         "portal_type": "ClientsFolder",
@@ -352,9 +392,9 @@ We get a 401 error if we try to create an object inside portal root:
     >>> post("create", data)
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    HTTPError: HTTP Error 403: Forbidden
 
-We get a 401 error if we try to create an object inside setup folder:
+We get a 403 error if we try to create an object inside setup folder:
 
     >>> data = {"title": "My Analysis Categories folder",
     ...         "portal_type": "AnalysisCategories",
@@ -362,9 +402,9 @@ We get a 401 error if we try to create an object inside setup folder:
     >>> post("create", data)
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    HTTPError: HTTP Error 403: Forbidden
 
-We get a 401 error when we try to create an object from a type that is not
+We get a 403 error when we try to create an object from a type that is not
 allowed by the container:
 
     >>> data = {"title": "My Method",
@@ -373,4 +413,4 @@ allowed by the container:
     >>> post("create", data)
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    HTTPError: HTTP Error 403: Forbidden
