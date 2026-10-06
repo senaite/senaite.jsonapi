@@ -141,6 +141,19 @@
       factory=".datamanagers.DexterityDataManager"
       />
 
+  <!-- UPDATE HANDLERS
+       Custom create/update handling for types that cannot be assembled
+       through plain field setting.
+  -->
+
+  <!-- Assemble Worksheets through their add methods (builds the layout
+       and supports QC reference/duplicate analyses) -->
+  <adapter
+      for="senaite.core.interfaces.IWorksheet"
+      provides=".interfaces.IUpdate"
+      factory=".update.WorksheetUpdate"
+      />
+
 
   <!-- AT FIELD MANAGERS
        Field level interface to get and set values and get a JSON compatible
