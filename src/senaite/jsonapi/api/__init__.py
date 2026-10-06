@@ -18,21 +18,15 @@
 # Copyright 2017-2025 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-import copy
 import datetime
 import json
 
-import transaction
-from AccessControl import Unauthorized
 from Acquisition import ImplicitAcquisitionWrapper
 from bika.lims import api
-from bika.lims.api import snapshot
-from bika.lims.utils.analysisrequest import create_analysisrequest as create_ar
 from DateTime import DateTime
 from plone import api as ploneapi
 from plone.behavior.interfaces import IBehaviorAssignable
 from plone.jsonapi.core import router
-from Products.ATContentTypes.utils import DT2dt
 from Products.CMFPlone.PloneBatch import Batch
 from Products.ZCatalog.Lazy import LazyMap
 from senaite.core.api import dtime
@@ -43,15 +37,8 @@ from senaite.jsonapi.exceptions import APIError
 from senaite.jsonapi.interfaces import IBatch
 from senaite.jsonapi.interfaces import ICatalog
 from senaite.jsonapi.interfaces import ICatalogQuery
-from senaite.jsonapi.interfaces import ICreate
 from senaite.jsonapi.interfaces import IDataManager
-from senaite.jsonapi.interfaces import IFieldManager
-from senaite.jsonapi.interfaces import IInfo
-from senaite.jsonapi.interfaces import IUpdate
-from zope.component import getAdapters
 from zope.component import getMultiAdapter
-from zope.component import queryAdapter
-from zope.deprecation import deprecate
 from zope.schema import getFields
 
 _marker = object()
@@ -106,164 +93,9 @@ def get_batched(portal_type=None, uid=None, endpoint=None, **kw):
                      complete=complete)
 
 
-# CREATE
-def create_items(portal_type=None, uid=None, endpoint=None, **kw):
-    """ create items
-
-    1. If the uid is given, get the object and create the content in there
-       (assumed that it is folderish)
-    2. If the uid is 0, the target folder is assumed the portal.
-    3. If there is no uid given, the payload is checked for either a key
-        - `parent_uid`  specifies the *uid* of the target folder
-        - `parent_path` specifies the *physical path* of the target folder
-    """
-    # disable CSRF
-    req.disable_csrf_protection()
-
-    # destination where to create the content
-    container = uid and get_object_by_uid(uid) or None
-
-    # extract the data from the request
-    records = req.get_request_data()
-
-    results = []
-    for record in records:
-
-        # get the portal_type
-        if portal_type is None:
-            # try to fetch the portal type out of the request data
-            portal_type = record.pop("portal_type", None)
-
-        if container is None:
-            # find the container for content creation
-            container = find_target_container(record)
-
-        # Check if we have a container and a portal_type
-        if not all([container, portal_type]):
-            fail(400, "Please provide a container path/uid and portal_type")
-
-        # check if it is allowed to create the portal_type
-        if not is_creation_allowed(portal_type, container):
-            fail(401, "Creation of '{}' in '{}' is not allowed".format(
-                portal_type, api.get_path(container)))
-
-        # create the object and pass in the record data
-        sp = transaction.savepoint()
-        try:
-            obj = create_object(container, portal_type, **record)
-            results.append(obj)
-        except Exception as e:
-            # rollback the subtransaction if an error occurred
-            # => this ensures that the new generated ID is also rolled back
-            sp.rollback()
-            logger.exception("Error while creating object: %s", e)
-
-    if not results:
-        fail(400, "No Objects could be created")
-
-    return make_items_for(results, endpoint=endpoint)
-
-
-# PATCH (alias for update_items)
-def patch_items(portal_type=None, uid=None, endpoint=None, **kw):
-    return update_items(portal_type=portal_type, uid=uid, endpoint=endpoint, **kw)
-
-
-# PUT (alias for update_items)
-def put_items(portal_type=None, uid=None, endpoint=None, **kw):
-    return update_items(portal_type=portal_type, uid=uid, endpoint=endpoint, **kw)
-
-
-# UPDATE
-def update_items(portal_type=None, uid=None, endpoint=None, **kw):
-    """ update items
-
-    1. If the uid is given, the user wants to update the object with the data
-       given in request body
-    2. If no uid is given, the user wants to update a bunch of objects.
-       -> each record contains either an UID, path or parent_path + id
-    """
-
-    # disable CSRF
-    req.disable_csrf_protection()
-
-    # the data to update
-    records = req.get_request_data()
-
-    # we have an uid -> try to get an object for it
-    obj = get_object_by_uid(uid)
-    if obj:
-        record = records[0]  # ignore other records if we got an uid
-
-        # Can this object be updated?
-        if not is_update_allowed(obj):
-            fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
-
-        obj = update_object_with_data(obj, record)
-        return make_items_for([obj], endpoint=endpoint)
-
-    # no uid -> go through the record items
-    results = []
-    for record in records:
-        obj = get_object_by_record(record)
-
-        # no object found for this record
-        if obj is None:
-            continue
-
-        # Can this object be updated?
-        if not is_update_allowed(obj):
-            fail(401, "Update of {} is not allowed".format(api.get_path(obj)))
-
-        # update the object with the given record data
-        obj = update_object_with_data(obj, record)
-        results.append(obj)
-
-    if not results:
-        fail(400, "No Objects could be updated")
-
-    return make_items_for(results, endpoint=endpoint)
-
-
-# DELETE
-def delete_items(portal_type=None, uid=None, endpoint=None, **kw):
-    """ delete items
-
-    1. If the uid is given, we can ignore the request body and delete the
-       object with the given uid (if the uid was valid).
-    2. If no uid is given, the user wants to delete more than one item.
-       => go through each item and extract the uid. Delete it afterwards.
-       // we should do this kind of transaction base. So if we can not get an
-       // object for an uid, no item will be deleted.
-    3. we could check if the portal_type matches, just to be sure the user
-       wants to delete the right content.
-    """
-
-    # disable CSRF
-    req.disable_csrf_protection()
-
-    # try to find the requested objects
-    objects = find_objects(uid=uid)
-
-    # We don't want to delete the portal object
-    if filter(lambda o: is_root(o), objects):
-        fail(400, "Can not delete the portal object")
-
-    results = []
-    for obj in objects:
-        # We deactivate only!
-        deactivate_object(obj)
-
-        # Extract the data with proper adapters
-        info = {}
-        for name, adapter in getAdapters((obj,), IInfo):
-            info.update(adapter.to_dict())
-        results.append(info)
-
-    if not results:
-        fail(404, "No Objects could be found")
-
-    return results
+# Route orchestrators (create_items, patch_items, put_items,
+# update_items, delete_items) live in senaite.jsonapi.api.mutation and
+# are re-exported at the bottom of this module.
 
 
 def make_items_for(brains_or_objects, endpoint=None, complete=False):
@@ -297,289 +129,10 @@ def make_items_for(brains_or_objects, endpoint=None, complete=False):
     return map(extract_data, brains_or_objects)
 
 
-# -----------------------------------------------------------------------------
-#   Info Functions (JSON compatible data representation)
-# -----------------------------------------------------------------------------
-
-def get_info(brain_or_object, endpoint=None, complete=False):
-    """Extract the data from the catalog brain or object
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param endpoint: The named URL endpoint for the root of the items
-    :type endpoint: str/unicode
-    :param complete: Flag to wake up the object and fetch all data
-    :type complete: bool
-    :returns: Data mapping for the object/catalog brain
-    :rtype: dict
-    """
-
-    # also extract the brain data for objects
-    if not is_brain(brain_or_object):
-        brain_or_object = get_brain(brain_or_object)
-        if brain_or_object is None:
-            logger.warn("Couldn't find/fetch brain of {}".format(brain_or_object))
-            return {}
-        complete = True
-
-    # When querying uid catalog we have to be sure that we skip the objects
-    # used to relate two or more objects
-    if is_relationship_object(brain_or_object):
-        logger.warn("Skipping relationship object {}".format(repr(brain_or_object)))
-        return {}
-
-    # extract the data from the initial object with proper adapters
-    info = {}
-    for name, adapter in getAdapters((brain_or_object, ), IInfo):
-        info.update(adapter.to_dict())
-
-    # update with url info (always included)
-    url_info = get_url_info(brain_or_object, endpoint)
-    info.update(url_info)
-
-    # include the parent url info
-    parent = get_parent_info(brain_or_object)
-    info.update(parent)
-
-    # add the complete data of the object if requested
-    # -> requires to wake up the object if it is a catalog brain
-    if complete:
-        # ensure we have a full content object
-        obj = api.get_object(brain_or_object)
-
-        # updates the dict representation with info from custom adapters
-        for name, adapter in getAdapters((obj, ), IInfo):
-            info.update(adapter.to_dict())
-
-        # add the snapshot version of this content
-        info["version"] = snapshot.get_version(obj)
-
-        # update the data set with the workflow information
-        # -> only possible if `?complete=yes&workflow=yes`
-        if req.get_workflow(False):
-            info.update(get_workflow_info(obj))
-
-        # # add sharing data if the user requested it
-        # # -> only possible if `?complete=yes`
-        # if req.get_sharing(False):
-        #     sharing = get_sharing_info(obj)
-        #     info.update({"sharing": sharing})
-
-    return info
-
-
-def get_url_info(brain_or_object, endpoint=None):
-    """Generate url information for the content object/catalog brain
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param endpoint: The named URL endpoint for the root of the items
-    :type endpoint: str/unicode
-    :returns: URL information mapping
-    :rtype: dict
-    """
-
-    # If no endpoint was given, guess the endpoint by portal type
-    if endpoint is None:
-        endpoint = get_endpoint(brain_or_object)
-
-    uid = get_uid(brain_or_object)
-    portal_type = get_portal_type(brain_or_object)
-    resource = portal_type_to_resource(portal_type)
-
-    return {
-        "uid": uid,
-        "url": get_url(brain_or_object),
-        "api_url": url_for(endpoint, resource=resource, uid=uid),
-    }
-
-
-def get_parent_info(brain_or_object, endpoint=None):
-    """Generate url information for the parent object
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param endpoint: The named URL endpoint for the root of the items
-    :type endpoint: str/unicode
-    :returns: URL information mapping
-    :rtype: dict
-    """
-
-    # special case for the portal object
-    if is_root(brain_or_object):
-        return {}
-
-    # get the parent object
-    try:
-        parent = get_parent(brain_or_object)
-    except Unauthorized:
-        return {
-            "parent_id": "",
-            "parent_uid": "",
-            "parent_url": "",
-        }
-    portal_type = get_portal_type(parent)
-    resource = portal_type_to_resource(portal_type)
-
-    # fall back if no endpoint specified
-    if endpoint is None:
-        endpoint = get_endpoint(parent)
-
-    return {
-        "parent_id": get_id(parent),
-        "parent_uid": get_uid(parent),
-        "parent_url": url_for(endpoint, resource=resource, uid=get_uid(parent))
-    }
-
-
-def get_children_info(brain_or_object, complete=False):
-    """Generate data items of the contained contents
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param complete: Flag to wake up the object and fetch all data
-    :type complete: bool
-    :returns: info mapping of contained content items
-    :rtype: list
-    """
-
-    # fetch the contents (if folderish)
-    children = get_contents(brain_or_object)
-
-    def extract_data(brain_or_object):
-        return get_info(brain_or_object, complete=complete)
-    items = map(extract_data, children)
-
-    return {
-        "children_count": len(items),
-        "children": items
-    }
-
-
-def get_file_info(obj, fieldname, default=None):
-    """Extract file data from a file field
-
-    :param obj: Content object
-    :type obj: ATContentType/DexterityContentType
-    :param fieldname: Schema name of the field
-    :type fieldname: str/unicode
-    :returns: File data mapping
-    :rtype: dict
-    """
-
-    # extract the file field from the object if omitted
-    field = get_field(obj, fieldname)
-
-    # get the value with the fieldmanager
-    fm = IFieldManager(field)
-
-    # return None if we have no file data
-    if fm.get_size(obj) == 0:
-        return None
-
-    out = {
-        "content_type": fm.get_content_type(obj),
-        "filename": fm.get_filename(obj),
-        "download": fm.get_download_url(obj),
-    }
-
-    # only return file data only if requested (?filedata=yes)
-    if req.get_filedata(False):
-        data = fm.get_data(obj)
-        out["data"] = data.encode("base64")
-
-    return out
-
-
-def get_workflow_info(brain_or_object, endpoint=None):
-    """Generate workflow information of the assigned workflows
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param endpoint: The named URL endpoint for the root of the items
-    :type endpoint: str/unicode
-    :returns: Workflows info
-    :rtype: dict
-    """
-
-    # ensure we have a full content object
-    obj = get_object(brain_or_object)
-
-    # get the portal workflow tool
-    wf_tool = get_tool("portal_workflow")
-
-    # the assigned workflows of this object
-    workflows = wf_tool.getWorkflowsFor(obj)
-
-    # no worfkflows assigned -> return
-    if not workflows:
-        return []
-
-    def to_transition_info(transition):
-        """ return the transition information
-        """
-        return {
-            "title": transition["title"],
-            "value": transition["id"],
-            "display": transition["description"],
-            "url": transition["url"],
-        }
-
-    def to_review_history_info(review_history):
-        """ return the transition information
-        """
-        converted = DT2dt(review_history.get('time')).\
-            strftime("%Y-%m-%d %H:%M:%S")
-        review_history['time'] = converted
-        return review_history
-
-    out = []
-
-    for workflow in workflows:
-
-        # get the status info of the current state (dictionary)
-        info = wf_tool.getStatusOf(workflow.getId(), obj)
-        if info is None:
-            continue
-
-        # get the current review_status
-        review_state = info.get("review_state", None)
-        inactive_state = info.get("inactive_state", None)
-        cancellation_state = info.get("cancellation_state", None)
-        worksheetanalysis_review_state = info.get("worksheetanalysis_review_state", None)
-
-        state = review_state or \
-            inactive_state or \
-            cancellation_state or \
-            worksheetanalysis_review_state
-
-        if state is None:
-            logger.warn("No state variable found for {} -> {}".format(
-                repr(obj), info))
-            continue
-
-        # get the wf status object
-        status_info = workflow.states[state]
-
-        # get the title of the current status
-        status = status_info.title
-
-        # get the transition informations
-        transitions = map(to_transition_info, wf_tool.getTransitionsFor(obj))
-
-        # get the review history
-        rh = map(to_review_history_info,
-                 workflow.getInfoFor(obj, 'review_history', ''))
-
-        out.append({
-            "workflow": workflow.getId(),
-            "status": status,
-            "review_state": state,
-            "transitions": transitions,
-            "review_history": rh,
-        })
-
-    return {"workflow_info": out}
+# Serialization helpers (get_info, get_url_info, get_parent_info,
+# get_children_info, get_file_info, get_workflow_info) live in
+# senaite.jsonapi.api.serialization and are re-exported at the bottom
+# of this module.
 
 
 # -----------------------------------------------------------------------------
@@ -587,26 +140,36 @@ def get_workflow_info(brain_or_object, endpoint=None):
 # -----------------------------------------------------------------------------
 
 def fail(status, msg):
-    """API Error
+    """Raise an APIError with the given HTTP status and message.
+
+    Kept as a thin helper for legacy call sites. New code should raise
+    a specific typed subclass (NotFoundError, UnauthorizedError,
+    ForbiddenError, BadRequestError, ConflictError, ValidationError)
+    from senaite.jsonapi.exceptions so the response envelope carries
+    a meaningful `type` field.
     """
     if msg is None:
         msg = "Reason not given."
-    raise APIError(status, "{}".format(msg))
+    raise APIError("{}".format(msg), status=status)
 
 
 def check_permission(permission, context=None):
     """Check the given permission on context (portal root if None).
 
-    Raises APIError 401 for anonymous callers, 403 for authenticated
-    callers that lack the permission. Returns None on success.
+    Raises UnauthorizedError for anonymous callers, ForbiddenError for
+    authenticated callers that lack the permission. Returns None on
+    success.
     """
+    from senaite.jsonapi.exceptions import ForbiddenError
+    from senaite.jsonapi.exceptions import UnauthorizedError
+
     if context is None:
         context = get_portal()
     if ploneapi.user.has_permission(permission, obj=context):
         return
     if is_anonymous():
-        fail(401, "Authentication required")
-    fail(403, "You do not have permission to access this resource")
+        raise UnauthorizedError("Authentication required")
+    raise ForbiddenError("You do not have permission to access this resource")
 
 
 def search(portal_type=None, **kw):
@@ -1109,72 +672,9 @@ def resource_to_portal_type(resource):
     return portal_type
 
 
-def is_creation_allowed(portal_type, container):
-    """Checks if it is allowed to create the portal type
-
-    :param portal_type: The portal type requested
-    :type portal_type: string
-    :container container: The parent of the object to be created
-    :returns: True if it is allowed to create this object
-    :rtype: bool
-    """
-    # Do not allow the creation of objects directly inside portal root
-    if container == api.get_portal():
-        return False
-
-    # Do not allow the creation of objects directly inside setup folder
-    if container == api.get_setup():
-        return False
-
-    # Do not allow the update of objects that belong to senaite_setup folder
-    if container == api.get_senaite_setup():
-        return False
-
-    # Check if the portal_type is allowed in the container
-    container_info = container.getTypeInfo()
-    if container_info.filter_content_types:
-        if portal_type not in container_info.allowed_content_types:
-            return False
-
-    # Look for a create-specific adapter for this portal type and container
-    adapter = queryAdapter(container, ICreate, name=portal_type)
-    if adapter:
-        return adapter.is_creation_allowed()
-
-    return True
-
-
-def is_update_allowed(obj):
-    """Returns whether the update of the object passed in is supported
-
-    :param obj: The object to be updated
-    :type obj: ATContentType/DexterityContentType
-    :returns: True if it is allowed to update this object
-    :rtype: bool
-    """
-    # Do not allow to update the site itself
-    if api.is_portal(obj):
-        return False
-
-    # Do not allow the update of objects that belong to site root folder
-    parent = api.get_parent(obj)
-    if api.is_portal(parent):
-        return False
-
-    # Do not allow the update of objects that belong to setup folder
-    if parent == api.get_setup():
-        return False
-
-    # Do not allow the update of objects that belong to senaite_setup folder
-    if parent == api.get_senaite_setup():
-        return False
-
-    # Look for an update-specific adapter for this object
-    adapter = queryAdapter(obj, IUpdate)
-    if adapter:
-        return adapter.is_update_allowed()
-
-    return True
+# is_creation_allowed and is_update_allowed live in
+# senaite.jsonapi.api.mutation and are re-exported at the bottom of
+# this module.
 
 
 def url_for(endpoint, default=DEFAULT_ENDPOINT, **values):
@@ -1343,190 +843,9 @@ def find_objects(uid=None):
     return objects
 
 
-def find_target_container(record):
-    """Locates a target container for the given portal_type and record
-
-    :param record: The dictionary representation of a content object
-    :type record: dict
-    :returns: folder which contains the object
-    :rtype: object
-    """
-    parent_uid = record.pop("parent_uid", None)
-    parent_path = record.pop("parent_path", None)
-
-    # Try to find the target object
-    target = None
-    if parent_uid:
-        target = get_object_by_uid(parent_uid)
-    elif parent_path:
-        target = get_object_by_path(parent_path)
-
-    if not target:
-        fail(404, "No target container found")
-
-    return target
-
-
-def create_object(container, portal_type, **data):
-    """Creates an object slug
-
-    :returns: The new created content object
-    :rtype: object
-    """
-
-    if "id" in data:
-        # always omit the id as senaite LIMS generates a proper one
-        id = data.pop("id")
-        logger.warn("Passed in ID '{}' omitted! Senaite LIMS "
-                    "generates a proper ID for you" .format(id))
-
-    try:
-        # Is there any adapter registered to handle the creation of this type?
-        adapter = queryAdapter(container, ICreate, name=portal_type)
-        if adapter and adapter.is_creation_delegated():
-            logger.info("Delegating 'create' operation of '{}' in '{}'".format(
-                portal_type, api.get_path(container)
-            ))
-            return adapter.create_object(**data)
-
-        # Special case for ARs
-        # => return immediately w/o update
-        if portal_type == "AnalysisRequest":
-            # convert physical paths to objects
-            # NOTE: for all other objects we handle this already in the
-            # fieldmanager
-            data = convert_physical_paths_to_objects(data)
-            obj = create_analysisrequest(container, **data)
-            # Omit values which are already set through the helper
-            data = u.omit(data, "SampleType", "Analyses")
-            # Set the container as the client, as the AR lives in it
-            data["Client"] = container
-            return obj
-        # Standard content creation
-        else:
-            # we want just a minimun viable object and set the data later
-            obj = api.create(container, portal_type)
-            # obj = api.create(container, portal_type, **data)
-    except Unauthorized:
-        fail(401, "You are not allowed to create this content")
-
-    # Update the object with the given data, but omit the id
-    update_object_with_data(obj, data)
-
-    return obj
-
-
-def create_analysisrequest(container, **data):
-    """Create a minimun viable AnalysisRequest
-
-    :param container: A single folderish catalog brain or content object
-    :type container: ATContentType/DexterityContentType/CatalogBrain
-    """
-    container = get_object(container)
-    request = req.get_request()
-    return create_ar(container, request, data)
-
-
-def update_object_with_data(content, record):
-    """Update the content with the record data
-
-    :param content: A single folderish catalog brain or content object
-    :type content: ATContentType/DexterityContentType/CatalogBrain
-    :param record: The data to update
-    :type record: dict
-    :returns: The updated content object
-    :rtype: object
-    :raises:
-        APIError,
-        :class:`~plone.jsonapi.routes.exceptions.APIError`
-    """
-
-    # ensure we have a full content object
-    content = get_object(content)
-
-    # Look for an update-specific adapter for this object
-    adapter = queryAdapter(content, IUpdate)
-    if adapter:
-        # Use the adapter to update the object
-        logger.info("Delegating 'update' operation of '{}'".format(
-            api.get_path(content)
-        ))
-        adapter.update_object(**record)
-
-    else:
-        # Fall-back to default update machinery
-        # get the proper data manager
-        dm = IDataManager(content)
-
-        if dm is None:
-            fail(400, "Update for this object is not allowed")
-
-        # Bail-out non-update-able fields
-        purged_records = copy.deepcopy(record)
-        map(lambda key: purged_records.pop(key, None), SKIP_UPDATE_FIELDS)
-
-        # Iterate through record items
-        for k, v in purged_records.items():
-            try:
-                success = dm.set(k, v, **record)
-            except Unauthorized:
-                fail(401, "Not allowed to set the field '%s'" % k)
-            except ValueError, exc:
-                fail(400, str(exc))
-
-            if success is False:
-                logger.warning("update_object_with_data::skipping key=%r", k)
-                continue
-
-            logger.debug("update_object_with_data::field %r updated", k)
-
-    # Validate the entire content object
-    invalid = api.validate(content)
-    if invalid:
-        fail(400, u.to_json(invalid))
-
-    # do a wf transition
-    if record.get("transition", None):
-        t = record.get("transition")
-        logger.debug(">>> Do Transition '%s' for Object %s", t, content.getId())
-        do_transition_for(content, t)
-
-    # reindex the object
-    content.reindexObject()
-    return content
-
-
-@deprecate("Use senaite.core.api.validate instead")
-def validate_object(brain_or_object, data):
-    """Validate the entire object
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :param data: The sharing dictionary as returned from the API
-    :type data: dict
-    :returns: invalidity status
-    :rtype: dict
-    """
-    obj = get_object(brain_or_object)
-    return api.validate(obj)
-
-
-def deactivate_object(brain_or_object):
-    """Deactivate the given object
-
-    :param brain_or_object: A single catalog brain or content object
-    :type brain_or_object: ATContentType/DexterityContentType/CatalogBrain
-    :returns: Nothing
-    :rtype: None
-    """
-    obj = get_object(brain_or_object)
-    # we do not want to delete the site root!
-    if is_root(obj):
-        fail(401, "Deactivating the Portal is not allowed")
-    try:
-        do_transition_for(brain_or_object, "deactivate")
-    except Unauthorized:
-        fail(401, "Not allowed to deactivate object '%s'" % obj.getId())
+# find_target_container, create_object, create_analysisrequest,
+# update_object_with_data, validate_object and deactivate_object live
+# in senaite.jsonapi.api.mutation and are re-exported at the bottom.
 
 
 def is_relationship_object(brain_or_object):
@@ -1582,3 +901,22 @@ from senaite.jsonapi.api.settings import CONTROLPANEL_INTERFACE_MAPPING  # noqa:
 from senaite.jsonapi.api.settings import get_registry_records_by_keyword  # noqa: E402,F401
 from senaite.jsonapi.api.settings import get_settings_by_keyword  # noqa: E402,F401
 from senaite.jsonapi.api.settings import get_settings_from_interface  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_url_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_parent_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_children_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_file_info  # noqa: E402,F401
+from senaite.jsonapi.api.serialization import get_workflow_info  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import create_items  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import patch_items  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import put_items  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import update_items  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import delete_items  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import find_target_container  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import create_object  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import create_analysisrequest  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import update_object_with_data  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import validate_object  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import deactivate_object  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import is_creation_allowed  # noqa: E402,F401
+from senaite.jsonapi.api.mutation import is_update_allowed  # noqa: E402,F401

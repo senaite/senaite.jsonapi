@@ -31,6 +31,14 @@ from senaite.jsonapi import logger
 from senaite.jsonapi import api
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi.fieldmanagers import DurationFieldManager
+from senaite.jsonapi.fieldmanagers import UIDReferenceFieldMixin
+
+# Field managers that normalize the incoming value (resolve UIDs, coerce
+# a duration mapping to a timedelta, ...). For these the raw set<Name>
+# mutator would store the value unconverted, so the data manager must go
+# through the field manager instead of the setter.
+NORMALIZING_FIELD_MANAGERS = (UIDReferenceFieldMixin, DurationFieldManager)
 
 
 class BaseDataManager(object):
@@ -225,22 +233,32 @@ class DexterityDataManager(BaseDataManager):
         if not self.can_write():
             raise Unauthorized("You are not allowed to modify this content")
 
-        # prioritize setters over fields
         setter = "".join(pt[:1].upper() + pt[1:] for pt in name.split("_"))
         setter = getattr(self.context, "set%s" % setter, None)
+
+        field = api.get_field(self.context, name)
+
+        # Fields whose manager normalizes the value must be set via that
+        # manager (e.g. UID references coerced to native str, or a
+        # duration mapping coerced to a timedelta). A raw setter would
+        # store the value as given -- a unicode UID that fails the
+        # ASCIILine value_type, or a dict that a Timedelta field rejects
+        # as "wrong type".
+        if field is not None:
+            fieldmanager = IFieldManager(field)
+            if isinstance(fieldmanager, NORMALIZING_FIELD_MANAGERS):
+                return fieldmanager.set(self.context, value, **kw)
+
+        # Otherwise prefer a content-type setter: it may carry side
+        # effects and also covers BBB properties without a schema field
+        # (e.g. Department.DepartmentID).
         if setter:
             return setter(value)
 
-        # fetch the field by name
-        field = api.get_field(self.context, name)
-
-        # bail out if we have no field
-        if not field:
+        # No setter: fall back to the field manager.
+        if field is None:
             return False
-
-        # call the field adapter and set the value
-        fieldmanager = IFieldManager(field)
-        return fieldmanager.set(self.context, value, **kw)
+        return IFieldManager(field).set(self.context, value, **kw)
 
     def json_data(self, name):
         """Get a JSON compatible structure for the named attribute

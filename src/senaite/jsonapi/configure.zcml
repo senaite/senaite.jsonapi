@@ -8,6 +8,15 @@
   <!-- Package Includes -->
   <include package=".v1"/>
 
+  <!-- Clear maybe_webdav_client for API requests so PUT/PATCH/DELETE
+       reach the API view instead of Zope's WebDAV machinery. Keeps the
+       REST verbs working on the released plone.jsonapi.core. -->
+  <subscriber
+      for="ZPublisher.interfaces.IPubStart"
+      handler=".webdav.allow_api_verbs"
+      />
+
+
   <!-- GenericSetup profile -->
   <genericsetup:registerProfile
       name="default"
@@ -132,6 +141,19 @@
       factory=".datamanagers.DexterityDataManager"
       />
 
+  <!-- UPDATE HANDLERS
+       Custom create/update handling for types that cannot be assembled
+       through plain field setting.
+  -->
+
+  <!-- Assemble Worksheets through their add methods (builds the layout
+       and supports QC reference/duplicate analyses) -->
+  <adapter
+      for="senaite.core.interfaces.IWorksheet"
+      provides=".interfaces.IUpdate"
+      factory=".update.WorksheetUpdate"
+      />
+
 
   <!-- AT FIELD MANAGERS
        Field level interface to get and set values and get a JSON compatible
@@ -247,6 +269,12 @@
   <adapter
       for="zope.schema.interfaces.IDatetime"
       factory=".fieldmanagers.DatetimeFieldManager"
+      />
+
+  <!-- Adapter for DX Duration (Timedelta) Fields -->
+  <adapter
+      for="senaite.core.schema.interfaces.IDurationField"
+      factory=".fieldmanagers.DurationFieldManager"
       />
 
   <!-- Adapter for Named Image Fields -->

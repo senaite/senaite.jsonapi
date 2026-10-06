@@ -164,16 +164,16 @@ We can update and transition at same time:
 Update restrictions
 ~~~~~~~~~~~~~~~~~~~
 
-We get a 401 error if we try to update an object from inside portal root:
+We get a 403 error if we try to update an object from inside portal root:
 
     >>> data = {"title": "My clients folder",
     ...         "uid": api.get_uid(clients),}
     >>> post("update", data)
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    HTTPError: HTTP Error 403: Forbidden
 
-We get a 401 error if we try to update an object from inside setup folder:
+We get a 403 error if we try to update an object from inside setup folder:
 
     >>> cats_uid = api.get_uid(portal.setup.analysiscategories)
     >>> data = {"title": "My Analysis Categories folder",
@@ -181,7 +181,7 @@ We get a 401 error if we try to update an object from inside setup folder:
     >>> post("update", data)
     Traceback (most recent call last):
     [...]
-    HTTPError: HTTP Error 401: Unauthorized
+    HTTPError: HTTP Error 403: Forbidden
 
 We cannot update the `id` of an object:
 
