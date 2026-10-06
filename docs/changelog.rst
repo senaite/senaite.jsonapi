@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #105 Assemble worksheets (layout + QC analyses) through the API
 - #104 Fix Analyses field ignoring a plain list of analysis service UIDs
 - #103 Allow updating the setup configuration objects
 - #102 Support DX Duration (Timedelta) fields via a field manager

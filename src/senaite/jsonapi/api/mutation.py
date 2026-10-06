@@ -325,9 +325,15 @@ def update_object_with_data(content, record):
                 continue
             logger.debug("update_object_with_data::field %r updated", k)
 
-    invalid = bika_api.validate(content)
-    if invalid:
-        raise BadRequestError(u.to_json(invalid))
+        # Validate the whole object only for the field-manager path, where
+        # the payload maps directly to schema fields. A custom IUpdate
+        # adapter assembles the object through domain operations (e.g. a
+        # worksheet's addAnalyses populates system-managed fields such as
+        # the layout that the generic schema validator cannot check) and
+        # is responsible for its own validity.
+        invalid = bika_api.validate(content)
+        if invalid:
+            raise BadRequestError(u.to_json(invalid))
 
     if record.get("transition", None):
         t = record.get("transition")
