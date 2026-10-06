@@ -678,10 +678,10 @@ class ARAnalysesFieldManager(ATFieldManager):
             uid = None
             if isinstance(item, dict):
                 uid = item.get("uid")
-            if api.is_uid(value):
+            elif api.is_uid(item):
                 uid = item
             if uid is None:
-                logger.warn("Could extract UID of value")
+                logger.warn("Could not extract UID from value %r", item)
                 continue
             uids.append(uid)
 
