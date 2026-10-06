@@ -158,7 +158,7 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
         if not is_update_allowed(obj):
             raise ForbiddenError(
                 "Update of {} is not allowed".format(bika_api.get_path(obj)))
-        obj = update_object_with_data(obj, record)
+        obj = update_object_with_data(obj, record, partial=True)
         return make_items_for([obj], endpoint=endpoint)
 
     results = []
@@ -169,7 +169,7 @@ def update_items(portal_type=None, uid=None, endpoint=None, **kw):
         if not is_update_allowed(obj):
             raise ForbiddenError(
                 "Update of {} is not allowed".format(bika_api.get_path(obj)))
-        obj = update_object_with_data(obj, record)
+        obj = update_object_with_data(obj, record, partial=True)
         results.append(obj)
 
     if not results:
@@ -290,11 +290,15 @@ def create_analysisrequest(container, **data):
     return _create_ar(container, request, data)
 
 
-def update_object_with_data(content, record):
+def update_object_with_data(content, record, partial=False):
     """Update `content` with the fields from `record`.
 
     Delegates to a registered `IUpdate` adapter if one exists;
     otherwise uses the default `IDataManager` machinery.
+
+    :param partial: True on the update route, where only the submitted
+        fields are checked. False on creation, where the whole object is
+        validated.
     """
     content = get_object(content)
 
@@ -332,9 +336,18 @@ def update_object_with_data(content, record):
         # worksheet's addAnalyses populates system-managed fields such as
         # the layout that the generic schema validator cannot check) and
         # is responsible for its own validity.
-        invalid = bika_api.validate(content)
-        if invalid:
-            raise BadRequestError(u.to_json(invalid))
+        #
+        # And only on creation. The field managers have already validated
+        # each submitted field on set, so a second pass over the whole
+        # object re-checks fields nobody touched, and fails on one that no
+        # longer passes a full validation on its own: an Archetypes field
+        # holding a stored legacy value, or a Dexterity behavior invariant
+        # such as IExcludeFromNavigationDefault. That used to refuse a
+        # partial update of a setup object whose submitted field was fine.
+        if not partial:
+            invalid = bika_api.validate(content)
+            if invalid:
+                raise BadRequestError(u.to_json(invalid))
 
     if record.get("transition", None):
         t = record.get("transition")
