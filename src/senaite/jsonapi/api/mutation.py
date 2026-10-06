@@ -41,6 +41,7 @@ from bika.lims.utils.analysisrequest import (
     create_analysisrequest as _create_ar,
 )
 
+from senaite.core.interfaces import ILaboratory
 from senaite.jsonapi import logger
 from senaite.jsonapi import request as req
 from senaite.jsonapi import underscore as u
@@ -398,15 +399,26 @@ def is_creation_allowed(portal_type, container):
     return True
 
 
-def is_setup(obj):
-    """True if `obj` is one of the setup config singletons.
+def is_configuration(obj):
+    """True if `obj` holds site configuration rather than content.
 
     These are the AT `bika_setup` and the DX `senaite_setup` objects
-    that carry site-wide configuration (self verification, ID formatting,
-    ...). They live directly at the portal root.
+    that carry site-wide settings (self verification, ID formatting,
+    ...), and the Laboratory, which carries the lab's own identity.
+
+    What they have in common is not where they live but what they are
+    for. The first two sit at the portal root and the third moved under
+    the DX setup folder with its migration, and both of those are
+    locations the parent check in `is_update_allowed` refuses outright.
+    All three are meant to be filled in, so they are named here instead.
+
+    Left out, the laboratory can never be filled in through the API,
+    which shows up on every published report as an empty letterhead.
     """
     setups = [bika_api.get_setup(), bika_api.get_senaite_setup()]
-    return any(obj == setup for setup in setups if setup is not None)
+    if any(obj == setup for setup in setups if setup is not None):
+        return True
+    return ILaboratory.providedBy(obj)
 
 
 def is_update_allowed(obj):
@@ -416,15 +428,15 @@ def is_update_allowed(obj):
     senaite_setup), applied to the object's parent, plus an optional
     `IUpdate` adapter's opinion.
 
-    The setup config singletons themselves are an exception: they hold
-    site-wide settings and are meant to be updated, even though they sit
-    at the portal root (which the parent check below would otherwise
-    refuse). Only their children stay read-only.
+    The configuration objects themselves are an exception: they hold
+    the site's own settings and are meant to be updated, even though
+    they sit where the parent check below would otherwise refuse them.
+    Only their children stay read-only.
     """
     if bika_api.is_portal(obj):
         return False
 
-    if not is_setup(obj):
+    if not is_configuration(obj):
         parent = bika_api.get_parent(obj)
         if bika_api.is_portal(parent):
             return False
