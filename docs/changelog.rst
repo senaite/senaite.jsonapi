@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #106 Fix single-valued UID reference fields not settable through the JSON API
 - #112 Allow updating the Laboratory through the API
 - #105 Assemble worksheets (layout + QC analyses) through the API
 - #104 Fix Analyses field ignoring a plain list of analysis service UIDs
