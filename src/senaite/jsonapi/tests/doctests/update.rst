@@ -192,3 +192,40 @@ We cannot update the `id` of an object:
     >>> obj = get_item_object(response)
     >>> api.get_id(obj) == original_id
     True
+
+
+Partial validation on update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An update only validates the fields that were submitted. Fields left untouched
+are not re-validated, so a pre-existing problem on another field does not block
+an unrelated update.
+
+    >>> data = {"portal_type": "Client",
+    ...         "parent_path": api.get_path(clients),
+    ...         "title": "Dolphin Corp",
+    ...         "ClientID": "DC"}
+    >>> client4 = create(data)
+
+Clear its required `ClientID` field, bypassing the API so the stored object no
+longer passes a full validation:
+
+    >>> client4.setClientID("")
+    >>> transaction.commit()
+
+Updating a different field still succeeds (the empty `ClientID` is not
+re-validated):
+
+    >>> data = {"uid": api.get_uid(client4), "title": "Dolphin Ltd"}
+    >>> response = post("update", data)
+    >>> obj = get_item_object(response)
+    >>> obj.Title()
+    'Dolphin Ltd'
+
+But submitting the offending field itself is still validated and rejected:
+
+    >>> data = {"uid": api.get_uid(client4), "ClientID": ""}
+    >>> post("update", data)
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
