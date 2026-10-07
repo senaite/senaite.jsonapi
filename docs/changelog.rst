@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #110 Fix /registry route failing on datetime registry values
 - #109 Add a partition operation endpoint
 - #106 Fix single-valued UID reference fields not settable through the JSON API
 - #112 Allow updating the Laboratory through the API

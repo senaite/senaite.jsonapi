@@ -33,6 +33,7 @@ from Products.CMFPlone.interfaces.controlpanel import IMailSchema
 from Products.CMFPlone.interfaces.controlpanel import IMaintenanceSchema
 from Products.CMFPlone.interfaces.controlpanel import ISecuritySchema
 from Products.CMFPlone.interfaces.controlpanel import IUserGroupsSettingsSchema  # noqa: E501
+from senaite.core.api import dtime
 from zope.component import getAdapter
 from zope.schema import getFieldNames
 
@@ -46,6 +47,28 @@ CONTROLPANEL_INTERFACE_MAPPING = {
 }
 
 
+def to_json_value(value):
+    """Coerce a registry value into a JSON serializable form.
+
+    Registry records may hold dates or datetimes (and containers of them),
+    which the JSON encoder used by the route cannot serialize.
+
+    :param value: The raw registry value
+    :returns: A JSON serializable value
+    """
+    if isinstance(value, (list, tuple)):
+        return [to_json_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: to_json_value(val) for key, val in value.items()}
+    # datetime and Zope DateTime
+    if dtime.is_dt(value) or dtime.is_DT(value):
+        return dtime.to_iso_format(value)
+    # pure date, which to_iso_format does not handle
+    if dtime.is_d(value):
+        return value.isoformat()
+    return value
+
+
 def get_registry_records_by_keyword(keyword=None):
     """Return registry records whose name contains `keyword`.
 
@@ -55,7 +78,8 @@ def get_registry_records_by_keyword(keyword=None):
     records = {}
     for record in portal_reg.records:
         if keyword is None or keyword.lower() in record.lower():
-            records[record] = bika_api.get_registry_record(record)
+            value = bika_api.get_registry_record(record)
+            records[record] = to_json_value(value)
     return records
 
 
