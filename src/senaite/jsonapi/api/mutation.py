@@ -33,6 +33,7 @@ getattr) keeps working unchanged.
 """
 
 import copy
+import difflib
 
 import transaction
 from AccessControl import Unauthorized
@@ -48,12 +49,14 @@ from senaite.jsonapi import underscore as u
 from senaite.jsonapi.api import convert_physical_paths_to_objects
 from senaite.jsonapi.api import do_transition_for
 from senaite.jsonapi.api import find_objects
+from senaite.jsonapi.api import get_fields
 from senaite.jsonapi.api import get_object
 from senaite.jsonapi.api import get_object_by_path
 from senaite.jsonapi.api import get_object_by_record
 from senaite.jsonapi.api import get_object_by_uid
 from senaite.jsonapi.api import is_root
 from senaite.jsonapi.api import make_items_for
+from senaite.jsonapi.api import CONTROL_FIELDS
 from senaite.jsonapi.api import SKIP_UPDATE_FIELDS
 from senaite.jsonapi.exceptions import BadRequestError
 from senaite.jsonapi.exceptions import ForbiddenError
@@ -290,6 +293,24 @@ def create_analysisrequest(container, **data):
     return _create_ar(container, request, data)
 
 
+def no_such_field(content, name):
+    """Say that a field is not there, and which one was probably meant
+
+    A name that matches no field and no setter used to be dropped with
+    a line in the log, and the request answered that the object had
+    been created or updated. A caller asking for `Service` instead of
+    `services` was told that all was well and got back an object with
+    nothing in it.
+    """
+    names = sorted(get_fields(content))
+    close = difflib.get_close_matches(name, names, n=1, cutoff=0.6)
+    message = "No field named '%s' on %s" % (
+        name, bika_api.get_portal_type(content))
+    if close:
+        message = "%s. Did you mean '%s'?" % (message, close[0])
+    return message
+
+
 def update_object_with_data(content, record):
     """Update `content` with the fields from `record`.
 
@@ -310,7 +331,7 @@ def update_object_with_data(content, record):
             raise BadRequestError("Update for this object is not allowed")
 
         purged = copy.deepcopy(record)
-        for key in SKIP_UPDATE_FIELDS:
+        for key in set(SKIP_UPDATE_FIELDS) | set(CONTROL_FIELDS):
             purged.pop(key, None)
 
         for k, v in purged.items():
@@ -322,8 +343,7 @@ def update_object_with_data(content, record):
                 raise BadRequestError(str(exc))
 
             if success is False:
-                logger.warning("update_object_with_data::skipping key=%r", k)
-                continue
+                raise BadRequestError(no_such_field(content, k))
             logger.debug("update_object_with_data::field %r updated", k)
 
         # Validate the whole object only for the field-manager path, where

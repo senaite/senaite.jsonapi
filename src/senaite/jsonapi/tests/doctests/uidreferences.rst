@@ -150,6 +150,33 @@ More than one is refused, because the field holds a single reference:
     HTTPError: HTTP Error 400: Bad Request
 
 
+A name that is no field at all
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A BBB name is a name the type supports, and it reaches the field. A
+name that reaches nothing is a mistake, and saying so is the whole
+point of the two being told apart:
+
+    >>> browser.raiseHttpErrors = False
+    >>> print(post("create", {
+    ...     "portal_type": "AnalysisProfile",
+    ...     "parent_path": api.get_path(setup.analysisprofiles),
+    ...     "title": "Typo Panel",
+    ...     "Service": []}))
+    {...No field named 'Service' on AnalysisProfile. Did you mean 'services'?...}
+
+Without a field close enough to suggest, it says only what it knows:
+
+    >>> print(post("create", {
+    ...     "portal_type": "AnalysisProfile",
+    ...     "parent_path": api.get_path(setup.analysisprofiles),
+    ...     "title": "Typo Panel",
+    ...     "Nonsense": 42}))
+    {...No field named 'Nonsense' on AnalysisProfile...}
+
+    >>> browser.raiseHttpErrors = True
+
+
 A single valued Archetypes reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

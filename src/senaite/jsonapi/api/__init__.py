@@ -48,6 +48,11 @@ DEFAULT_ENDPOINT = "senaite.jsonapi.v1.get"
 
 SKIP_UPDATE_FIELDS = ["id", ]
 
+# Keys that address the object or steer the request rather than naming
+# one of its fields. Everything else in a record is taken for a field.
+CONTROL_FIELDS = ("id", "parent_path", "parent_uid", "path",
+                  "portal_type", "transition", "uid")
+
 
 # -----------------------------------------------------------------------------
 #   JSON API (CRUD) Functions (called by the route providers)
