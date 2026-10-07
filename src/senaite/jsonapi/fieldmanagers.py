@@ -729,17 +729,20 @@ class UIDReferenceFieldMixin(object):
         # convert all references to UIDs
         refs = [str(api.get_uid(ref)) for ref in refs if ref]
 
-        # Single valued fields expect a scalar value, not a list. Passing a
-        # list makes the field validator of e.g. an AT UIDReferenceField
-        # reject the value with "[...] is not supported", so unwrap it here
-        # (None clears the reference). Multi valued fields keep the list.
-        if not self.multi_valued:
-            if len(refs) > 1:
-                raise ValueError("Multiple values given for single valued "
-                                 "field {}".format(repr(self.field)))
-            refs = refs[0] if refs else None
+        if not self.multi_valued and len(refs) > 1:
+            raise ValueError("Multiple values given for single valued "
+                             "field {}".format(repr(self.field)))
 
-        return self._set(instance, refs, **kw)
+        return self._set(instance, self.to_field_value(refs), **kw)
+
+    def to_field_value(self, refs):
+        """Shape the UIDs the way this field's own validator wants them.
+
+        The two implementations disagree on a single valued field, and
+        both validate before they store, so the value has to arrive in
+        the shape each one expects.
+        """
+        return refs
 
 
 @implementer(IFieldManager)
@@ -750,10 +753,24 @@ class ATUIDReferenceFieldManager(UIDReferenceFieldMixin, ATFieldManager):
         super(ATUIDReferenceFieldManager, self).__init__(field)
         self.multi_valued = field.multiValued
 
+    def to_field_value(self, refs):
+        """A single valued AT field wants the UID itself.
+
+        Handing it a list makes its validator refuse the value with
+        "[...] is not supported". None clears the reference.
+        """
+        if not self.multi_valued:
+            return refs[0] if refs else None
+        return refs
+
 
 @implementer(IFieldManager)
 class DXUIDReferenceFieldManager(UIDReferenceFieldMixin, ZopeSchemaFieldManager):
     """Adapter to get/set the value of DX based UIDReferenceFields
+
+    A single valued field keeps the list. The DX UIDReferenceField
+    derives from zope.schema List and validates as one, so a bare UID
+    fails its own validation before it is ever stored.
     """
     def __init__(self, field):
         super(DXUIDReferenceFieldManager, self).__init__(field)
