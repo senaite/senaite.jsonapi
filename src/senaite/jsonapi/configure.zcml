@@ -271,6 +271,12 @@
       factory=".fieldmanagers.DatetimeFieldManager"
       />
 
+  <!-- Adapter for DX Decimal Fields -->
+  <adapter
+      for="zope.schema.interfaces.IDecimal"
+      factory=".fieldmanagers.DecimalFieldManager"
+      />
+
   <!-- Adapter for DX Duration (Timedelta) Fields -->
   <adapter
       for="senaite.core.schema.interfaces.IDurationField"

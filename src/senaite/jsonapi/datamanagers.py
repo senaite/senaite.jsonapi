@@ -31,14 +31,20 @@ from senaite.jsonapi import logger
 from senaite.jsonapi import api
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi.fieldmanagers import DecimalFieldManager
 from senaite.jsonapi.fieldmanagers import DurationFieldManager
 from senaite.jsonapi.fieldmanagers import UIDReferenceFieldMixin
 
 # Field managers that normalize the incoming value (resolve UIDs, coerce
-# a duration mapping to a timedelta, ...). For these the raw set<Name>
-# mutator would store the value unconverted, so the data manager must go
-# through the field manager instead of the setter.
-NORMALIZING_FIELD_MANAGERS = (UIDReferenceFieldMixin, DurationFieldManager)
+# a duration mapping to a timedelta, a number to a Decimal, ...). For
+# these the raw set<Name> mutator would store the value unconverted, so
+# the data manager must go through the field manager instead of the
+# setter.
+NORMALIZING_FIELD_MANAGERS = (
+    UIDReferenceFieldMixin,
+    DurationFieldManager,
+    DecimalFieldManager,
+)
 
 
 class BaseDataManager(object):

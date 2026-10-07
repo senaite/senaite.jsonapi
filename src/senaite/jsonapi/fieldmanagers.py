@@ -25,6 +25,8 @@ import six
 from AccessControl import Unauthorized
 from bika.lims import api as bika_api
 from datetime import timedelta
+from decimal import Decimal
+from decimal import InvalidOperation
 from DateTime import DateTime
 from Products.Archetypes.utils import mapply
 from senaite.core.schema.uidreferencefield import UIDReferenceField
@@ -200,6 +202,49 @@ class DurationFieldManager(ZopeSchemaFieldManager):
             "minutes": minutes,
             "seconds": seconds,
         }
+
+
+class DecimalFieldManager(ZopeSchemaFieldManager):
+    """Adapter to get/set DX Decimal field values.
+
+    The stored value is a `decimal.Decimal`, which JSON has no type for.
+    A price arrives as a string, a float or an integer and every one of
+    them fails the field's own validation, so a Decimal field could not
+    be written through the API at all. Accept all three on set and
+    serialize back to a string, which is the only JSON form that keeps
+    the exact value.
+    """
+    interface.implements(IFieldManager)
+
+    def set(self, instance, value, **kw):
+        value = self.to_decimal(value)
+        self.field.validate(value)
+        return self.field.set(instance, value)
+
+    def json_data(self, instance, default=None):
+        value = self.get(instance)
+        if not isinstance(value, Decimal):
+            return default
+        return str(value)
+
+    @staticmethod
+    def to_decimal(value):
+        """Coerce a JSON value to Decimal, leaving anything else alone.
+
+        A value that is not a number is handed on untouched so the field
+        reports it, rather than this adapter raising an error of its own
+        for a value the field would describe better.
+        """
+        if value is None or isinstance(value, Decimal):
+            return value
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (six.string_types, int, float)):
+            try:
+                return Decimal(str(value).strip())
+            except (InvalidOperation, ValueError):
+                return value
+        return value
 
 
 class RichTextFieldManager(ZopeSchemaFieldManager):
