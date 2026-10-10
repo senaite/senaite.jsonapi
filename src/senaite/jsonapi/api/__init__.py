@@ -50,8 +50,12 @@ SKIP_UPDATE_FIELDS = ["id", ]
 
 # Keys that address the object or steer the request rather than naming
 # one of its fields. Everything else in a record is taken for a field.
-CONTROL_FIELDS = ("id", "parent_path", "parent_uid", "path",
-                  "portal_type", "transition", "uid")
+# `filename`, `mimetype` and `content_type` are read from the payload
+# by the file and image field managers, which take them as keyword
+# arguments rather than from a field of their own.
+CONTROL_FIELDS = ("content_type", "filename", "id", "mimetype",
+                  "parent_path", "parent_uid", "path", "portal_type",
+                  "transition", "uid")
 
 
 # -----------------------------------------------------------------------------
