@@ -32,13 +32,23 @@ from senaite.jsonapi import api
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
 from senaite.jsonapi.fieldmanagers import DurationFieldManager
+from senaite.jsonapi.fieldmanagers import NamedFileFieldManager
 from senaite.jsonapi.fieldmanagers import UIDReferenceFieldMixin
 
 # Field managers that normalize the incoming value (resolve UIDs, coerce
 # a duration mapping to a timedelta, ...). For these the raw set<Name>
 # mutator would store the value unconverted, so the data manager must go
 # through the field manager instead of the setter.
-NORMALIZING_FIELD_MANAGERS = (UIDReferenceFieldMixin, DurationFieldManager)
+NORMALIZING_FIELD_MANAGERS = (
+    UIDReferenceFieldMixin,
+    DurationFieldManager,
+    # A file arrives as base64 text and the manager decodes it and
+    # builds the NamedFile or NamedImage the field holds. The raw
+    # mutator would store the text itself, which the field then fails
+    # to validate as the wrong type. NamedImageFieldManager is a
+    # subclass, so it is covered here too.
+    NamedFileFieldManager,
+)
 
 
 class BaseDataManager(object):
