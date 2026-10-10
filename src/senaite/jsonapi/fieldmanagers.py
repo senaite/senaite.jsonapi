@@ -31,6 +31,7 @@ from senaite.core.schema.uidreferencefield import UIDReferenceField
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import underscore as u
+from senaite.jsonapi.exceptions import BadRequestError
 from senaite.jsonapi.interfaces import IFieldManager
 from zope import interface
 from zope.interface import implementer
@@ -86,7 +87,12 @@ class ZopeSchemaFieldManager(object):
             # TODO: Check security on the field level
             return self.field.set(instance, value)
         except (WrongType, WrongContainedType):
-            raise TypeError("WrongType: Field={} Value={}".format(
+            # A value the schema refuses came from the request, so this
+            # is a bad request and not a server fault. Raised as a
+            # TypeError it answered 500, and a caller composing many
+            # objects could not tell which payload was at fault,
+            # because the type carried no more than the message.
+            raise BadRequestError("WrongType: Field={} Value={}".format(
                 self.field, value))
 
     def _get(self, instance, **kw):
@@ -369,8 +375,8 @@ class ATFieldManager(object):
         # validate the value
         error = self.field.validate(value, instance)
         if error:
-            raise ValueError("Invalid value for field {}: {}"
-                             .format(self.name, error))
+            raise BadRequestError("Invalid value for field {}: {}"
+                                  .format(self.name, error))
 
         # id fields take only strings
         if self.name == "id":
@@ -598,8 +604,9 @@ class ReferenceFieldManager(ATFieldManager):
         # Handle non multi valued fields
         if not self.multi_valued:
             if len(ref) > 1:
-                raise ValueError("Multiple values given for single valued "
-                                 "field {}".format(repr(self.field)))
+                raise BadRequestError(
+                    "Multiple values given for single valued "
+                    "field {}".format(repr(self.field)))
             else:
                 ref = ref[0]
         return self._set(instance, ref, **kw)
@@ -735,8 +742,9 @@ class UIDReferenceFieldMixin(object):
         # (None clears the reference). Multi valued fields keep the list.
         if not self.multi_valued:
             if len(refs) > 1:
-                raise ValueError("Multiple values given for single valued "
-                                 "field {}".format(repr(self.field)))
+                raise BadRequestError(
+                    "Multiple values given for single valued "
+                    "field {}".format(repr(self.field)))
             refs = refs[0] if refs else None
 
         return self._set(instance, refs, **kw)
