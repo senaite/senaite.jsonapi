@@ -20,6 +20,7 @@
 
 import datetime
 import json
+import re
 
 from Acquisition import ImplicitAcquisitionWrapper
 from bika.lims import api
@@ -315,11 +316,44 @@ def get_fields(brain_or_object):
     return api.get_fields(obj)
 
 
+def to_snake_case(name):
+    """Convert a CamelCase name to snake_case
+
+    Acronyms are kept together: `AccreditationBodyURL` becomes
+    `accreditation_body_url`, not `..._u_r_l`.
+    """
+    name = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+
+
 def get_field(brain_or_object, name, default=None):
     """Return the named field
+
+    A Dexterity type that was migrated from Archetypes keeps the old
+    capitalised name as a BBB property, and a payload written against
+    the old API uses it. The schema field is named in snake case, so
+    the exact lookup misses and the caller falls back to the BBB
+    setter, which stores whatever it is given: a UID that arrived from
+    a JSON body as unicode then fails the field's own value type, and
+    says so on the whole object rather than on the value.
+
+    The schema spellings are tried after the exact name, and only a
+    candidate that names a real field is used, so a name that converts
+    to nothing in particular is still nothing in particular. The plain
+    lower case form is there because the convention is not kept
+    everywhere: a sample template calls its field `samplepoint`.
     """
     fields = get_fields(brain_or_object)
-    return fields.get(name, default)
+    candidates = [
+        name,
+        name[:1].lower() + name[1:],
+        to_snake_case(name),
+        name.lower(),
+    ]
+    for candidate in candidates:
+        if candidate in fields:
+            return fields[candidate]
+    return default
 
 
 def get_behaviors(brain_or_object):
