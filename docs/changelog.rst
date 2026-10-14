@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #110 Fix /registry route failing on datetime registry values
 - #108 Add introspection endpoints for types, schema and workflow
 - #107 Validate only the submitted fields on update
 - #109 Add a partition operation endpoint
