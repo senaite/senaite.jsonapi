@@ -16,6 +16,9 @@ Changelog
    and the per-user JWT signing secrets.
 
 - #113 Carry an error's status instead of applying it on construction
+- #110 Fix /registry route failing on datetime registry values
+- #108 Add introspection endpoints for types, schema and workflow
+- #107 Validate only the submitted fields on update
 - #109 Add a partition operation endpoint
 - #106 Fix single-valued UID reference fields not settable through the JSON API
 - #112 Allow updating the Laboratory through the API
