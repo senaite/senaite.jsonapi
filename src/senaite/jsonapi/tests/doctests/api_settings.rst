@@ -137,6 +137,114 @@ filtered subset:
     True
 
 
+Non JSON serializable values are coerced
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some registry records hold `datetime` values, which the JSON encoder used
+by the route cannot serialize. Such values are coerced to ISO strings:
+
+    >>> from datetime import datetime
+    >>> from plone.registry import field
+    >>> from plone.registry.record import Record
+    >>> reg = ploneapi.portal.get_tool("portal_registry")
+    >>> reg.records["senaite.jsonapi.test_datetime"] = Record(
+    ...     field.Datetime(title=u"Test"),
+    ...     datetime(2014, 8, 14, 0, 0, 0, 3))
+    >>> transaction.commit()
+
+    >>> hits = api_settings.get_registry_records_by_keyword("test_datetime")
+    >>> hits["senaite.jsonapi.test_datetime"]
+    '2014-08-14T00:00:00.000003'
+
+So the whole record set is now JSON serializable:
+
+    >>> ignored = json.dumps(
+    ...     api_settings.get_registry_records_by_keyword(None))
+
+`to_json_value` does the coercion. Plain JSON values are returned as is:
+
+    >>> to_json_value = api_settings.to_json_value
+    >>> to_json_value("text")
+    'text'
+    >>> to_json_value(u"text")
+    u'text'
+    >>> to_json_value(1), to_json_value(1.5)
+    (1, 1.5)
+    >>> to_json_value(True), to_json_value(None)
+    (True, None)
+
+A `datetime` is converted with `isoformat`, keeping its timezone if any:
+
+    >>> import pytz
+    >>> to_json_value(datetime(2014, 8, 14, 10, 30))
+    '2014-08-14T10:30:00'
+    >>> to_json_value(datetime(2014, 8, 14, 10, 30, tzinfo=pytz.utc))
+    '2014-08-14T10:30:00+00:00'
+
+A `date` is converted with `isoformat` too:
+
+    >>> from datetime import date
+    >>> to_json_value(date(2014, 8, 14))
+    '2014-08-14'
+
+A Zope `DateTime` is converted with `DateTime.ISO`, keeping its timezone:
+
+    >>> from DateTime import DateTime
+    >>> to_json_value(DateTime("2014/08/14 10:30:00 UTC"))
+    '2014-08-14T10:30:00+00:00'
+    >>> to_json_value(DateTime("2014/08/14 10:30:00 GMT+2"))
+    '2014-08-14T10:30:00+02:00'
+
+Lists and tuples are converted item by item. Both come back as a list:
+
+    >>> to_json_value([date(2014, 8, 14), "text", 1])
+    ['2014-08-14', 'text', 1]
+    >>> to_json_value((date(2014, 8, 14), "text"))
+    ['2014-08-14', 'text']
+    >>> to_json_value([]), to_json_value(())
+    ([], [])
+
+Dicts keep their keys and have their values converted:
+
+    >>> to_json_value({"day": date(2014, 8, 14), "count": 1}) == {
+    ...     "day": "2014-08-14", "count": 1}
+    True
+    >>> to_json_value({})
+    {}
+
+Nested containers are converted at every level:
+
+    >>> value = {"days": [date(2014, 8, 14), (datetime(2014, 8, 14, 10),)],
+    ...          "inner": {"when": DateTime("2014/08/14 10:30:00 UTC")}}
+    >>> to_json_value(value) == {
+    ...     "days": ["2014-08-14", ["2014-08-14T10:00:00"]],
+    ...     "inner": {"when": "2014-08-14T10:30:00+00:00"}}
+    True
+    >>> ignored = json.dumps(to_json_value(value))
+
+The value passed in is not modified:
+
+    >>> value["days"][0]
+    datetime.date(2014, 8, 14)
+
+Registry records of the other date-like and container field types are
+coerced on the way out as well:
+
+    >>> reg.records["senaite.jsonapi.test_date"] = Record(
+    ...     field.Date(title=u"Test"), date(2014, 8, 14))
+    >>> reg.records["senaite.jsonapi.test_datetimes"] = Record(
+    ...     field.List(title=u"Test", value_type=field.Datetime()),
+    ...     [datetime(2014, 8, 14, 10, 30)])
+    >>> transaction.commit()
+
+    >>> hits = api_settings.get_registry_records_by_keyword(
+    ...     "senaite.jsonapi.test_")
+    >>> hits["senaite.jsonapi.test_date"]
+    '2014-08-14'
+    >>> hits["senaite.jsonapi.test_datetimes"]
+    ['2014-08-14T10:30:00']
+
+
 get_settings_by_keyword via the /settings route
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
