@@ -25,12 +25,15 @@ import six
 from AccessControl import Unauthorized
 from bika.lims import api as bika_api
 from datetime import timedelta
+from decimal import Decimal
+from decimal import InvalidOperation
 from DateTime import DateTime
 from Products.Archetypes.utils import mapply
 from senaite.core.schema.uidreferencefield import UIDReferenceField
 from senaite.jsonapi import api
 from senaite.jsonapi import logger
 from senaite.jsonapi import underscore as u
+from senaite.jsonapi.exceptions import BadRequestError
 from senaite.jsonapi.interfaces import IFieldManager
 from zope import interface
 from zope.interface import implementer
@@ -86,7 +89,12 @@ class ZopeSchemaFieldManager(object):
             # TODO: Check security on the field level
             return self.field.set(instance, value)
         except (WrongType, WrongContainedType):
-            raise TypeError("WrongType: Field={} Value={}".format(
+            # A value the schema refuses came from the request, so this
+            # is a bad request and not a server fault. Raised as a
+            # TypeError it answered 500, and a caller composing many
+            # objects could not tell which payload was at fault,
+            # because the type carried no more than the message.
+            raise BadRequestError("WrongType: Field={} Value={}".format(
                 self.field, value))
 
     def _get(self, instance, **kw):
@@ -200,6 +208,49 @@ class DurationFieldManager(ZopeSchemaFieldManager):
             "minutes": minutes,
             "seconds": seconds,
         }
+
+
+class DecimalFieldManager(ZopeSchemaFieldManager):
+    """Adapter to get/set DX Decimal field values.
+
+    The stored value is a `decimal.Decimal`, which JSON has no type for.
+    A price arrives as a string, a float or an integer and every one of
+    them fails the field's own validation, so a Decimal field could not
+    be written through the API at all. Accept all three on set and
+    serialize back to a string, which is the only JSON form that keeps
+    the exact value.
+    """
+    interface.implements(IFieldManager)
+
+    def set(self, instance, value, **kw):
+        value = self.to_decimal(value)
+        self.field.validate(value)
+        return self.field.set(instance, value)
+
+    def json_data(self, instance, default=None):
+        value = self.get(instance)
+        if not isinstance(value, Decimal):
+            return default
+        return str(value)
+
+    @staticmethod
+    def to_decimal(value):
+        """Coerce a JSON value to Decimal, leaving anything else alone.
+
+        A value that is not a number is handed on untouched so the field
+        reports it, rather than this adapter raising an error of its own
+        for a value the field would describe better.
+        """
+        if value is None or isinstance(value, Decimal):
+            return value
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (six.string_types, int, float)):
+            try:
+                return Decimal(str(value).strip())
+            except (InvalidOperation, ValueError):
+                return value
+        return value
 
 
 class RichTextFieldManager(ZopeSchemaFieldManager):
@@ -369,8 +420,8 @@ class ATFieldManager(object):
         # validate the value
         error = self.field.validate(value, instance)
         if error:
-            raise ValueError("Invalid value for field {}: {}"
-                             .format(self.name, error))
+            raise BadRequestError("Invalid value for field {}: {}"
+                                  .format(self.name, error))
 
         # id fields take only strings
         if self.name == "id":
@@ -598,8 +649,9 @@ class ReferenceFieldManager(ATFieldManager):
         # Handle non multi valued fields
         if not self.multi_valued:
             if len(ref) > 1:
-                raise ValueError("Multiple values given for single valued "
-                                 "field {}".format(repr(self.field)))
+                raise BadRequestError(
+                    "Multiple values given for single valued "
+                    "field {}".format(repr(self.field)))
             else:
                 ref = ref[0]
         return self._set(instance, ref, **kw)
@@ -730,8 +782,8 @@ class UIDReferenceFieldMixin(object):
         refs = [str(api.get_uid(ref)) for ref in refs if ref]
 
         if not self.multi_valued and len(refs) > 1:
-            raise ValueError("Multiple values given for single valued "
-                             "field {}".format(repr(self.field)))
+            raise BadRequestError("Multiple values given for single valued "
+                                  "field {}".format(repr(self.field)))
 
         return self._set(instance, self.to_field_value(refs), **kw)
 

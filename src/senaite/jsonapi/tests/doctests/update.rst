@@ -229,3 +229,52 @@ But submitting the offending field itself is still validated and rejected:
     Traceback (most recent call last):
     [...]
     HTTPError: HTTP Error 400: Bad Request
+
+
+
+Refused values
+~~~~~~~~~~~~~~
+
+A value the schema refuses came with the request, so the request is answered
+as a bad request. The values are sent as a JSON body, so they keep their type:
+
+    >>> def post_json(url, data):
+    ...     url = "{}/{}".format(api_url, url)
+    ...     browser.post(url, json.dumps(data), "application/json")
+    ...     return browser.contents
+
+    >>> sampletype = api.create(portal.setup.sampletypes, "SampleType",
+    ...                         title="Water", Prefix="W")
+    >>> sampletype_uid = api.get_uid(sampletype)
+    >>> transaction.commit()
+
+The minimum volume of a sample type is a text field, and `min_volume` has no
+setter of its own, so the value goes through the field manager. A number is
+refused:
+
+    >>> post_json("update/{}".format(sampletype_uid), {"min_volume": 20})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+The answer says which field refused which value:
+
+    >>> error = json.loads(browser.contents)
+    >>> error["type"]
+    u'BadRequestError'
+    >>> "min_volume" in error["message"]
+    True
+    >>> "WrongType" in error["message"]
+    True
+
+And the value is not stored:
+
+    >>> api.get_object(sampletype_uid).min_volume is None
+    True
+
+A value of the right type is taken:
+
+    >>> response = post_json("update/{}".format(sampletype_uid),
+    ...                      {"min_volume": u"20 ml"})
+    >>> get_item_object(response).min_volume
+    u'20 ml'
