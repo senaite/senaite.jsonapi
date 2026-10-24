@@ -18,6 +18,7 @@
 # Copyright 2017-2025 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+import binascii
 import mimetypes
 
 import dateutil
@@ -318,7 +319,20 @@ class NamedFileFieldManager(ZopeSchemaFieldManager):
         logger.debug("NamedFileFieldManager::set:File field"
                      "detected ('%r'), base64 decoding value", self.field)
 
-        data = str(value).decode("base64")
+        if not value:
+            # An empty value clears the field. Decoding it would store a
+            # file instead: an empty one for "", and the three bytes that
+            # "None" decodes to for null
+            return self.field.set(instance, None)
+
+        try:
+            data = str(value).decode("base64")
+        except binascii.Error as exc:
+            # Not a ValueError in Python 2, so it would escape the handling
+            # of refused values and answer 200 with success false
+            raise BadRequestError(
+                "Invalid base64 value for field {}: {}".format(
+                    self.get_field_name(), exc))
         filename = kw.get("filename") or kw.get("id") or kw.get("title")
         contentType = kw.get("mimetype") or kw.get("content_type")
 

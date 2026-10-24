@@ -37,9 +37,10 @@ from senaite.jsonapi.fieldmanagers import NamedFileFieldManager
 from senaite.jsonapi.fieldmanagers import UIDReferenceFieldMixin
 
 # Field managers that normalize the incoming value (resolve UIDs, coerce
-# a duration mapping to a timedelta, ...). For these the raw set<Name>
-# mutator would store the value unconverted, so the data manager must go
-# through the field manager instead of the setter.
+# a duration mapping to a timedelta, a number to a Decimal, base64 text to
+# a file, ...). For these the raw set<Name> mutator would store the value
+# unconverted, so the data manager must go through the field manager
+# instead of the setter.
 NORMALIZING_FIELD_MANAGERS = (
     UIDReferenceFieldMixin,
     DurationFieldManager,
