@@ -31,6 +31,7 @@ from senaite.jsonapi import logger
 from senaite.jsonapi import api
 from senaite.jsonapi.interfaces import IDataManager
 from senaite.jsonapi.interfaces import IFieldManager
+from senaite.jsonapi.fieldmanagers import DecimalFieldManager
 from senaite.jsonapi.fieldmanagers import DurationFieldManager
 from senaite.jsonapi.fieldmanagers import NamedFileFieldManager
 from senaite.jsonapi.fieldmanagers import UIDReferenceFieldMixin
@@ -42,6 +43,7 @@ from senaite.jsonapi.fieldmanagers import UIDReferenceFieldMixin
 NORMALIZING_FIELD_MANAGERS = (
     UIDReferenceFieldMixin,
     DurationFieldManager,
+    DecimalFieldManager,
     # A file arrives as base64 text and the manager decodes it and
     # builds the NamedFile or NamedImage the field holds. The raw
     # mutator would store the text itself, which the field then fails
