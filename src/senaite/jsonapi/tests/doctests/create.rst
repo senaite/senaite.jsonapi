@@ -350,6 +350,30 @@ directly; it accepts a `{days, hours, minutes, seconds}` mapping:
     >>> sample_point.sampling_frequency
     datetime.timedelta(7)
 
+A DX Decimal field has no JSON type either. It takes the number as a
+string, which is the only form that keeps the exact value, and also
+accepts a plain number:
+
+    >>> data = {"portal_type": "AnalysisProfile",
+    ...         "parent_path": api.get_path(portal.setup.analysisprofiles),
+    ...         "title": "Basic Panel",
+    ...         "analysis_profile_price": u"24.00",
+    ...         "analysis_profile_vat": 7}
+    >>> profile = create_json(data)
+    >>> profile.analysis_profile_price
+    Decimal('24.00')
+    >>> profile.analysis_profile_vat
+    Decimal('7')
+
+It reads back as a string:
+
+    >>> from senaite.jsonapi.interfaces import IFieldManager
+    >>> from senaite.jsonapi.api import get_field
+    >>> field = get_field(profile, "analysis_profile_price")
+    >>> IFieldManager(field).json_data(profile)
+    '24.00'
+
+
 
 Creating a Sample
 ~~~~~~~~~~~~~~~~~

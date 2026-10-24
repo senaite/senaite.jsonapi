@@ -15,6 +15,7 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+- #114 Support DX Decimal fields via a field manager
 - #115 Fix single valued Dexterity UID references not settable
 - #110 Fix /registry route failing on datetime registry values
 - #108 Add introspection endpoints for types, schema and workflow
