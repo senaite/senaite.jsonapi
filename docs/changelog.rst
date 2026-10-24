@@ -15,7 +15,24 @@ Changelog
    applied. Uninstalling from the same panel removes the PAS plugin
    and the per-user JWT signing secrets.
 
+.. note::
+
+   Create and update requests are now refused (HTTP 400) when a record
+   holds a key that matches neither a field nor a `set<Name>` setter of
+   the object (#116). Such keys used to be dropped silently, with a
+   warning in the log, while the request reported success. Integrations
+   that still send obsolete or misspelled field names, e.g. names a
+   content type lost when it was migrated to Dexterity, must remove
+   them from their payloads. The error names the offending key and
+   suggests the closest field, e.g. "No field named 'Service' on
+   AnalysisProfile. Did you mean 'services'?". Control keys such as
+   `id`, `content_type` or `filename` are still ignored, names still
+   served by a `set<Name>` setter keep working, and objects updated
+   through a custom `IUpdate` adapter handle their payload themselves.
+
 - #117 Answer a refused field value with 400, not 500
+- #116 Refuse a field name that is not a field
+- #114 Support DX Decimal fields via a field manager
 - #115 Fix single valued Dexterity UID references not settable
 - #110 Fix /registry route failing on datetime registry values
 - #108 Add introspection endpoints for types, schema and workflow
