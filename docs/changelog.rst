@@ -30,6 +30,7 @@ Changelog
    served by a `set<Name>` setter keep working, and objects updated
    through a custom `IUpdate` adapter handle their payload themselves.
 
+- #118 Set a file field through its field manager, not the raw mutator
 - #117 Answer a refused field value with 400, not 500
 - #116 Refuse a field name that is not a field
 - #114 Support DX Decimal fields via a field manager
