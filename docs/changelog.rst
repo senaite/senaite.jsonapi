@@ -30,6 +30,7 @@ Changelog
    served by a `set<Name>` setter keep working, and objects updated
    through a custom `IUpdate` adapter handle their payload themselves.
 
+- #113 Carry an error's status instead of applying it on construction
 - #118 Set a file field through its field manager, not the raw mutator
 - #117 Answer a refused field value with 400, not 500
 - #116 Refuse a field name that is not a field
