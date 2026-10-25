@@ -31,6 +31,7 @@ Changelog
    through a custom `IUpdate` adapter handle their payload themselves.
 
 - #119 Fix file fields not cleared by an empty value through the API
+- #113 Carry an error's status instead of applying it on construction
 - #118 Set a file field through its field manager, not the raw mutator
 - #117 Answer a refused field value with 400, not 500
 - #116 Refuse a field name that is not a field

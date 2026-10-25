@@ -30,6 +30,12 @@ without parsing free-form text.
 Backward compatibility: every typed error inherits `APIError`, so any
 code that catches `APIError` still catches all of them, and the legacy
 `api.fail(status, msg)` helper still raises a plain `APIError`.
+
+The status is carried, not applied. It reaches the response when
+plone.jsonapi.core renders the error envelope, which is the moment the
+error becomes the answer. Setting it in the constructor instead meant
+an error that was caught, and never answered with, still left its
+status on whatever the request went on to return.
 """
 
 from senaite.jsonapi import request as req
@@ -39,9 +45,6 @@ class APIError(Exception):
     """Base class for every JSON API error.
 
     Instances carry an HTTP status code and a human-facing message.
-    Instantiating one sets the response status on the current request
-    as a side effect (matches the legacy behavior that route code and
-    the error-envelope decorator both rely on).
     """
     status = 500
 
@@ -49,13 +52,12 @@ class APIError(Exception):
         if status is not None:
             self.status = status
         self.message = message
-        self._set_response_status(self.status)
 
     def _set_response_status(self, status):
         request = req.getRequest()
         # req.getRequest() may return None outside a real request
         # context (unit tests, setup handlers). Skip silently in that
-        # case so raising an APIError never crashes ancillary code.
+        # case so setting a status never crashes ancillary code.
         if request is None:
             return
         response = getattr(request, "response", None)
@@ -64,8 +66,10 @@ class APIError(Exception):
         response.setStatus(status)
 
     # Legacy alias, retained so existing callers of `err.setStatus(x)`
-    # keep working.
+    # keep working. Nothing in this package calls it: the status of an
+    # error reaches the response when the envelope is rendered.
     def setStatus(self, status):
+        self.status = status
         self._set_response_status(status)
 
     def __str__(self):
