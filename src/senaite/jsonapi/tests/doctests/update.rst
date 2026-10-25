@@ -278,3 +278,58 @@ A value of the right type is taken:
     ...                      {"min_volume": u"20 ml"})
     >>> get_item_object(response).min_volume
     u'20 ml'
+
+
+File fields
+~~~~~~~~~~~
+
+A file arrives as base64 text and is stored as the file the field holds. The
+attachment of a sample point is a file field with a setter of its own, which
+the file goes around:
+
+    >>> samplepoint = api.create(portal.setup.samplepoints, "SamplePoint",
+    ...                          title="Well")
+    >>> samplepoint_uid = api.get_uid(samplepoint)
+    >>> transaction.commit()
+
+    >>> def get_attachment():
+    ...     return api.get_object(samplepoint_uid).attachment_file
+
+    >>> data = {"attachment_file": "hello world".encode("base64"),
+    ...         "filename": "notes.txt"}
+    >>> response = post_json("update/{}".format(samplepoint_uid), data)
+    >>> attachment = get_attachment()
+    >>> attachment.filename, attachment.data
+    (u'notes.txt', 'hello world')
+
+A null value clears the field:
+
+    >>> response = post_json("update/{}".format(samplepoint_uid),
+    ...                      {"attachment_file": None})
+    >>> get_attachment() is None
+    True
+
+And so does an empty string:
+
+    >>> response = post_json("update/{}".format(samplepoint_uid), data)
+    >>> get_attachment().filename
+    u'notes.txt'
+
+    >>> response = post_json("update/{}".format(samplepoint_uid),
+    ...                      {"attachment_file": ""})
+    >>> get_attachment() is None
+    True
+
+A value that is not base64 is refused:
+
+    >>> post_json("update/{}".format(samplepoint_uid),
+    ...           {"attachment_file": "not base64!"})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> error = json.loads(browser.contents)
+    >>> error["type"]
+    u'BadRequestError'
+    >>> "attachment_file" in error["message"]
+    True
