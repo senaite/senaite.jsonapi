@@ -362,6 +362,10 @@ without an error, skipping the characters outside the alphabet:
     (400, u'BadRequestError',
      u'Invalid base64 value for field attachment_file')
 
+    >>> post_invalid(u"h\xe9llo")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
 The file is left as it was:
 
     >>> get_attachment().data
@@ -437,3 +441,32 @@ with its own flag:
     ...                      {"Signature": None})
     >>> not get_signature()
     True
+
+The file of a required field cannot be removed. The specification file of a
+dynamic analysis specification is required:
+
+    >>> dynamicspec = api.create(portal.setup.dynamicanalysisspecs,
+    ...                          "DynamicAnalysisSpec", title="Dynamic")
+    >>> dynamicspec_uid = api.get_uid(dynamicspec)
+    >>> transaction.commit()
+
+    >>> def get_specs_file():
+    ...     return api.get_object(dynamicspec_uid).specs_file
+
+    >>> response = post_json("update/{}".format(dynamicspec_uid),
+    ...                      {"specs_file": "specs".encode("base64"),
+    ...                       "filename": "specs.xlsx"})
+    >>> get_specs_file().data
+    'specs'
+
+    >>> post_json("update/{}".format(dynamicspec_uid),
+    ...           {"specs_file": None})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> json.loads(browser.contents)["message"]
+    u'Field specs_file is required, its file cannot be removed'
+
+    >>> get_specs_file().data
+    'specs'

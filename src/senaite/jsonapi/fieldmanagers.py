@@ -62,6 +62,17 @@ def decode_base64(value):
     return str(value).decode("base64")
 
 
+def check_file_removable(field, field_name):
+    """Refuses the removal of the file of a required field
+
+    :raises BadRequestError: if the field is required
+    """
+    if field.required:
+        raise BadRequestError(
+            "Field {} is required, its file cannot be removed"
+            .format(field_name))
+
+
 def get_file_data(value, field_name):
     """Returns the file data of a base64 value sent for a file field
 
@@ -357,6 +368,7 @@ class NamedFileFieldManager(ZopeSchemaFieldManager):
 
         if value is None:
             # An explicit null removes the file
+            check_file_removable(self.field, self.get_field_name())
             return self.field.set(instance, None)
 
         data = get_file_data(value, self.get_field_name())
@@ -599,6 +611,7 @@ class FileFieldManager(ATFieldManager):
         if value is None:
             # An explicit null removes the file. AT fields only remove it
             # with their flag, image fields with their own
+            check_file_removable(self.field, self.get_field_name())
             flag = "DELETE_FILE"
             if IImageField.providedBy(self.field):
                 flag = "DELETE_IMAGE"
