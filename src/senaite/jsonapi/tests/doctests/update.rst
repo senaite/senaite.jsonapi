@@ -302,28 +302,22 @@ the file goes around:
     >>> attachment.filename, attachment.data
     (u'notes.txt', 'hello world')
 
-A null value clears the field:
+An explicit null removes the file:
 
     >>> response = post_json("update/{}".format(samplepoint_uid),
     ...                      {"attachment_file": None})
     >>> get_attachment() is None
     True
 
-And so does an empty string:
+An empty string is refused rather than taken as a removal, so that a client
+sending an empty file input along with other fields does not lose the file:
 
     >>> response = post_json("update/{}".format(samplepoint_uid), data)
     >>> get_attachment().filename
     u'notes.txt'
 
-    >>> response = post_json("update/{}".format(samplepoint_uid),
-    ...                      {"attachment_file": ""})
-    >>> get_attachment() is None
-    True
-
-A value that is not base64 is refused:
-
     >>> post_json("update/{}".format(samplepoint_uid),
-    ...           {"attachment_file": "not base64!"})
+    ...           {"attachment_file": ""})
     Traceback (most recent call last):
     [...]
     HTTPError: HTTP Error 400: Bad Request
@@ -331,5 +325,115 @@ A value that is not base64 is refused:
     >>> error = json.loads(browser.contents)
     >>> error["type"]
     u'BadRequestError'
-    >>> "attachment_file" in error["message"]
+    >>> "send null to remove the file" in error["message"]
+    True
+
+    >>> get_attachment().data
+    'hello world'
+
+A value that is not base64 is refused. Python 2 would decode most of them
+without an error, skipping the characters outside the alphabet:
+
+    >>> def post_invalid(value):
+    ...     try:
+    ...         post_json("update/{}".format(samplepoint_uid),
+    ...                   {"attachment_file": value})
+    ...     except Exception as exc:
+    ...         error = json.loads(browser.contents)
+    ...         return exc.code, error["type"], error["message"]
+
+    >>> post_invalid("not base64!")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid("abcd!")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid("{}")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid("data:application/pdf;base64,JVBERi0=")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid(123)
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+The file is left as it was:
+
+    >>> get_attachment().data
+    'hello world'
+
+Line breaks, as base64 encoders add them, are fine:
+
+    >>> encoded = ("x" * 100).encode("base64")
+    >>> "\n" in encoded.strip()
+    True
+    >>> response = post_json("update/{}".format(samplepoint_uid),
+    ...                      {"attachment_file": encoded})
+    >>> get_attachment().data == "x" * 100
+    True
+
+The file fields of AT objects behave the same. The attachment file of an
+attachment is a blob file field:
+
+    >>> attachment = api.create(client1, "Attachment")
+    >>> attachment_uid = api.get_uid(attachment)
+    >>> transaction.commit()
+
+    >>> def get_attachment_file():
+    ...     obj = api.get_object(attachment_uid)
+    ...     return obj.getAttachmentFile().data
+
+    >>> response = post_json("update/{}".format(attachment_uid),
+    ...                      {"AttachmentFile": "hello".encode("base64"),
+    ...                       "filename": "hello.txt"})
+    >>> str(get_attachment_file())
+    'hello'
+
+    >>> post_json("update/{}".format(attachment_uid),
+    ...           {"AttachmentFile": "abcd!"})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> post_json("update/{}".format(attachment_uid),
+    ...           {"AttachmentFile": ""})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> str(get_attachment_file())
+    'hello'
+
+    >>> response = post_json("update/{}".format(attachment_uid),
+    ...                      {"AttachmentFile": None})
+    >>> str(get_attachment_file())
+    ''
+
+The signature of a lab contact is an AT image field, which is only removed
+with its own flag:
+
+    >>> labcontact = api.create(portal.bika_setup.bika_labcontacts,
+    ...                         "LabContact", Firstname="Ann",
+    ...                         Surname="Lab")
+    >>> labcontact_uid = api.get_uid(labcontact)
+    >>> transaction.commit()
+
+    >>> def get_signature():
+    ...     obj = api.get_object(labcontact_uid)
+    ...     return obj.getSignature()
+
+    >>> gif = ("R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==")
+    >>> response = post_json("update/{}".format(labcontact_uid),
+    ...                      {"Signature": gif, "filename": "sig.gif"})
+    >>> get_signature().get_size() > 0
+    True
+
+    >>> response = post_json("update/{}".format(labcontact_uid),
+    ...                      {"Signature": None})
+    >>> not get_signature()
     True

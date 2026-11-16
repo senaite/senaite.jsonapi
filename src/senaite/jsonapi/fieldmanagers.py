@@ -18,8 +18,8 @@
 # Copyright 2017-2025 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-import binascii
 import mimetypes
+import re
 
 import dateutil
 import six
@@ -29,6 +29,7 @@ from datetime import timedelta
 from decimal import Decimal
 from decimal import InvalidOperation
 from DateTime import DateTime
+from Products.Archetypes.interfaces.field import IImageField
 from Products.Archetypes.utils import mapply
 from senaite.core.schema.uidreferencefield import UIDReferenceField
 from senaite.jsonapi import api
@@ -41,6 +42,41 @@ from zope.interface import implementer
 from zope.schema import getFields
 from zope.schema._bootstrapinterfaces import WrongContainedType
 from zope.schema._bootstrapinterfaces import WrongType
+
+BASE64_RX = re.compile(r"^[A-Za-z0-9+/]*={0,2}$")
+
+
+def decode_base64(value):
+    """Decode a base64 value strictly
+
+    Python 2 decodes base64 leniently and skips every character outside the
+    alphabet, so the value is checked before it is decoded.
+
+    :returns: the decoded data or None if the value is not valid base64
+    """
+    if not isinstance(value, six.string_types):
+        return None
+    value = re.sub(r"\s", "", value)
+    if len(value) % 4 or not BASE64_RX.match(value):
+        return None
+    return str(value).decode("base64")
+
+
+def get_file_data(value, field_name):
+    """Returns the file data of a base64 value sent for a file field
+
+    :raises BadRequestError: if the value is empty or not valid base64
+    """
+    if not value:
+        # Removing a file is always explicit, as in the widgets
+        raise BadRequestError(
+            "Empty value for field {}, send null to remove the file"
+            .format(field_name))
+    data = decode_base64(value)
+    if data is None:
+        raise BadRequestError(
+            "Invalid base64 value for field {}".format(field_name))
+    return data
 
 
 class ZopeSchemaFieldManager(object):
@@ -319,20 +355,11 @@ class NamedFileFieldManager(ZopeSchemaFieldManager):
         logger.debug("NamedFileFieldManager::set:File field"
                      "detected ('%r'), base64 decoding value", self.field)
 
-        if not value:
-            # An empty value clears the field. Decoding it would store a
-            # file instead: an empty one for "", and the three bytes that
-            # "None" decodes to for null
+        if value is None:
+            # An explicit null removes the file
             return self.field.set(instance, None)
 
-        try:
-            data = str(value).decode("base64")
-        except binascii.Error as exc:
-            # Not a ValueError in Python 2, so it would escape the handling
-            # of refused values and answer 200 with success false
-            raise BadRequestError(
-                "Invalid base64 value for field {}: {}".format(
-                    self.get_field_name(), exc))
+        data = get_file_data(value, self.get_field_name())
         filename = kw.get("filename") or kw.get("id") or kw.get("title")
         contentType = kw.get("mimetype") or kw.get("content_type")
 
@@ -569,7 +596,15 @@ class FileFieldManager(ATFieldManager):
     def set(self, instance, value, **kw):
         """Decodes base64 value and set the file object
         """
-        value = str(value).decode("base64")
+        if value is None:
+            # An explicit null removes the file. AT fields only remove it
+            # with their flag, image fields with their own
+            flag = "DELETE_FILE"
+            if IImageField.providedBy(self.field):
+                flag = "DELETE_IMAGE"
+            return self._set(instance, flag, **kw)
+
+        value = get_file_data(value, self.get_field_name())
 
         # handle the filename
         if "filename" not in kw:
@@ -577,7 +612,7 @@ class FileFieldManager(ATFieldManager):
                          "-> using title or id")
             kw["filename"] = kw.get("id") or kw.get("title")
 
-        self._set(instance, value, **kw)
+        return self._set(instance, value, **kw)
 
     def json_data(self, instance, default=None):
         """Get a JSON compatible value
