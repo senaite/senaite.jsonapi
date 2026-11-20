@@ -278,3 +278,195 @@ A value of the right type is taken:
     ...                      {"min_volume": u"20 ml"})
     >>> get_item_object(response).min_volume
     u'20 ml'
+
+
+File fields
+~~~~~~~~~~~
+
+A file arrives as base64 text and is stored as the file the field holds. The
+attachment of a sample point is a file field with a setter of its own, which
+the file goes around:
+
+    >>> samplepoint = api.create(portal.setup.samplepoints, "SamplePoint",
+    ...                          title="Well")
+    >>> samplepoint_uid = api.get_uid(samplepoint)
+    >>> transaction.commit()
+
+    >>> def get_attachment():
+    ...     return api.get_object(samplepoint_uid).attachment_file
+
+    >>> data = {"attachment_file": "hello world".encode("base64"),
+    ...         "filename": "notes.txt"}
+    >>> response = post_json("update/{}".format(samplepoint_uid), data)
+    >>> attachment = get_attachment()
+    >>> attachment.filename, attachment.data
+    (u'notes.txt', 'hello world')
+
+An explicit null removes the file:
+
+    >>> response = post_json("update/{}".format(samplepoint_uid),
+    ...                      {"attachment_file": None})
+    >>> get_attachment() is None
+    True
+
+An empty string is refused rather than taken as a removal, so that a client
+sending an empty file input along with other fields does not lose the file:
+
+    >>> response = post_json("update/{}".format(samplepoint_uid), data)
+    >>> get_attachment().filename
+    u'notes.txt'
+
+    >>> post_json("update/{}".format(samplepoint_uid),
+    ...           {"attachment_file": ""})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> error = json.loads(browser.contents)
+    >>> error["type"]
+    u'BadRequestError'
+    >>> "send null to remove the file" in error["message"]
+    True
+
+    >>> get_attachment().data
+    'hello world'
+
+A value that is not base64 is refused. Python 2 would decode most of them
+without an error, skipping the characters outside the alphabet:
+
+    >>> def post_invalid(value):
+    ...     try:
+    ...         post_json("update/{}".format(samplepoint_uid),
+    ...                   {"attachment_file": value})
+    ...     except Exception as exc:
+    ...         error = json.loads(browser.contents)
+    ...         return exc.code, error["type"], error["message"]
+
+    >>> post_invalid("not base64!")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid("abcd!")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid("{}")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid("data:application/pdf;base64,JVBERi0=")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid(123)
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+    >>> post_invalid(u"h\xe9llo")
+    (400, u'BadRequestError',
+     u'Invalid base64 value for field attachment_file')
+
+The file is left as it was:
+
+    >>> get_attachment().data
+    'hello world'
+
+Line breaks, as base64 encoders add them, are fine:
+
+    >>> encoded = ("x" * 100).encode("base64")
+    >>> "\n" in encoded.strip()
+    True
+    >>> response = post_json("update/{}".format(samplepoint_uid),
+    ...                      {"attachment_file": encoded})
+    >>> get_attachment().data == "x" * 100
+    True
+
+The file fields of AT objects behave the same. The attachment file of an
+attachment is a blob file field:
+
+    >>> attachment = api.create(client1, "Attachment")
+    >>> attachment_uid = api.get_uid(attachment)
+    >>> transaction.commit()
+
+    >>> def get_attachment_file():
+    ...     obj = api.get_object(attachment_uid)
+    ...     return obj.getAttachmentFile().data
+
+    >>> response = post_json("update/{}".format(attachment_uid),
+    ...                      {"AttachmentFile": "hello".encode("base64"),
+    ...                       "filename": "hello.txt"})
+    >>> str(get_attachment_file())
+    'hello'
+
+    >>> post_json("update/{}".format(attachment_uid),
+    ...           {"AttachmentFile": "abcd!"})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> post_json("update/{}".format(attachment_uid),
+    ...           {"AttachmentFile": ""})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> str(get_attachment_file())
+    'hello'
+
+    >>> response = post_json("update/{}".format(attachment_uid),
+    ...                      {"AttachmentFile": None})
+    >>> str(get_attachment_file())
+    ''
+
+The signature of a lab contact is an AT image field, which is only removed
+with its own flag:
+
+    >>> labcontact = api.create(portal.bika_setup.bika_labcontacts,
+    ...                         "LabContact", Firstname="Ann",
+    ...                         Surname="Lab")
+    >>> labcontact_uid = api.get_uid(labcontact)
+    >>> transaction.commit()
+
+    >>> def get_signature():
+    ...     obj = api.get_object(labcontact_uid)
+    ...     return obj.getSignature()
+
+    >>> gif = ("R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==")
+    >>> response = post_json("update/{}".format(labcontact_uid),
+    ...                      {"Signature": gif, "filename": "sig.gif"})
+    >>> get_signature().get_size() > 0
+    True
+
+    >>> response = post_json("update/{}".format(labcontact_uid),
+    ...                      {"Signature": None})
+    >>> not get_signature()
+    True
+
+The file of a required field cannot be removed. The specification file of a
+dynamic analysis specification is required:
+
+    >>> dynamicspec = api.create(portal.setup.dynamicanalysisspecs,
+    ...                          "DynamicAnalysisSpec", title="Dynamic")
+    >>> dynamicspec_uid = api.get_uid(dynamicspec)
+    >>> transaction.commit()
+
+    >>> def get_specs_file():
+    ...     return api.get_object(dynamicspec_uid).specs_file
+
+    >>> response = post_json("update/{}".format(dynamicspec_uid),
+    ...                      {"specs_file": "specs".encode("base64"),
+    ...                       "filename": "specs.xlsx"})
+    >>> get_specs_file().data
+    'specs'
+
+    >>> post_json("update/{}".format(dynamicspec_uid),
+    ...           {"specs_file": None})
+    Traceback (most recent call last):
+    [...]
+    HTTPError: HTTP Error 400: Bad Request
+
+    >>> json.loads(browser.contents)["message"]
+    u'Field specs_file is required, its file cannot be removed'
+
+    >>> get_specs_file().data
+    'specs'
